@@ -10,3 +10,11 @@ function apply(){
 }
 document.getElementById('themeBtn').addEventListener('click', () => { i = (i + 1)%3; apply(); });
 apply();
+// Les liens vers une autre page s'ouvrent dans un nouvel onglet (sauf ancres, mailto et data-same-tab)
+document.querySelectorAll('a[href]').forEach(a => {
+  const h = a.getAttribute('href');
+  if (h.startsWith('#') || h.startsWith('mailto:') || a.hasAttribute('data-same-tab')) return;
+  const u = new URL(a.href, location.href);
+  if (u.origin === location.origin && u.pathname === location.pathname) return;
+  a.target = '_blank'; a.rel = 'noopener';
+});
