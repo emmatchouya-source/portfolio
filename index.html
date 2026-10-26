@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emmanuel Tchouya — Portfolio</title>
+<meta name="description" content="Portfolio d'Emmanuel Tchouya : projets en ingénierie aérospatiale, aérodynamique et propulsion.">
+<style>
+:root{
+  --bg:#f7f7f5; --panel:#ffffff; --ink:#16181d; --muted:#5d6470; --line:#e3e4e8;
+  --accent:#1f4fd1; --accent-soft:#e8eefc; --todo:#b45309; --todo-bg:#fff4e5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1014; --panel:#161920; --ink:#e8eaee; --muted:#9ba3b1; --line:#262b35;
+    --accent:#7a9cff; --accent-soft:#1c2540; --todo:#f2b84e; --todo-bg:#2b2213;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1014; --panel:#161920; --ink:#e8eaee; --muted:#9ba3b1; --line:#262b35;
+  --accent:#7a9cff; --accent-soft:#1c2540; --todo:#f2b84e; --todo-bg:#2b2213;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;gap:16px}
+nav .brand{font-weight:700;color:var(--ink)}
+nav ul{display:flex;gap:20px;list-style:none;margin:0;padding:0;font-size:14px}
+nav ul a{color:var(--muted)}
+nav ul a:hover{color:var(--ink);text-decoration:none}
+.hero{padding:88px 0 64px}
+.hero .kicker{color:var(--accent);font-weight:600;font-size:14px;letter-spacing:.4px;text-transform:uppercase}
+.hero h1{font-size:clamp(34px,6vw,56px);line-height:1.08;margin:10px 0 18px;letter-spacing:-.5px}
+.hero p{font-size:18px;color:var(--muted);max-width:640px;margin:0 0 28px}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-block;padding:10px 18px;border-radius:8px;border:1px solid var(--line);color:var(--ink);background:var(--panel);font-weight:600;font-size:15px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:hover{text-decoration:none;filter:brightness(1.07)}
+section{padding:56px 0;border-top:1px solid var(--line)}
+section h2{font-size:26px;margin:0 0 24px;letter-spacing:-.2px}
+.about{display:grid;grid-template-columns:1.4fr 1fr;gap:32px}
+.facts{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;font-size:15px}
+.facts dt{color:var(--muted);font-size:13px}
+.facts dd{margin:0 0 12px}
+.skills{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.skill{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+.skill h3{margin:0 0 10px;font-size:16px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:13px;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
+.projects{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.project{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.project .thumb{aspect-ratio:16/9;background:var(--accent-soft);display:flex;align-items:center;justify-content:center}
+.project .thumb svg{width:100%;height:100%}
+.project .body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1}
+.project h3{margin:0;font-size:18px}
+.project p{margin:0;color:var(--muted);font-size:15px}
+.project .links{margin-top:auto;display:flex;gap:16px;font-size:14px;font-weight:600}
+.timeline{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}
+.timeline li{position:relative;padding:0 0 26px 24px}
+.timeline li::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
+.timeline .when{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+.timeline h3{margin:2px 0 4px;font-size:17px}
+.timeline p{margin:0;color:var(--muted);font-size:15px}
+.contact{display:flex;gap:12px;flex-wrap:wrap}
+footer{padding:28px 0 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.todo{background:var(--todo-bg);color:var(--todo);border:1px dashed var(--todo);border-radius:4px;padding:0 4px}
+#themeBtn{font:inherit;font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+@media (max-width:760px){
+  nav ul{display:none}
+  .about{grid-template-columns:1fr}
+  .hero{padding:56px 0 40px}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#">Emmanuel Tchouya</a>
+    <ul>
+      <li><a href="#apropos">À propos</a></li>
+      <li><a href="#competences">Compétences</a></li>
+      <li><a href="#projets">Projets</a></li>
+      <li><a href="#parcours">Parcours</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button id="themeBtn">Thème</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Ingénierie aérospatiale</div>
+    <h1>Emmanuel Tchouya</h1>
+    <p><span class="todo">Une phrase d'accroche : votre spécialité et ce que vous cherchez (stage, emploi, collaboration).</span></p>
+    <div class="btns">
+      <a class="btn primary" href="#projets">Voir mes projets</a>
+      <a class="btn" href="#contact">Me contacter</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section id="apropos">
+    <div class="wrap about">
+      <div>
+        <h2>À propos</h2>
+        <p><span class="todo">Deux ou trois phrases sur votre parcours, vos centres d'intérêt techniques et ce qui vous motive.</span></p>
+        <p><span class="todo">Un paragraphe sur la façon dont vous travaillez ou un résultat dont vous êtes fier.</span></p>
+      </div>
+      <dl class="facts">
+        <dt>Formation</dt><dd>École de technologie supérieure (ÉTS), Montréal</dd>
+        <dt>Domaine</dt><dd><span class="todo">ex. génie mécanique, aérospatial</span></dd>
+        <dt>Langues</dt><dd><span class="todo">Français, anglais…</span></dd>
+        <dt>Localisation</dt><dd><span class="todo">Ville, pays</span></dd>
+      </dl>
+    </div>
+  </section>
+
+  <section id="competences">
+    <div class="wrap">
+      <h2>Compétences</h2>
+      <div class="skills">
+        <div class="skill"><h3>Aérodynamique &amp; performances</h3>
+          <div class="tags"><span class="tag">Polaires</span><span class="tag">Performances avion</span><span class="tag">Optimisation de voilure</span></div></div>
+        <div class="skill"><h3>Propulsion</h3>
+          <div class="tags"><span class="tag todo">à compléter</span></div></div>
+        <div class="skill"><h3>Logiciels de CAO / simulation</h3>
+          <div class="tags"><span class="tag todo">ex. CATIA / 3DEXPERIENCE, ANSYS…</span></div></div>
+        <div class="skill"><h3>Programmation</h3>
+          <div class="tags"><span class="tag">JavaScript</span><span class="tag">HTML / CSS</span><span class="tag todo">Python, MATLAB…</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="projets">
+    <div class="wrap">
+      <h2>Projets</h2>
+      <div class="projects">
+        <article class="project">
+          <div class="thumb" aria-hidden="true">
+            <svg viewBox="0 0 320 180">
+              <g stroke="currentColor" style="color:var(--line)" stroke-width="1">
+                <line x1="40" y1="150" x2="300" y2="150"/><line x1="40" y1="20" x2="40" y2="150"/>
+                <line x1="40" y1="85" x2="300" y2="85" stroke-dasharray="3 4"/><line x1="170" y1="20" x2="170" y2="150" stroke-dasharray="3 4"/>
+              </g>
+              <path d="M52 150 C 70 70, 120 40, 290 28" fill="none" stroke="var(--accent)" stroke-width="3"/>
+              <line x1="40" y1="150" x2="200" y2="30" stroke="#d68a00" stroke-width="2" stroke-dasharray="6 5"/>
+              <circle cx="112" cy="96" r="6" fill="#d68a00"/>
+              <text x="122" y="112" font-size="12" fill="var(--muted)" font-family="system-ui">(L/D) max</text>
+              <text x="276" y="166" font-size="11" fill="var(--muted)" font-family="system-ui">CD</text>
+              <text x="20" y="26" font-size="11" fill="var(--muted)" font-family="system-ui">CL</text>
+            </svg>
+          </div>
+          <div class="body">
+            <h3>AéroOptim</h3>
+            <p>Application web autonome d'analyse et d'optimisation des performances aérodynamiques d'un avion : polaire, traînée, montée, plafond, distance franchissable, puis optimisation de l'envergure, de la surface et de l'altitude sous contraintes.</p>
+            <div class="tags"><span class="tag">JavaScript</span><span class="tag">Mécanique du vol</span><span class="tag">Nelder-Mead</span></div>
+            <div class="links"><a href="projets/aero-optim/">Lancer l'application →</a></div>
+          </div>
+        </article>
+
+        <article class="project">
+          <div class="thumb"><span class="todo">Image du projet</span></div>
+          <div class="body">
+            <h3><span class="todo">Projet 2</span></h3>
+            <p><span class="todo">Contexte, ce que vous avez fait, outils utilisés et résultat chiffré.</span></p>
+            <div class="tags"><span class="tag todo">outil</span></div>
+          </div>
+        </article>
+
+        <article class="project">
+          <div class="thumb"><span class="todo">Image du projet</span></div>
+          <div class="body">
+            <h3><span class="todo">Projet 3</span></h3>
+            <p><span class="todo">Contexte, ce que vous avez fait, outils utilisés et résultat chiffré.</span></p>
+            <div class="tags"><span class="tag todo">outil</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="parcours">
+    <div class="wrap">
+      <h2>Parcours</h2>
+      <ol class="timeline">
+        <li><div class="when"><span class="todo">Année – année</span></div><h3><span class="todo">Poste ou stage</span> · <span class="todo">Entreprise</span></h3><p><span class="todo">Missions principales et résultats.</span></p></li>
+        <li><div class="when"><span class="todo">Année – année</span></div><h3><span class="todo">Diplôme</span> · École de technologie supérieure</h3><p><span class="todo">Spécialisation, cours marquants, projets étudiants.</span></p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="contact">
+    <div class="wrap">
+      <h2>Contact</h2>
+      <p style="color:var(--muted);margin-top:-8px">Une question, une opportunité de stage ou de collaboration ? Écrivez-moi.</p>
+      <div class="contact">
+        <a class="btn primary" href="mailto:emmanuel.tchouya-tangwa.1@ens.etsmtl.ca">E-mail</a>
+        <a class="btn" href="https://github.com/emmatchouya-source">GitHub</a>
+        <a class="btn" href="#"><span class="todo">LinkedIn</span></a>
+        <a class="btn" href="#"><span class="todo">CV (PDF)</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><span>© <span id="year"></span> Emmanuel Tchouya</span><span>Fait à la main, en HTML et CSS.</span></div>
+</footer>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+const themes = ['auto', 'light', 'dark'], labels = { auto:'Thème : auto', light:'Thème : clair', dark:'Thème : sombre' };
+let i = 0;
+try { const s = localStorage.getItem('pfTheme'); if (themes.includes(s)) i = themes.indexOf(s); } catch (e) {}
+function apply(){
+  const t = themes[i];
+  if (t === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  document.getElementById('themeBtn').textContent = labels[t];
+  try { localStorage.setItem('pfTheme', t); } catch (e) {}
+}
+document.getElementById('themeBtn').addEventListener('click', () => { i = (i + 1)%3; apply(); });
+apply();
+</script>
+</body>
+</html>

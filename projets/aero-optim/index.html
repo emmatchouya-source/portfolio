@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AéroOptim</title>
+<style>
+:root{
+  --bg:#f5f6f8; --panel:#ffffff; --ink:#1a1d23; --muted:#5b6472; --line:#e1e4ea; --grid:#eceff3;
+  --accent:#2457d6; --accent-ink:#ffffff; --good:#15803d; --bad:#b91c1c; --warn:#b45309;
+  --c1:#2457d6; --c2:#d6452b; --c3:#1f9d55; --c4:#c58a00; --c5:#7c4dcc;
+  --infeasible:rgba(110,115,125,.55); --tip:#1a1d23; --tip-ink:#fff;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1115; --panel:#171a21; --ink:#e7e9ee; --muted:#9aa3b2; --line:#2a2f3a; --grid:#232833;
+    --accent:#6d93ff; --accent-ink:#0f1115; --good:#4cc982; --bad:#ff7a6b; --warn:#f2b84e;
+    --c1:#6d93ff; --c2:#ff7a5c; --c3:#4cc982; --c4:#f2c14e; --c5:#b18cff;
+    --infeasible:rgba(70,75,85,.7); --tip:#e7e9ee; --tip-ink:#0f1115;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1115; --panel:#171a21; --ink:#e7e9ee; --muted:#9aa3b2; --line:#2a2f3a; --grid:#232833;
+  --accent:#6d93ff; --accent-ink:#0f1115; --good:#4cc982; --bad:#ff7a6b; --warn:#f2b84e;
+  --c1:#6d93ff; --c2:#ff7a5c; --c3:#4cc982; --c4:#f2c14e; --c5:#b18cff;
+  --infeasible:rgba(70,75,85,.7); --tip:#e7e9ee; --tip-ink:#0f1115;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{font-size:18px;margin:0;font-weight:650;letter-spacing:.2px}
+header h1 span{color:var(--muted);font-weight:400;font-size:13px;margin-left:8px}
+.layout{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;padding:16px;max-width:1500px;margin:0 auto}
+aside{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.card+.card{margin-top:16px}
+h2{font-size:15px;margin:0 0 10px;font-weight:650}
+h3{font-size:12px;margin:14px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+h3:first-child{margin-top:0}
+.field{display:grid;grid-template-columns:1fr 96px 46px;align-items:center;gap:6px;margin:4px 0}
+.field label{color:var(--ink)}
+.field .u{color:var(--muted);font-size:12px}
+input[type=number],select{width:100%;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit;font-variant-numeric:tabular-nums}
+input[type=number]:disabled{opacity:.45}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.check{display:flex;align-items:center;gap:6px;margin:6px 0;color:var(--muted);font-size:13px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:inherit;padding:7px 12px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:hover{filter:brightness(1.06)}
+button:disabled{opacity:.5;cursor:default}
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.tab{border:none;border-bottom:2px solid transparent;border-radius:0;background:none;padding:8px 14px;color:var(--muted)}
+.tab.on{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+.pane{display:none}.pane.on{display:block}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kpi .l{color:var(--muted);font-size:12px}
+.kpi .v{font-size:21px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .v .un{font-size:12px;font-weight:400;color:var(--muted);margin-left:3px}
+.kpi .s{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+canvas{display:block;width:100%}
+canvas.chart{height:290px}
+canvas.heat{height:440px}
+canvas.tornado{height:340px}
+.note{color:var(--muted);font-size:12.5px;margin:8px 0 0}
+.warn{margin-top:12px;padding:8px 12px;border-radius:8px;border:1px solid var(--warn);color:var(--warn);font-size:13px;display:none}
+.warn.on{display:block}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-weight:600;font-size:12px}
+.pos{color:var(--good)}.neg{color:var(--bad)}
+.optgrid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:16px}
+.range{display:grid;grid-template-columns:1fr 78px 78px 40px;gap:6px;align-items:center;margin:4px 0}
+.status{color:var(--muted);font-size:13px}
+details summary{cursor:pointer;color:var(--muted);font-size:13px;margin-top:8px}
+.formula{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--muted);line-height:1.7}
+@media (max-width:1000px){
+  .layout{grid-template-columns:1fr;padding:16px}
+  aside{position:static;max-height:none}
+  .charts,.optgrid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>AéroOptim <span>performances &amp; optimisation aérodynamique</span></h1>
+  <button id="themeBtn" title="Thème">Thème : auto</button>
+</header>
+
+<div class="layout">
+<aside>
+  <div class="card">
+    <h3>Modèle d'avion</h3>
+    <select id="preset">
+      <option value="c172">Monomoteur léger (type C172)</option>
+      <option value="glider">Planeur 18 m</option>
+      <option value="drone">Drone MALE léger</option>
+      <option value="a320">Biréacteur moyen-courrier (type A320)</option>
+      <option value="custom">Personnalisé</option>
+    </select>
+
+    <h3>Masse</h3>
+    <div class="field"><label for="m">Masse au décollage</label><input type="number" id="m" step="1"><span class="u">kg</span></div>
+    <div class="field"><label for="fuel">Carburant</label><input type="number" id="fuel" step="1"><span class="u">kg</span></div>
+    <div class="field"><label for="reserve">Réserve</label><input type="number" id="reserve" step="1"><span class="u">%</span></div>
+
+    <h3>Voilure</h3>
+    <div class="field"><label for="S">Surface alaire S</label><input type="number" id="S" step="0.1"><span class="u">m²</span></div>
+    <div class="field"><label for="b">Envergure b</label><input type="number" id="b" step="0.1"><span class="u">m</span></div>
+    <div class="field"><label for="CLmax">CL max</label><input type="number" id="CLmax" step="0.01"><span class="u"></span></div>
+
+    <h3>Traînée</h3>
+    <div class="field"><label for="CD0">CD0 (parasite)</label><input type="number" id="CD0" step="0.0005"><span class="u"></span></div>
+    <div class="field"><label for="e">Oswald e</label><input type="number" id="e" step="0.01"><span class="u"></span></div>
+    <label class="check"><input type="checkbox" id="eAuto"> e calculé (Kroo, dépend de AR et CD0)</label>
+
+    <h3>Propulsion</h3>
+    <div class="field"><label for="propType">Type</label><select id="propType" style="grid-column:span 2"><option value="prop">Hélice (moteur à pistons)</option><option value="jet">Réacteur</option></select></div>
+    <div class="field only-prop"><label for="P">Puissance arbre</label><input type="number" id="P" step="1"><span class="u">kW</span></div>
+    <div class="field only-prop"><label for="etap">Rendement hélice η</label><input type="number" id="etap" step="0.01"><span class="u"></span></div>
+    <div class="field only-prop"><label for="bsfc">Conso. spécifique</label><input type="number" id="bsfc" step="0.01"><span class="u">kg/kWh</span></div>
+    <div class="field only-jet"><label for="T">Poussée max (sol)</label><input type="number" id="T" step="1"><span class="u">kN</span></div>
+    <div class="field only-jet"><label for="tsfc">TSFC</label><input type="number" id="tsfc" step="0.1"><span class="u">g/kN·s</span></div>
+    <div class="field only-jet"><label for="mmo">Mach max (MMO)</label><input type="number" id="mmo" step="0.01"><span class="u"></span></div>
+
+    <h3>Croisière</h3>
+    <div class="field"><label for="h">Altitude</label><input type="number" id="h" step="100"><span class="u">m</span></div>
+    <div class="field"><label for="Vc">Vitesse vraie</label><input type="number" id="Vc" step="5"><span class="u">km/h</span></div>
+    <label class="check"><input type="checkbox" id="vAuto"> Vitesse optimale (CL optimal du régime)</label>
+    <p class="note">Atmosphère standard ISA, polaire parabolique CD = CD0 + k·CL², k = 1/(π·e·AR). Distance et endurance intégrées numériquement à altitude constante.</p>
+  </div>
+</aside>
+
+<main>
+  <div class="tabs">
+    <button class="tab on" data-tab="analyse">Analyse</button>
+    <button class="tab" data-tab="optim">Optimisation</button>
+    <button class="tab" data-tab="sens">Sensibilité</button>
+  </div>
+
+  <section class="pane on" id="pane-analyse">
+    <div class="kpis" id="kpis"></div>
+    <div class="warn" id="warn"></div>
+    <div class="charts">
+      <div class="card"><h2>Polaire</h2><canvas class="chart" id="chPolar"></canvas></div>
+      <div class="card"><h2>Traînée et poussée disponible à l'altitude de croisière</h2><canvas class="chart" id="chDrag"></canvas></div>
+      <div class="card"><h2>Puissance requise / disponible</h2><canvas class="chart" id="chPower"></canvas></div>
+      <div class="card"><h2>Taux de montée max selon l'altitude</h2><canvas class="chart" id="chClimb"></canvas></div>
+    </div>
+  </section>
+
+  <section class="pane" id="pane-optim">
+    <div class="optgrid">
+      <div class="card">
+        <h2>Problème d'optimisation</h2>
+        <h3>Objectif</h3>
+        <select id="optObj">
+          <option value="range">Maximiser la distance franchissable</option>
+          <option value="endurance">Maximiser l'endurance</option>
+          <option value="ld">Maximiser la finesse max</option>
+          <option value="sink">Minimiser le taux de chute</option>
+        </select>
+        <h3>Variables de conception</h3>
+        <div class="range"><span></span><span class="u" style="color:var(--muted);font-size:12px">min</span><span class="u" style="color:var(--muted);font-size:12px">max</span><span></span></div>
+        <div class="range"><label>Envergure</label><input type="number" id="bmin" step="0.1"><input type="number" id="bmax" step="0.1"><span class="u" style="color:var(--muted);font-size:12px">m</span></div>
+        <div class="range"><label>Surface</label><input type="number" id="Smin" step="0.1"><input type="number" id="Smax" step="0.1"><span class="u" style="color:var(--muted);font-size:12px">m²</span></div>
+        <label class="check"><input type="checkbox" id="hOpt" checked> Optimiser aussi l'altitude de croisière</label>
+        <div class="range"><label>Altitude</label><input type="number" id="hmin" step="100"><input type="number" id="hmax" step="100"><span class="u" style="color:var(--muted);font-size:12px">m</span></div>
+        <h3>Contraintes</h3>
+        <div class="field"><label for="VsMax">V décrochage max (sol)</label><input type="number" id="VsMax" step="1"><span class="u">km/h</span></div>
+        <div class="field"><label for="ROCmin">Montée min au sol</label><input type="number" id="ROCmin" step="0.1"><span class="u">m/s</span></div>
+        <div class="field"><label for="ARmax">Allongement max</label><input type="number" id="ARmax" step="0.5"><span class="u"></span></div>
+        <h3>Couplages physiques</h3>
+        <label class="check"><input type="checkbox" id="massModel" checked> Masse de l'aile variable (Raymer, relatif)</label>
+        <div class="field"><label for="Nz">Facteur de charge ultime</label><input type="number" id="Nz" step="0.1"><span class="u">g</span></div>
+        <div class="field"><label for="tc">Épaisseur relative t/c</label><input type="number" id="tc" step="0.01"><span class="u"></span></div>
+        <label class="check"><input type="checkbox" id="dragModel" checked> CD0 de l'aile ∝ surface mouillée</label>
+        <div class="field"><label for="Cf">Cf équivalent aile</label><input type="number" id="Cf" step="0.0005"><span class="u"></span></div>
+        <div class="row" style="margin-top:12px">
+          <button class="primary" id="runOpt">Lancer l'optimisation</button>
+          <button id="initOpt">Bornes par défaut</button>
+        </div>
+        <p class="status" id="optStatus"></p>
+        <details><summary>Méthode</summary>
+          <p class="note">Balayage de l'espace (envergure × surface, 34 × 34 points) puis affinage par simplexe de Nelder-Mead avec pénalisation des contraintes. Pour chaque géométrie, l'altitude est optimisée (balayage + section dorée) et la croisière se fait au CL optimal du régime.</p>
+          <p class="formula">m = m₀ − m_aile(b₀,S₀) + m_aile(b,S)<br>m_aile ∝ S^0,758 · AR^0,6 · (t/c)^−0,3 · (Nz·m)^0,49<br>CD0(S) = f_reste / S + 2,05·Cf</p>
+        </details>
+      </div>
+      <div>
+        <div class="card"><h2>Carte de l'objectif</h2><canvas class="heat" id="chHeat"></canvas>
+          <p class="note">Zones grisées : contraintes violées. Pointillés : iso-allongement. ○ configuration actuelle, ★ optimum.</p></div>
+        <div class="card"><h2>Résultat</h2><div id="optResult"><p class="note">Lancez l'optimisation pour comparer la configuration actuelle à l'optimum.</p></div>
+          <div class="row" style="margin-top:10px"><button id="applyOpt" disabled>Appliquer l'optimum au modèle</button></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pane" id="pane-sens">
+    <div class="card">
+      <h2>Sensibilité aux paramètres (±10 %)</h2>
+      <p class="note" id="sensNote" style="margin:-4px 0 10px"></p>
+      <canvas class="tornado" id="chTornado"></canvas>
+      <p class="note">Chaque barre montre la variation relative de l'indicateur quand un seul paramètre varie de ±10 %, les autres restant fixes. Les paramètres en haut sont ceux sur lesquels un effort de conception paie le plus.</p>
+    </div>
+  </section>
+</main>
+</div>
+
+<script>
+'use strict';
+const g0 = 9.80665, Rgas = 287.053;
+const $ = id => document.getElementById(id);
+
+/* ---------- Atmosphère ISA ---------- */
+function isa(h){
+  h = Math.max(0, h);
+  let T, p;
+  if (h <= 11000){ T = 288.15 - 0.0065*h; p = 101325*Math.pow(T/288.15, 5.25588); }
+  else { T = 216.65; p = 22632.06*Math.exp(-g0*(h-11000)/(Rgas*T)); }
+  const rho = p/(Rgas*T);
+  return { T, p, rho, sigma: rho/1.225, a: Math.sqrt(1.4*Rgas*T) };
+}
+
+/* ---------- Préréglages ---------- */
+const PRESETS = {
+  c172:  { m:1111, fuel:145, reserve:10, S:16.17, b:11.0, CLmax:1.6, CD0:0.027, e:0.75, eAuto:false, propType:'prop', P:119, etap:0.80, bsfc:0.30, T:10, tsfc:17, mmo:0.3, h:2500, Vc:220, vAuto:true },
+  glider:{ m:600, fuel:0, reserve:0, S:11.4, b:18.0, CLmax:1.5, CD0:0.0105, e:0.9, eAuto:false, propType:'prop', P:0, etap:0.75, bsfc:0.35, T:0, tsfc:17, mmo:0.3, h:1000, Vc:110, vAuto:true },
+  drone: { m:25, fuel:4, reserve:10, S:1.6, b:4.4, CLmax:1.3, CD0:0.032, e:0.82, eAuto:false, propType:'prop', P:2.5, etap:0.70, bsfc:0.55, T:0, tsfc:17, mmo:0.3, h:1500, Vc:110, vAuto:true },
+  a320:  { m:73500, fuel:18700, reserve:8, S:122.6, b:34.1, CLmax:1.5, CD0:0.022, e:0.78, eAuto:false, propType:'jet', P:0, etap:0.8, bsfc:0.3, T:240, tsfc:16.5, mmo:0.82, h:11000, Vc:830, vAuto:true }
+};
+const NUM = ['m','fuel','reserve','S','b','CLmax','CD0','e','P','etap','bsfc','T','tsfc','mmo','h','Vc'];
+
+function readParams(){
+  const p = {};
+  NUM.forEach(k => p[k] = parseFloat($(k).value));
+  p.eAuto = $('eAuto').checked; p.vAuto = $('vAuto').checked; p.propType = $('propType').value;
+  return p;
+}
+function validParams(p){
+  return p.m>0 && p.S>0 && p.b>0 && p.CLmax>0 && p.CD0>0 && (p.eAuto || p.e>0) && p.fuel>=0 && p.fuel<p.m;
+}
+
+/* ---------- Modèle aérodynamique ---------- */
+function oswaldKroo(AR, CD0){ return 1/(1/(0.99*0.975) + 0.38*CD0*Math.PI*AR); }
+function derive(p){
+  const AR = p.b*p.b/p.S;
+  const e = p.eAuto ? oswaldKroo(AR, p.CD0) : p.e;
+  const k = 1/(Math.PI*e*AR);
+  return { AR, e, k, CLmd: Math.sqrt(p.CD0/k), LDmax: 0.5/Math.sqrt(p.CD0*k) };
+}
+const hasEngine = p => p.propType==='prop' ? (p.P>0 && p.etap>0) : p.T>0;
+function avail(p, at, V){
+  if (p.propType==='prop'){
+    const s = at.sigma;
+    const P = Math.max(0, p.P*1000*p.etap*(s - (1-s)/7.55));   // Gagg-Ferrar
+    return { P, T: P/Math.max(V, 1) };
+  }
+  const T = p.T*1000*Math.pow(at.sigma, 0.7);
+  return { T, P: T*V };
+}
+function drag(p, d, rho, V, m){
+  const q = 0.5*rho*V*V, CL = m*g0/(q*p.S);
+  const D0 = q*p.S*p.CD0, Di = q*p.S*d.k*CL*CL;
+  return { CL, D0, Di, D: D0+Di, P: (D0+Di)*V };
+}
+const vStall = (p, rho, m) => Math.sqrt(2*m*g0/(rho*p.S*p.CLmax));
+const vCap = (p, at) => p.propType==='jet' ? p.mmo*at.a : 0.75*at.a;
+
+function climbScan(p, d, h, m){
+  const at = isa(h), Vs = vStall(p, at.rho, m), Vu = Math.min(vCap(p, at), 15*Vs);
+  if (!hasEngine(p) || Vu <= Vs) return { roc: -Infinity, V: NaN, Vmax: null, Vs, capped:false };
+  const N = 240, dV = (Vu-Vs)/N;
+  let best = { roc: -Infinity, V: NaN }, iLast = -1;
+  const ex = V => (avail(p, at, V).P - drag(p, d, at.rho, V, m).P)/(m*g0);
+  for (let i = 0; i <= N; i++){
+    const V = Vs + dV*i, r = ex(V);
+    if (r > best.roc) best = { roc: r, V };
+    if (r >= 0) iLast = i;
+  }
+  let Vmax = null, capped = false;
+  if (iLast === N){ Vmax = Vu; capped = true; }
+  else if (iLast >= 0){
+    let lo = Vs + dV*iLast, hi = lo + dV;
+    for (let j = 0; j < 30; j++){ const mid = (lo+hi)/2; if (ex(mid) >= 0) lo = mid; else hi = mid; }
+    Vmax = lo;
+  }
+  return { roc: best.roc, V: best.V, Vmax, Vs, capped };
+}
+function ceiling(p, d, m){
+  if (!hasEngine(p)) return NaN;
+  const th = 0.508;  // 100 ft/min
+  if (climbScan(p, d, 0, m).roc < th) return 0;
+  let lo = 0, hi = 20000;
+  if (climbScan(p, d, hi, m).roc >= th) return hi;
+  for (let i = 0; i < 26; i++){ const mid = (lo+hi)/2; if (climbScan(p, d, mid, m).roc >= th) lo = mid; else hi = mid; }
+  return lo;
+}
+function minSink(p, d, rho, m){
+  const CL = Math.min(Math.sqrt(3*p.CD0/d.k), p.CLmax/1.44);
+  const V = Math.sqrt(2*m*g0/(rho*p.S*CL));
+  const dr = drag(p, d, rho, V, m);
+  return { w: dr.P/(m*g0), V };
+}
+function cruiseCL(p, d, mode){
+  const jet = p.propType==='jet';
+  const CL = mode==='range' ? (jet ? Math.sqrt(p.CD0/(3*d.k)) : d.CLmd)
+                            : (jet ? d.CLmd : Math.sqrt(3*p.CD0/d.k));
+  return Math.min(CL, p.CLmax/1.44);
+}
+/* Intégration de la croisière : V imposée ou CL optimal, altitude constante */
+function cruise(p, d, h, opt = {}){
+  if (!hasEngine(p)) return { ok:false, why:'aucune propulsion' };
+  const usable = p.fuel*(1 - p.reserve/100);
+  if (!(usable > 0)) return { ok:false, why:'pas de carburant utilisable' };
+  const at = isa(h), jet = p.propType==='jet', mode = opt.mode || 'range';
+  const CLt = cruiseCL(p, d, mode), CLcap = p.CLmax/1.44, Vc = vCap(p, at);
+  const N = 40, dm = usable/N;
+  let x = 0, t = 0, V0 = 0, CL0 = 0, LDs = 0, mach = false;
+  for (let i = 0; i < N; i++){
+    const mm = p.m - (i+0.5)*dm;
+    let V = opt.V || Math.sqrt(2*mm*g0/(at.rho*p.S*CLt));
+    if (V > Vc){ V = Vc; mach = true; }
+    const dr = drag(p, d, at.rho, V, mm);
+    if (dr.CL > CLcap*1.0001) return { ok:false, why:'vitesse trop faible (marge au décrochage < 1,2·Vs)' };
+    if (avail(p, at, V).P < dr.P) return { ok:false, why:'puissance / poussée insuffisante à cette altitude' };
+    const ff = jet ? p.tsfc*1e-6*dr.D : (p.bsfc/3.6e6)*dr.P/p.etap;
+    const dt = dm/ff;
+    t += dt; x += V*dt; LDs += mm*g0/dr.D;
+    if (i === 0){ V0 = V; CL0 = dr.CL; }
+  }
+  return { ok:true, range:x, endurance:t, Vavg:x/t, V0, CL0, LD:LDs/N, mach, usable };
+}
+
+/* ---------- Analyse complète ---------- */
+function analyze(p){
+  const d = derive(p), at = isa(p.h), at0 = isa(0);
+  const r = { p, d, at };
+  r.Vs0 = vStall(p, at0.rho, p.m);
+  r.Vsh = vStall(p, at.rho, p.m);
+  r.Vmd = Math.sqrt(2*p.m*g0/(at.rho*p.S*d.CLmd));
+  r.sink0 = minSink(p, d, at0.rho, p.m);
+  r.climb0 = climbScan(p, d, 0, p.m);
+  r.climbh = climbScan(p, d, p.h, p.m);
+  r.ceil = ceiling(p, d, p.m);
+  r.cr = cruise(p, d, p.h, { mode:'range', V: p.vAuto ? null : p.Vc/3.6 });
+  r.en = cruise(p, d, p.h, { mode:'endurance', V: p.vAuto ? null : p.Vc/3.6 });
+  return r;
+}
+
+/* ---------- Formatage ---------- */
+function fmt(v, dec = 1){
+  if (v == null || !isFinite(v)) return '—';
+  return v.toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function fmtAuto(v){
+  if (!isFinite(v)) return '—';
+  const a = Math.abs(v);
+  return fmt(v, a >= 1000 ? 0 : a >= 100 ? 1 : a >= 10 ? 2 : a >= 1 ? 2 : 4);
+}
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------- Moteur de graphiques ---------- */
+function niceStep(span, n){
+  const raw = span/n, p10 = Math.pow(10, Math.floor(Math.log10(raw))), f = raw/p10;
+  return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10)*p10;
+}
+function tickLabel(v, step){
+  const dec = Math.max(0, Math.min(5, -Math.floor(Math.log10(step) + 1e-9)));
+  return (Math.abs(v) < step*1e-6 ? 0 : v).toLocaleString('fr-FR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+const canvases = new Set();
+function bindHover(cv, draw){
+  canvases.add(cv); cv._draw = draw;
+  if (cv._bound) return; cv._bound = true;
+  cv.addEventListener('mousemove', e => { const r = cv.getBoundingClientRect(); cv._hx = e.clientX - r.left; cv._hy = e.clientY - r.top; cv._draw(cv); });
+  cv.addEventListener('mouseleave', () => { cv._hx = null; cv._draw(cv); });
+}
+function prepCanvas(cv){
+  const W = cv.clientWidth, H = cv.clientHeight;
+  if (!W || !H) return null;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.font = '12px system-ui,-apple-system,"Segoe UI",sans-serif';
+  return { c, W, H };
+}
+function tooltip(c, W, H, x, y, lines){
+  c.font = '12px system-ui,sans-serif';
+  const w = Math.max(...lines.map(l => c.measureText(l.t).width)) + 26, h = lines.length*17 + 10;
+  let tx = x + 14, ty = y - h/2;
+  if (tx + w > W - 4) tx = x - w - 14;
+  ty = Math.max(4, Math.min(H - h - 4, ty));
+  c.fillStyle = css('--tip'); c.globalAlpha = .94;
+  c.beginPath(); c.roundRect ? c.roundRect(tx, ty, w, h, 6) : c.rect(tx, ty, w, h); c.fill(); c.globalAlpha = 1;
+  lines.forEach((l, i) => {
+    const yy = ty + 17 + i*17;
+    if (l.color){ c.fillStyle = l.color; c.fillRect(tx + 8, yy - 8, 8, 8); }
+    c.fillStyle = css('--tip-ink'); c.fillText(l.t, tx + (l.color ? 20 : 8), yy);
+  });
+}
+function lineChart(cv, cfg){ cv._cfg = cfg; bindHover(cv, drawLine); drawLine(cv); }
+function drawLine(cv){
+  const cfg = cv._cfg; if (!cfg) return;
+  const P = prepCanvas(cv); if (!P) return; const { c, W, H } = P;
+  const ink = css('--ink'), muted = css('--muted'), grid = css('--grid'), panel = css('--panel');
+  const xs = [], ys = [];
+  cfg.series.forEach(s => s.pts.forEach(([x, y]) => { if (isFinite(x) && isFinite(y)){ xs.push(x); ys.push(y); } }));
+  if (!xs.length){ c.fillStyle = muted; c.fillText(cfg.empty || 'Pas de données', 16, 28); return; }
+  let x0 = cfg.xmin ?? Math.min(...xs), x1 = cfg.xmax ?? Math.max(...xs);
+  let y0 = cfg.ymin ?? Math.min(...ys), y1 = cfg.ymax ?? Math.max(...ys);
+  if (x1 <= x0) x1 = x0 + 1; if (y1 <= y0) y1 = y0 + 1;
+  const xstep = niceStep(x1 - x0, W < 420 ? 4 : 6), ystep = niceStep(y1 - y0, 5);
+  if (cfg.ymin == null) y0 = Math.floor(y0/ystep)*ystep;
+  if (cfg.ymax == null) y1 = Math.ceil((y1 + (y1-y0)*0.04)/ystep)*ystep;
+  const L = 60, R = 14, T = 12, B = 40, pw = W - L - R, ph = H - T - B;
+  const X = v => L + (v - x0)/(x1 - x0)*pw, Y = v => T + ph - (v - y0)/(y1 - y0)*ph;
+  // grille
+  c.lineWidth = 1; c.strokeStyle = grid; c.fillStyle = muted; c.textAlign = 'right'; c.textBaseline = 'middle';
+  for (let v = Math.ceil(y0/ystep)*ystep; v <= y1 + ystep*1e-6; v += ystep){
+    const yy = Math.round(Y(v)) + .5; c.beginPath(); c.moveTo(L, yy); c.lineTo(L + pw, yy); c.stroke(); c.fillText(tickLabel(v, ystep), L - 6, yy);
+  }
+  c.textAlign = 'center'; c.textBaseline = 'top';
+  for (let v = Math.ceil(x0/xstep)*xstep; v <= x1 + xstep*1e-6; v += xstep){
+    const xx = Math.round(X(v)) + .5; c.beginPath(); c.moveTo(xx, T); c.lineTo(xx, T + ph); c.stroke(); c.fillText(tickLabel(v, xstep), xx, T + ph + 6);
+  }
+  c.fillStyle = muted; c.fillText(cfg.xlabel || '', L + pw/2, H - 16);
+  c.save(); c.translate(13, T + ph/2); c.rotate(-Math.PI/2); c.textBaseline = 'middle'; c.fillText(cfg.ylabel || '', 0, 0); c.restore();
+  // séries
+  c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
+  (cfg.hlines || []).forEach(l => { c.strokeStyle = l.color || muted; c.setLineDash([4, 4]); c.beginPath(); c.moveTo(L, Y(l.y)); c.lineTo(L + pw, Y(l.y)); c.stroke(); c.setLineDash([]);
+    if (l.label){ c.fillStyle = l.color || muted; c.textAlign = 'left'; c.textBaseline = 'bottom'; c.fillText(l.label, L + 6, Y(l.y) - 3); } });
+  cfg.series.forEach(s => {
+    c.strokeStyle = s.color; c.lineWidth = s.width || 2; c.setLineDash(s.dash || []);
+    c.beginPath(); let started = false;
+    s.pts.forEach(([x, y]) => { if (!isFinite(x) || !isFinite(y)){ started = false; return; } if (!started){ c.moveTo(X(x), Y(y)); started = true; } else c.lineTo(X(x), Y(y)); });
+    c.stroke(); c.setLineDash([]);
+  });
+  (cfg.markers || []).forEach(mk => {
+    if (!isFinite(mk.x) || !isFinite(mk.y)) return;
+    c.fillStyle = mk.color; c.strokeStyle = panel; c.lineWidth = 2;
+    c.beginPath(); c.arc(X(mk.x), Y(mk.y), 5, 0, Math.PI*2); c.fill(); c.stroke();
+    if (mk.label){ c.fillStyle = ink; c.textAlign = mk.align || 'left'; c.textBaseline = 'bottom'; c.fillText(mk.label, X(mk.x) + (mk.align === 'right' ? -8 : 8), Y(mk.y) - 6); }
+  });
+  c.restore();
+  // légende
+  const named = cfg.series.filter(s => s.name && !s.noLegend);
+  if (named.length > 1){
+    c.textAlign = 'left'; c.textBaseline = 'middle';
+    const widths = named.map(s => c.measureText(s.name).width + 30);
+    let lx = L + pw - widths.reduce((a, b) => a + b, 0) - 4, ly = T + 12;
+    if (lx < L + 4){ lx = L + 8; }
+    c.fillStyle = panel; c.globalAlpha = .85; c.fillRect(lx - 4, ly - 9, widths.reduce((a, b) => a + b, 0) + 4, 18); c.globalAlpha = 1;
+    named.forEach((s, i) => { c.strokeStyle = s.color; c.lineWidth = 2.5; c.setLineDash(s.dash || []); c.beginPath(); c.moveTo(lx, ly); c.lineTo(lx + 16, ly); c.stroke(); c.setLineDash([]);
+      c.fillStyle = ink; c.fillText(s.name, lx + 21, ly); lx += widths[i]; });
+  }
+  // survol
+  if (cv._hx != null && cv._hx >= L && cv._hx <= L + pw){
+    const xv = x0 + (cv._hx - L)/pw*(x1 - x0);
+    c.strokeStyle = muted; c.lineWidth = 1; c.beginPath(); c.moveTo(cv._hx + .5, T); c.lineTo(cv._hx + .5, T + ph); c.stroke();
+    const lines = [{ t: `${cfg.xname || 'x'} : ${fmtAuto(xv)} ${cfg.xunit || ''}` }];
+    cfg.series.forEach(s => {
+      if (s.noHover) return;
+      const pts = s.pts;
+      for (let i = 0; i < pts.length - 1; i++){
+        const [xa, ya] = pts[i], [xb, yb] = pts[i + 1];
+        if (xv >= Math.min(xa, xb) && xv <= Math.max(xa, xb) && isFinite(ya) && isFinite(yb)){
+          const yv = xb === xa ? ya : ya + (yb - ya)*(xv - xa)/(xb - xa);
+          if (yv >= y0 && yv <= y1){ c.fillStyle = s.color; c.beginPath(); c.arc(cv._hx, Y(yv), 3.5, 0, Math.PI*2); c.fill(); }
+          lines.push({ t: `${s.name} : ${fmtAuto(yv)} ${cfg.yunit || ''}`, color: s.color });
+          break;
+        }
+      }
+    });
+    tooltip(c, W, H, cv._hx, cv._hy, lines);
+  }
+}
+
+/* ---------- Rendu de l'analyse ---------- */
+let current = null;
+function kpi(label, value, unit, sub){
+  return `<div class="kpi"><div class="l">${label}</div><div class="v">${value}<span class="un">${unit || ''}</span></div><div class="s">${sub || '&nbsp;'}</div></div>`;
+}
+function renderAnalysis(){
+  const p = readParams();
+  if (!validParams(p)){ $('kpis').innerHTML = kpi('Paramètres', 'invalides', '', 'vérifiez masse, surface, envergure, CD0, e'); return; }
+  const r = analyze(p); current = r;
+  const { d, at } = r, eng = hasEngine(p), kmh = v => v*3.6;
+  const warns = [];
+  let html = '';
+  html += kpi('Finesse max', fmt(d.LDmax, 1), '', `CL* = ${fmt(d.CLmd, 3)}`);
+  html += kpi('V finesse max', fmt(kmh(r.Vmd), 0), 'km/h', `à ${fmt(p.h, 0)} m`);
+  html += kpi('Allongement', fmt(d.AR, 2), '', `e = ${fmt(d.e, 3)} · k = ${fmt(d.k, 4)}`);
+  html += kpi('V décrochage (sol)', fmt(kmh(r.Vs0), 0), 'km/h', `${fmt(kmh(r.Vsh), 0)} km/h vraie à ${fmt(p.h, 0)} m`);
+  html += kpi('Taux de chute min', fmt(r.sink0.w, 2), 'm/s', `à ${fmt(kmh(r.sink0.V), 0)} km/h (sol)`);
+  if (eng){
+    const vm = r.climbh.Vmax;
+    html += kpi('V max à ' + fmt(p.h, 0) + ' m', vm ? fmt(kmh(vm), 0) : '—', 'km/h', vm ? `Mach ${fmt(vm/at.a, 2)}${r.climbh.capped ? ' (limite Mach)' : ''}` : 'vol en palier impossible');
+    html += kpi('Montée max (sol)', fmt(r.climb0.roc, 2), 'm/s', `${fmt(r.climb0.roc*196.85, 0)} ft/min à ${fmt(kmh(r.climb0.V), 0)} km/h`);
+    html += kpi('Plafond pratique', fmt(r.ceil, 0), 'm', r.ceil >= 20000 ? '≥ 20 000 m' : `${fmt(r.ceil*3.2808, 0)} ft`);
+  }
+  if (r.cr.ok){
+    html += kpi('Distance franchissable', fmt(r.cr.range/1000, 0), 'km', `${fmt(r.cr.range/1852, 0)} NM · finesse moy. ${fmt(r.cr.LD, 1)}`);
+    html += kpi('Vitesse de croisière', fmt(kmh(r.cr.V0), 0), 'km/h', `CL = ${fmt(r.cr.CL0, 3)}${r.cr.mach ? ' · limitée par MMO' : ''}`);
+  } else if (eng || p.fuel > 0) warns.push('Croisière (distance) impossible : ' + r.cr.why + '.');
+  if (r.en.ok) html += kpi('Endurance', fmt(r.en.endurance/3600, 2), 'h', `à ${fmt(kmh(r.en.V0), 0)} km/h`);
+  else if (eng && p.fuel > 0 && r.cr.ok) warns.push('Endurance : ' + r.en.why + '.');
+  if (!eng) warns.push('Pas de propulsion : seules les performances de vol plané sont évaluées (finesse, taux de chute).');
+  if (p.propType === 'jet' && p.vAuto && r.cr.ok && r.cr.mach) warns.push('La vitesse de distance optimale dépasse la MMO : la croisière est plafonnée à Mach ' + fmt(p.mmo, 2) + '. Monter plus haut ou réduire la surface rapprocherait le CL optimal.');
+  $('kpis').innerHTML = html;
+  $('warn').innerHTML = warns.join('<br>'); $('warn').classList.toggle('on', warns.length > 0);
+  drawAnalysisCharts(r);
+  renderSensitivity();
+}
+
+function drawAnalysisCharts(r){
+  const { p, d, at } = r, eng = hasEngine(p);
+  const C = ['--c1', '--c2', '--c3', '--c4', '--c5'].map(css);
+  // Polaire
+  const pol = [];
+  for (let i = 0; i <= 80; i++){ const CL = p.CLmax*i/80; pol.push([p.CD0 + d.k*CL*CL, CL]); }
+  const CDmd = 2*p.CD0, tang = [[0, 0], [CDmd*1.9, d.CLmd*1.9]];
+  lineChart($('chPolar'), {
+    series: [{ name:'CL(CD)', color:C[0], pts:pol }, { name:'Tangente (L/D)max', color:C[3], pts:tang, dash:[5, 4], width:1.5, noHover:true }],
+    markers: [{ x:CDmd, y:d.CLmd, color:C[3], label:`L/D max = ${fmt(d.LDmax, 1)}` }],
+    xmin:0, xmax: (p.CD0 + d.k*p.CLmax*p.CLmax)*1.05, ymin:0, ymax:p.CLmax*1.08,
+    xlabel:'CD', ylabel:'CL', xname:'CD', yunit:''
+  });
+  // Traînée & puissance
+  const Vs = r.Vsh, Vu = Math.min(vCap(p, at)*1.05, 15*Vs, eng && r.climbh.Vmax ? r.climbh.Vmax*1.3 : 3.5*Vs);
+  const big = p.m*g0/d.LDmax > 5000, du = big ? 1000 : 1, dl = big ? 'kN' : 'N';
+  const s0 = [], si = [], st = [], sa = [], pr = [], pa = [];
+  for (let i = 0; i <= 120; i++){
+    const V = Vs*0.95 + (Vu - Vs*0.95)*i/120, dr = drag(p, d, at.rho, V, p.m), x = V*3.6;
+    s0.push([x, dr.D0/du]); si.push([x, dr.Di/du]); st.push([x, dr.D/du]); pr.push([x, dr.P/1000]);
+    if (eng){ const av = avail(p, at, V); sa.push([x, av.T/du]); pa.push([x, av.P/1000]); }
+  }
+  const Dmax = Math.max(...st.map(q => q[1])), Tmax = sa.length ? Math.max(...sa.map(q => q[1])) : 0;
+  const mk = [{ x:r.Vmd*3.6, y:p.m*g0/d.LDmax/du, color:C[3], label:'Traînée min' }];
+  if (eng && r.climbh.Vmax){ const dv = drag(p, d, at.rho, r.climbh.Vmax, p.m); mk.push({ x:r.climbh.Vmax*3.6, y:dv.D/du, color:C[4], label:'V max', align:'right' }); }
+  if (r.cr.ok){ const dv = drag(p, d, at.rho, r.cr.V0, p.m); mk.push({ x:r.cr.V0*3.6, y:dv.D/du, color:C[0], label:'Croisière' }); }
+  lineChart($('chDrag'), {
+    series: [{ name:'Totale', color:C[0], pts:st }, { name:'Parasite', color:C[2], pts:s0, dash:[6, 3] }, { name:'Induite', color:C[1], pts:si, dash:[2, 3] }]
+      .concat(eng ? [{ name:'Disponible', color:C[4], pts:sa }] : []),
+    markers: mk, ymin:0, ymax: p.propType === 'jet' ? Math.max(Dmax, Tmax)*1.08 : Dmax*1.1,
+    xlabel:'Vitesse vraie (km/h)', ylabel:`Force (${dl})`, xname:'V', xunit:'km/h', yunit:dl
+  });
+  const sk = minSink(p, d, at.rho, p.m);
+  const mkp = [{ x:sk.V*3.6, y:sk.w*p.m*g0/1000, color:C[3], label:'Puissance min' }];
+  if (eng && r.climbh.Vmax){ const dv = drag(p, d, at.rho, r.climbh.Vmax, p.m); mkp.push({ x:r.climbh.Vmax*3.6, y:dv.P/1000, color:C[4], label:'V max', align:'right' }); }
+  if (eng && isFinite(r.climbh.V) && r.climbh.roc > 0){ const dv = drag(p, d, at.rho, r.climbh.V, p.m); mkp.push({ x:r.climbh.V*3.6, y:dv.P/1000, color:C[2], label:'Montée max' }); }
+  const Pmax = Math.max(...pr.map(q => q[1]), ...(pa.length ? pa.map(q => q[1]) : [0]));
+  lineChart($('chPower'), {
+    series: [{ name:'Requise', color:C[0], pts:pr }].concat(eng ? [{ name:'Disponible', color:C[4], pts:pa }] : []),
+    markers: mkp, ymin:0, ymax:Pmax*1.08,
+    xlabel:'Vitesse vraie (km/h)', ylabel:'Puissance (kW)', xname:'V', xunit:'km/h', yunit:'kW'
+  });
+  // Montée vs altitude
+  if (eng){
+    const hTop = Math.min(20000, Math.max(3000, (r.ceil || 0)*1.25 + 500));
+    const rc = [], vv = [];
+    for (let i = 0; i <= 50; i++){ const h = hTop*i/50, cs = climbScan(p, d, h, p.m); rc.push([h/1000, cs.roc > -50 ? cs.roc : NaN]); }
+    lineChart($('chClimb'), {
+      series: [{ name:'Taux de montée max', color:C[2], pts:rc }],
+      hlines: [{ y:0.508, label:'100 ft/min (plafond pratique)', color:C[1] }],
+      markers: r.ceil > 0 && r.ceil < 20000 ? [{ x:r.ceil/1000, y:0.508, color:C[1], label:`${fmt(r.ceil, 0)} m`, align:'right' }] : [],
+      ymin: Math.min(0, ...rc.filter(q => isFinite(q[1])).map(q => q[1])), xmin:0, xmax:hTop/1000,
+      xlabel:'Altitude (km)', ylabel:'Taux de montée (m/s)', xname:'Altitude', xunit:'km', yunit:'m/s'
+    });
+  } else {
+    // planeur : polaire des vitesses
+    const ps = [];
+    for (let i = 0; i <= 100; i++){ const V = Vs*0.98 + (Vs*3.2 - Vs*0.98)*i/100, dr = drag(p, d, at.rho, V, p.m); ps.push([V*3.6, -dr.P/(p.m*g0)]); }
+    const skh = minSink(p, d, at.rho, p.m);
+    lineChart($('chClimb'), {
+      series: [{ name:'Vitesse verticale', color:C[2], pts:ps }],
+      markers: [{ x:skh.V*3.6, y:-skh.w, color:C[3], label:`chute min ${fmt(skh.w, 2)} m/s` }, { x:r.Vmd*3.6, y:-r.Vmd/d.LDmax, color:C[0], label:`finesse ${fmt(d.LDmax, 1)}` }],
+      xlabel:'Vitesse vraie (km/h)', ylabel:'Vz (m/s)', xname:'V', xunit:'km/h', yunit:'m/s', ymax:0
+    });
+    $('chClimb').previousElementSibling.textContent = 'Polaire des vitesses (vol plané)';
+    return;
+  }
+  $('chClimb').previousElementSibling.textContent = 'Taux de montée max selon l\'altitude';
+}
+
+/* ---------- Sensibilité ---------- */
+function metric(p){
+  if (!validParams(p)) return NaN;
+  const d = derive(p);
+  if (hasEngine(p) && p.fuel > 0){
+    const c = cruise(p, d, p.h, { mode:'range', V: p.vAuto ? null : p.Vc/3.6 });
+    return c.ok ? c.range/1000 : NaN;
+  }
+  return d.LDmax;
+}
+function renderSensitivity(){
+  const cv = $('chTornado'); if (!cv.clientWidth) return;
+  const p = readParams(); if (!validParams(p)) return;
+  const usesRange = hasEngine(p) && p.fuel > 0;
+  const base = metric(p);
+  $('sensNote').textContent = usesRange ? `Indicateur : distance franchissable (référence ${fmt(base, 0)} km)` : `Indicateur : finesse max (référence ${fmt(base, 1)})`;
+  const list = [['m', 'Masse au décollage'], ['S', 'Surface alaire'], ['b', 'Envergure'], ['CD0', 'CD0'], ['CLmax', 'CL max']];
+  if (!p.eAuto) list.push(['e', 'Oswald e']);
+  if (usesRange){
+    list.push(['fuel', 'Carburant'], ['h', 'Altitude de croisière']);
+    if (p.propType === 'prop') list.push(['etap', 'Rendement hélice'], ['bsfc', 'Conso. spécifique']);
+    else list.push(['tsfc', 'TSFC'], ['T', 'Poussée']);
+    if (!p.vAuto) list.push(['Vc', 'Vitesse de croisière']);
+  }
+  const rows = list.map(([k, lab]) => {
+    const up = metric({ ...p, [k]: p[k]*1.1 }), dn = metric({ ...p, [k]: p[k]*0.9 });
+    return { lab, up: (up/base - 1)*100, dn: (dn/base - 1)*100 };
+  }).sort((a, b) => Math.max(Math.abs(b.up) || 0, Math.abs(b.dn) || 0) - Math.max(Math.abs(a.up) || 0, Math.abs(a.dn) || 0));
+  cv._rows = rows; bindHover(cv, drawTornado); drawTornado(cv);
+}
+function drawTornado(cv){
+  const rows = cv._rows; if (!rows) return;
+  cv.style.height = (rows.length*30 + 60) + 'px';
+  const P = prepCanvas(cv); if (!P) return; const { c, W, H } = P;
+  const ink = css('--ink'), muted = css('--muted'), grid = css('--grid'), cUp = css('--c1'), cDn = css('--c2');
+  const L = Math.min(170, W*0.36), R = 50, T = 30, rowH = 30, pw = W - L - R;
+  const mx = Math.max(1, ...rows.flatMap(r => [Math.abs(r.up) || 0, Math.abs(r.dn) || 0]));
+  const step = niceStep(mx, 3), lim = Math.ceil(mx/step)*step;
+  const X = v => L + pw/2 + v/lim*pw/2;
+  c.strokeStyle = grid; c.fillStyle = muted; c.textAlign = 'center'; c.textBaseline = 'bottom';
+  for (let v = -lim; v <= lim + 1e-9; v += step){ const xx = Math.round(X(v)) + .5; c.beginPath(); c.moveTo(xx, T); c.lineTo(xx, T + rows.length*rowH); c.stroke(); c.fillText((v > 0 ? '+' : '') + tickLabel(v, step) + ' %', xx, T - 6); }
+  rows.forEach((r, i) => {
+    const y = T + i*rowH + 6, h = rowH - 12;
+    c.fillStyle = ink; c.textAlign = 'right'; c.textBaseline = 'middle'; c.fillText(r.lab, L - 10, y + h/2);
+    [[r.up, cUp], [r.dn, cDn]].forEach(([v, col]) => {
+      if (!isFinite(v)) return;
+      c.fillStyle = col; const x0 = X(0), x1 = X(v); c.fillRect(Math.min(x0, x1), y, Math.abs(x1 - x0), h);
+    });
+    c.fillStyle = muted; c.textAlign = 'left';
+    const right = Math.max(r.up || 0, r.dn || 0);
+    c.fillText(isFinite(r.up) && isFinite(r.dn) ? '' : 'infaisable', X(Math.max(0, right)) + 6, y + h/2);
+  });
+  c.strokeStyle = muted; c.beginPath(); c.moveTo(X(0) + .5, T - 2); c.lineTo(X(0) + .5, T + rows.length*rowH); c.stroke();
+  c.textBaseline = 'middle'; c.textAlign = 'left';
+  const ly = H - 14; c.fillStyle = cUp; c.fillRect(L, ly - 5, 10, 10); c.fillStyle = ink; c.fillText('paramètre +10 %', L + 15, ly);
+  c.fillStyle = cDn; c.fillRect(L + 130, ly - 5, 10, 10); c.fillStyle = ink; c.fillText('paramètre −10 %', L + 145, ly);
+  if (cv._hy != null && cv._hx != null){
+    const i = Math.floor((cv._hy - T)/rowH);
+    if (i >= 0 && i < rows.length){
+      const r = rows[i];
+      tooltip(c, W, H, cv._hx, cv._hy, [{ t: r.lab }, { t: `+10 % → ${isFinite(r.up) ? (r.up >= 0 ? '+' : '') + fmt(r.up, 2) + ' %' : 'infaisable'}`, color:cUp }, { t: `−10 % → ${isFinite(r.dn) ? (r.dn >= 0 ? '+' : '') + fmt(r.dn, 2) + ' %' : 'infaisable'}`, color:cDn }]);
+    }
+  }
+}
+
+/* ---------- Optimisation ---------- */
+const OBJ = {
+  range:     { label:'Distance franchissable', unit:'km', dec:0, max:true },
+  endurance: { label:'Endurance', unit:'h', dec:2, max:true },
+  ld:        { label:'Finesse max', unit:'', dec:2, max:true },
+  sink:      { label:'Taux de chute min', unit:'m/s', dec:3, max:false }
+};
+function wingMassRaymer(S, AR, m, o){
+  const Sft = S*10.7639, W = m*2.20462, Wfw = Math.max(1, o.fuel*2.20462);
+  const lb = 0.036*Math.pow(Sft, 0.758)*Math.pow(Wfw, 0.0035)*Math.pow(AR, 0.6)*Math.pow(50, 0.006)*Math.pow(0.6, 0.04)*Math.pow(100*o.tc, -0.3)*Math.pow(o.Nz*W, 0.49);
+  return lb/2.20462;
+}
+function readOpt(){
+  const o = {}; ['bmin','bmax','Smin','Smax','hmin','hmax','VsMax','ROCmin','ARmax','Nz','tc','Cf'].forEach(k => o[k] = parseFloat($(k).value));
+  o.obj = $('optObj').value; o.hOpt = $('hOpt').checked; o.massModel = $('massModel').checked; o.dragModel = $('dragModel').checked;
+  return o;
+}
+function initOptBounds(){
+  const p = readParams(); if (!validParams(p)) return;
+  const d = derive(p), Vs0 = vStall(p, 1.225, p.m)*3.6, roc = climbScan(p, d, 0, p.m).roc;
+  const r1 = v => Math.round(v*10)/10;
+  $('bmin').value = r1(p.b*0.7); $('bmax').value = r1(p.b*1.5);
+  $('Smin').value = r1(p.S*0.6); $('Smax').value = r1(p.S*1.4);
+  $('hmin').value = p.propType === 'jet' ? 6000 : 0; $('hmax').value = p.propType === 'jet' ? 13000 : 6000;
+  $('VsMax').value = Math.ceil(Vs0*1.03);
+  $('ROCmin').value = hasEngine(p) && roc > 0 ? r1(roc*0.8) : 0;
+  $('ARmax').value = Math.ceil(Math.max(d.AR*1.8, 12));
+  $('Nz').value = p.propType === 'jet' ? 3.75 : 5.7; $('tc').value = p.propType === 'jet' ? 0.11 : 0.13; $('Cf').value = p.propType === 'jet' ? 0.003 : 0.0055;
+  if (!hasEngine(p) || p.fuel <= 0){ if (['range','endurance'].includes($('optObj').value)) $('optObj').value = 'ld'; }
+}
+function makeEvaluator(p, o){
+  const d0 = derive(p);
+  // la part aile ne peut dépasser 90 % du CD0 de référence, pour que la base soit reproduite exactement
+  const wingPart = o.dragModel ? Math.min(2.05*o.Cf, 0.9*p.CD0) : 0;
+  const fRest = o.dragModel ? (p.CD0 - wingPart)*p.S : 0;
+  const mw0 = o.massModel ? wingMassRaymer(p.S, d0.AR, p.m, { ...o, fuel:p.fuel }) : 0;
+  const mOther = p.m - mw0;
+  const powered = hasEngine(p) && p.fuel > 0;
+  const mode = o.obj;
+  return function(b, S, hFixed){
+    const AR = b*b/S;
+    const CD0 = o.dragModel ? fRest/S + wingPart : p.CD0;
+    let m = p.m;
+    if (o.massModel){ for (let i = 0; i < 8; i++) m = mOther + wingMassRaymer(S, AR, m, { ...o, fuel:p.fuel }); }
+    const q = { ...p, b, S, CD0, m, vAuto:true };
+    const d = derive(q);
+    let viol = 0;
+    const Vs0 = vStall(q, 1.225, m)*3.6;
+    if (o.VsMax > 0) viol += Math.max(0, Vs0 - o.VsMax)/o.VsMax;
+    if (o.ARmax > 0) viol += Math.max(0, AR - o.ARmax)/o.ARmax;
+    let roc0 = NaN;
+    if (hasEngine(q)){ roc0 = climbScan(q, d, 0, m).roc; if (o.ROCmin > 0) viol += Math.max(0, o.ROCmin - roc0)/o.ROCmin; }
+    let val = NaN, h = hFixed ?? p.h, cr = null;
+    if (mode === 'ld') val = d.LDmax;
+    else if (mode === 'sink') val = minSink(q, d, 1.225, m).w;
+    else if (powered){
+      const f = hh => { const c = cruise(q, d, hh, { mode }); return c.ok ? (mode === 'range' ? c.range/1000 : c.endurance/3600) : -Infinity; };
+      if (o.hOpt && hFixed == null){
+        const n = 10, hs = []; for (let i = 0; i <= n; i++) hs.push(o.hmin + (o.hmax - o.hmin)*i/n);
+        const vs = hs.map(f); let ib = 0; vs.forEach((v, i) => { if (v > vs[ib]) ib = i; });
+        if (vs[ib] > -Infinity){
+          let a = hs[Math.max(0, ib - 1)], bb = hs[Math.min(n, ib + 1)];
+          const gr = (Math.sqrt(5) - 1)/2;
+          let x1 = bb - gr*(bb - a), x2 = a + gr*(bb - a), f1 = f(x1), f2 = f(x2);
+          for (let i = 0; i < 16; i++){ if (f1 > f2){ bb = x2; x2 = x1; f2 = f1; x1 = bb - gr*(bb - a); f1 = f(x1); } else { a = x1; x1 = x2; f1 = f2; x2 = a + gr*(bb - a); f2 = f(x2); } }
+          const cands = [[hs[ib], vs[ib]], [x1, f1], [x2, f2]].sort((u, v) => v[1] - u[1]);
+          h = cands[0][0]; val = cands[0][1];
+        } else val = -Infinity;
+      } else val = f(h);
+      if (val === -Infinity){ viol += 1; val = NaN; }
+      else cr = cruise(q, d, h, { mode });
+    }
+    const score = OBJ[mode].max ? val : -val;
+    return { b, S, AR, m, CD0, e:d.e, LD:d.LDmax, Vs0, roc0, h, val, score, viol, feasible: viol < 1e-9 && isFinite(val), cr };
+  };
+}
+function nelderMead(f, x0, step, iters){
+  const n = x0.length;
+  let P = [x0.slice()]; for (let i = 0; i < n; i++){ const x = x0.slice(); x[i] += step[i]; P.push(x); }
+  let F = P.map(f);
+  for (let it = 0; it < iters; it++){
+    const idx = F.map((v, i) => i).sort((a, b) => F[a] - F[b]); P = idx.map(i => P[i]); F = idx.map(i => F[i]);
+    const c = new Array(n).fill(0); for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) c[j] += P[i][j]/n;
+    const w = P[n], lin = t => c.map((cj, j) => cj + t*(cj - w[j]));
+    const xr = lin(1), fr = f(xr);
+    if (fr < F[0]){ const xe = lin(2), fe = f(xe); if (fe < fr){ P[n] = xe; F[n] = fe; } else { P[n] = xr; F[n] = fr; } }
+    else if (fr < F[n - 1]){ P[n] = xr; F[n] = fr; }
+    else {
+      const xc = lin(fr < F[n] ? 0.5 : -0.5), fc = f(xc);
+      if (fc < Math.min(fr, F[n])){ P[n] = xc; F[n] = fc; }
+      else { for (let i = 1; i <= n; i++){ P[i] = P[i].map((v, j) => P[0][j] + 0.5*(v - P[0][j])); F[i] = f(P[i]); } }
+    }
+  }
+  const ib = F.indexOf(Math.min(...F)); return { x: P[ib], f: F[ib] };
+}
+let heat = null, optBest = null;
+function runOptimization(){
+  const p = readParams(), o = readOpt();
+  if (!validParams(p)){ $('optStatus').textContent = 'Paramètres du modèle invalides.'; return; }
+  if (!(o.bmax > o.bmin && o.Smax > o.Smin && o.bmin > 0 && o.Smin > 0)){ $('optStatus').textContent = 'Bornes invalides.'; return; }
+  if (['range','endurance'].includes(o.obj) && !(hasEngine(p) && p.fuel > 0)){ $('optStatus').textContent = 'Cet objectif nécessite une propulsion et du carburant.'; return; }
+  $('optStatus').textContent = 'Calcul en cours…'; $('runOpt').disabled = true;
+  setTimeout(() => {
+    const t0 = performance.now();
+    const ev = makeEvaluator(p, o);
+    const N = 34, grid = [];
+    let best = null;
+    for (let j = 0; j < N; j++){ const row = []; for (let i = 0; i < N; i++){
+      const b = o.bmin + (o.bmax - o.bmin)*i/(N - 1), S = o.Smin + (o.Smax - o.Smin)*j/(N - 1);
+      const r = ev(b, S); row.push(r);
+      if (r.feasible && (!best || r.score > best.score)) best = r;
+    } grid.push(row); }
+    const base = ev(p.b, p.S, o.hOpt ? p.h : undefined);
+    let opt = best;
+    if (best){
+      const scale = Math.abs(best.score) + 1e-9;
+      const toX = r => [(r.b - o.bmin)/(o.bmax - o.bmin), (r.S - o.Smin)/(o.Smax - o.Smin)];
+      const clamp = v => Math.min(1, Math.max(0, v));
+      const cache = new Map();
+      const fobj = x => {
+        const b = o.bmin + clamp(x[0])*(o.bmax - o.bmin), S = o.Smin + clamp(x[1])*(o.Smax - o.Smin);
+        const r = ev(b, S); const key = b + ',' + S; cache.set(key, r);
+        const out = (Math.max(0, x[0] - 1) + Math.max(0, -x[0]) + Math.max(0, x[1] - 1) + Math.max(0, -x[1]));
+        if (!isFinite(r.score)) return 1e6;
+        return -r.score/scale + 50*(r.viol + out);
+      };
+      const nm = nelderMead(fobj, toX(best), [0.5/(N - 1), 0.5/(N - 1)], 90);
+      const b = o.bmin + clamp(nm.x[0])*(o.bmax - o.bmin), S = o.Smin + clamp(nm.x[1])*(o.Smax - o.Smin);
+      const r = ev(b, S);
+      if (r.feasible && r.score >= best.score) opt = r;
+    }
+    heat = { grid, N, o, base, opt, p };
+    optBest = opt;
+    drawHeatmap($('chHeat'));
+    renderOptResult(base, opt, o);
+    $('optStatus').textContent = opt ? `Terminé en ${fmt((performance.now() - t0)/1000, 2)} s.` : 'Aucune configuration ne respecte les contraintes : relâchez-les ou élargissez les bornes.';
+    $('runOpt').disabled = false; $('applyOpt').disabled = !opt;
+  }, 30);
+}
+function renderOptResult(base, opt, o){
+  if (!opt){ $('optResult').innerHTML = '<p class="note">Pas de solution faisable.</p>'; return; }
+  const ob = OBJ[o.obj];
+  const rows = [
+    [ob.label + (ob.unit ? ` (${ob.unit})` : ''), base.val, opt.val, ob.dec, ob.max],
+    ['Envergure (m)', base.b, opt.b, 2], ['Surface (m²)', base.S, opt.S, 2], ['Allongement', base.AR, opt.AR, 2],
+    ['Masse totale (kg)', base.m, opt.m, 0, false], ['CD0', base.CD0, opt.CD0, 4, false], ['Oswald e', base.e, opt.e, 3],
+    ['Finesse max', base.LD, opt.LD, 2, true], ['V décrochage sol (km/h)', base.Vs0, opt.Vs0, 1, false]
+  ];
+  if (isFinite(base.roc0)) rows.push(['Montée max sol (m/s)', base.roc0, opt.roc0, 2, true]);
+  if (['range','endurance'].includes(o.obj)){
+    rows.push(['Altitude de croisière (m)', base.h, opt.h, 0]);
+    if (opt.cr) rows.push(['Vitesse de croisière (km/h)', base.cr ? base.cr.V0*3.6 : NaN, opt.cr.V0*3.6, 0]);
+  }
+  let h = '<table><tr><th>Grandeur</th><th>Actuel</th><th>Optimum</th><th>Écart</th></tr>';
+  rows.forEach(([lab, a, b, dec, better], i) => {
+    const dlt = isFinite(a) && isFinite(b) && a !== 0 ? (b/a - 1)*100 : NaN;
+    let cls = '';
+    if (better !== undefined && isFinite(dlt) && Math.abs(dlt) > 0.05) cls = (dlt > 0) === better ? 'pos' : 'neg';
+    h += `<tr${i === 0 ? ' style="font-weight:650"' : ''}><td>${lab}</td><td>${fmt(a, dec)}</td><td>${fmt(b, dec)}</td><td class="${cls}">${isFinite(dlt) ? (dlt >= 0 ? '+' : '') + fmt(dlt, 1) + ' %' : '—'}</td></tr>`;
+  });
+  h += '</table>';
+  if (!base.feasible) h += '<p class="note" style="color:var(--warn)">La configuration actuelle viole au moins une contrainte.</p>';
+  $('optResult').innerHTML = h;
+}
+const VIRIDIS = [[68, 1, 84], [59, 82, 139], [33, 145, 140], [94, 201, 98], [253, 231, 37]];
+function ramp(t){
+  t = Math.min(1, Math.max(0, t)); const s = t*(VIRIDIS.length - 1), i = Math.min(VIRIDIS.length - 2, Math.floor(s)), f = s - i;
+  const a = VIRIDIS[i], b = VIRIDIS[i + 1];
+  return `rgb(${a.map((v, k) => Math.round(v + (b[k] - v)*f)).join(',')})`;
+}
+function drawHeatmap(cv){
+  bindHover(cv, drawHeatmap);
+  const P = prepCanvas(cv); if (!P) return; const { c, W, H } = P;
+  const muted = css('--muted'), ink = css('--ink'), grid = css('--grid'), panel = css('--panel');
+  if (!heat){ c.fillStyle = muted; c.fillText('Aucun calcul pour l\'instant.', 16, 28); return; }
+  const { grid: G, N, o, base, opt } = heat, ob = OBJ[o.obj];
+  const L = 56, R = 78, T = 12, B = 42, pw = W - L - R, ph = H - T - B;
+  const X = b => L + (b - o.bmin)/(o.bmax - o.bmin)*pw, Y = S => T + ph - (S - o.Smin)/(o.Smax - o.Smin)*ph;
+  let vmin = Infinity, vmax = -Infinity;
+  G.flat().forEach(r => { if (isFinite(r.val)){ vmin = Math.min(vmin, r.val); vmax = Math.max(vmax, r.val); } });
+  if (!(vmax > vmin)) vmax = vmin + 1;
+  const cw = pw/(N - 1), ch = ph/(N - 1);
+  G.forEach((row, j) => row.forEach((r, i) => {
+    const x = L + (i - 0.5)*cw, y = T + ph - (j + 0.5)*ch;
+    let t = (r.val - vmin)/(vmax - vmin); if (!ob.max) t = 1 - t;
+    c.fillStyle = isFinite(r.val) ? ramp(t) : css('--infeasible');
+    c.fillRect(Math.max(L, x), Math.max(T, y), cw + 1, ch + 1);
+    if (!r.feasible && isFinite(r.val)){ c.fillStyle = css('--infeasible'); c.fillRect(Math.max(L, x), Math.max(T, y), cw + 1, ch + 1); }
+  }));
+  c.clearRect(0, 0, L, H); c.clearRect(L + pw, 0, W, H); c.clearRect(0, 0, W, T); c.clearRect(0, T + ph, W, H);
+  // iso-allongement
+  c.save(); c.beginPath(); c.rect(L, T, pw, ph); c.clip();
+  const arMin = o.bmin*o.bmin/o.Smax, arMax = o.bmax*o.bmax/o.Smin, arStep = niceStep(arMax - arMin, 5);
+  c.strokeStyle = 'rgba(255,255,255,.55)'; c.setLineDash([3, 4]); c.lineWidth = 1; c.font = '11px system-ui,sans-serif';
+  for (let A = Math.ceil(arMin/arStep)*arStep; A <= arMax; A += arStep){
+    c.beginPath(); let started = false, lx = null, ly = null;
+    for (let k = 0; k <= 60; k++){ const b = o.bmin + (o.bmax - o.bmin)*k/60, S = b*b/A; const xx = X(b), yy = Y(S); if (!started){ c.moveTo(xx, yy); started = true; } else c.lineTo(xx, yy); if (yy >= T && yy <= T + ph){ lx = xx; ly = yy; } }
+    c.stroke();
+    if (lx != null){ c.fillStyle = 'rgba(255,255,255,.85)'; c.textAlign = 'right'; c.textBaseline = 'bottom'; c.fillText('AR ' + tickLabel(A, arStep), Math.min(lx, L + pw - 4), Math.max(T + 12, ly - 2)); }
+  }
+  c.setLineDash([]);
+  const star = (x, y, r) => { c.beginPath(); for (let k = 0; k < 10; k++){ const a = -Math.PI/2 + k*Math.PI/5, rr = k%2 ? r*0.45 : r; c.lineTo(x + rr*Math.cos(a), y + rr*Math.sin(a)); } c.closePath(); };
+  c.lineWidth = 2; c.strokeStyle = '#000'; c.fillStyle = '#fff';
+  c.beginPath(); c.arc(X(base.b), Y(base.S), 6, 0, Math.PI*2); c.fill(); c.stroke();
+  if (opt){ star(X(opt.b), Y(opt.S), 10); c.fillStyle = '#fff'; c.fill(); c.stroke(); }
+  c.restore();
+  // axes
+  c.font = '12px system-ui,sans-serif'; c.fillStyle = muted; c.strokeStyle = grid;
+  const xs = niceStep(o.bmax - o.bmin, W < 420 ? 4 : 6), ys = niceStep(o.Smax - o.Smin, 5);
+  c.textAlign = 'center'; c.textBaseline = 'top';
+  for (let v = Math.ceil(o.bmin/xs)*xs; v <= o.bmax + 1e-9; v += xs) c.fillText(tickLabel(v, xs), X(v), T + ph + 6);
+  c.textAlign = 'right'; c.textBaseline = 'middle';
+  for (let v = Math.ceil(o.Smin/ys)*ys; v <= o.Smax + 1e-9; v += ys) c.fillText(tickLabel(v, ys), L - 6, Y(v));
+  c.textAlign = 'center'; c.textBaseline = 'top'; c.fillText('Envergure (m)', L + pw/2, H - 18);
+  c.save(); c.translate(13, T + ph/2); c.rotate(-Math.PI/2); c.textBaseline = 'middle'; c.fillText('Surface alaire (m²)', 0, 0); c.restore();
+  // barre de couleur
+  const bx = L + pw + 16, bw = 12;
+  for (let k = 0; k < ph; k++){ let t = 1 - k/ph; if (!ob.max) t = 1 - t; c.fillStyle = ramp(t); c.fillRect(bx, T + k, bw, 1.5); }
+  c.fillStyle = muted; c.textAlign = 'left'; c.textBaseline = 'middle';
+  const cs = niceStep(vmax - vmin, 4);
+  for (let v = Math.ceil(vmin/cs)*cs; v <= vmax + 1e-9; v += cs){ const yy = T + ph - (v - vmin)/(vmax - vmin)*ph; c.fillText(tickLabel(v, cs), bx + bw + 4, yy); }
+  c.fillText(ob.unit, bx, T + ph + 14);
+  // survol
+  if (cv._hx != null && cv._hx >= L && cv._hx <= L + pw && cv._hy >= T && cv._hy <= T + ph){
+    const i = Math.round((cv._hx - L)/cw), j = Math.round((T + ph - cv._hy)/ch);
+    const r = G[Math.min(N - 1, Math.max(0, j))][Math.min(N - 1, Math.max(0, i))];
+    const lines = [{ t:`b = ${fmt(r.b, 2)} m · S = ${fmt(r.S, 2)} m²` }, { t:`AR = ${fmt(r.AR, 2)} · m = ${fmt(r.m, 0)} kg` }, { t:`${ob.label} : ${fmt(r.val, ob.dec)} ${ob.unit}` }];
+    if (['range','endurance'].includes(o.obj) && isFinite(r.val)) lines.push({ t:`Altitude : ${fmt(r.h, 0)} m` });
+    lines.push({ t: r.feasible ? 'Faisable' : 'Contrainte violée' });
+    tooltip(c, W, H, cv._hx, cv._hy, lines);
+  }
+}
+function applyOptimum(){
+  if (!optBest || !heat) return;
+  const o = heat.o, r = optBest;
+  $('b').value = r.b.toFixed(2); $('S').value = r.S.toFixed(2);
+  if (o.massModel) $('m').value = Math.round(r.m);
+  if (o.dragModel) $('CD0').value = r.CD0.toFixed(5);
+  if (!$('eAuto').checked && Math.abs(r.e - parseFloat($('e').value)) > 1e-6) $('e').value = r.e.toFixed(3);
+  if (['range','endurance'].includes(o.obj) && o.hOpt) $('h').value = Math.round(r.h);
+  $('vAuto').checked = true; $('preset').value = 'custom';
+  syncUI(); renderAnalysis();
+  $('applyOpt').disabled = true;
+  $('optStatus').textContent = 'Optimum appliqué au modèle. Relancez l\'optimisation pour repartir de ce point.';
+}
+
+/* ---------- Interface ---------- */
+function loadPreset(key){
+  const P = PRESETS[key]; if (!P) return;
+  NUM.forEach(k => $(k).value = P[k]);
+  $('eAuto').checked = P.eAuto; $('vAuto').checked = P.vAuto; $('propType').value = P.propType;
+  $('optObj').value = P.fuel > 0 && (P.propType === 'jet' ? P.T > 0 : P.P > 0) ? 'range' : 'ld';
+  syncUI(); initOptBounds(); heat = null; optBest = null; $('applyOpt').disabled = true;
+  $('optResult').innerHTML = '<p class="note">Lancez l\'optimisation pour comparer la configuration actuelle à l\'optimum.</p>'; $('optStatus').textContent = '';
+  renderAnalysis(); drawHeatmap($('chHeat'));
+}
+function syncUI(){
+  const jet = $('propType').value === 'jet';
+  document.querySelectorAll('.only-prop').forEach(el => el.style.display = jet ? 'none' : '');
+  document.querySelectorAll('.only-jet').forEach(el => el.style.display = jet ? '' : 'none');
+  $('e').disabled = $('eAuto').checked; $('Vc').disabled = $('vAuto').checked;
+  ['hmin','hmax'].forEach(k => $(k).disabled = !$('hOpt').checked);
+  $('Nz').disabled = $('tc').disabled = !$('massModel').checked; $('Cf').disabled = !$('dragModel').checked;
+}
+let tmr = null;
+document.querySelector('aside').addEventListener('input', e => {
+  if (e.target.id === 'preset') return;
+  $('preset').value = 'custom'; syncUI();
+  clearTimeout(tmr); tmr = setTimeout(renderAnalysis, 60);
+});
+$('preset').addEventListener('change', e => loadPreset(e.target.value));
+['hOpt','massModel','dragModel'].forEach(id => $(id).addEventListener('change', syncUI));
+$('runOpt').addEventListener('click', runOptimization);
+$('initOpt').addEventListener('click', initOptBounds);
+$('applyOpt').addEventListener('click', applyOptimum);
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
+  document.querySelectorAll('.pane').forEach(x => x.classList.toggle('on', x.id === 'pane-' + t.dataset.tab));
+  redrawAll(); if (t.dataset.tab === 'sens') renderSensitivity();
+}));
+function redrawAll(){ canvases.forEach(cv => cv._draw && cv._draw(cv)); }
+let rz = null; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(redrawAll, 80); });
+const themes = ['auto', 'light', 'dark'];
+let themeIdx = 0;
+try { const s = localStorage.getItem('aeroTheme'); if (themes.includes(s)) themeIdx = themes.indexOf(s); } catch (e) {}
+function applyTheme(){
+  const t = themes[themeIdx];
+  if (t === 'auto') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+  $('themeBtn').textContent = 'Thème : ' + { auto:'auto', light:'clair', dark:'sombre' }[t];
+  try { localStorage.setItem('aeroTheme', t); } catch (e) {}
+  redrawAll();
+}
+$('themeBtn').addEventListener('click', () => { themeIdx = (themeIdx + 1)%3; applyTheme(); });
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', redrawAll);
+applyTheme();
+loadPreset('c172');
+</script>
+</body>
+</html>
