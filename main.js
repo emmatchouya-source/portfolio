@@ -127,11 +127,11 @@ document.querySelectorAll('.case').forEach(c => c.addEventListener('pointermove'
     for (let k = 0; k < 20; k++){
       const x = anywhere ? Math.random()*W : -10 - Math.random()*30, y = Math.random()*H;
       const s = fromScreen(x, y);
-      if (!inside(s)){ p.s = s; p.life = 140 + Math.random()*260; p.px = null; return; }
+      if (!inside(s)){ p.s = s; p.life = 160 + Math.random()*260; p.trail = []; return; }
     }
   }
   function seed(){
-    const n = Math.round(Math.min(900, W*H / 300));
+    const n = Math.round(Math.min(520, W*H / 520));
     parts = Array.from({ length:n }, () => { const p = {}; spawn(p, true); return p; });
   }
   function resize(){
@@ -147,23 +147,34 @@ document.querySelectorAll('.case').forEach(c => c.addEventListener('pointermove'
     const w = dW(s), dz = sub([1, 0], div([1, 0], mul(s, s))), j = Math.max(abs2(dz), 0.04);
     return { v:[w[0]/j, -w[1]/j], speed: Math.sqrt(abs2(w) / j) };   // dζ/dt = conj(dW/dζ)/|dz/dζ|²
   }
+  // Chaque particule garde ses dernières positions ; tout est redessiné à chaque image
+  // (un effacement progressif du canvas laisse des traces résiduelles qui s'accumulent).
+  const TRAIL = 34;
   function step(dt){
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.fillStyle = 'rgba(0,0,0,0.035)'; ctx.fillRect(0, 0, W, H);
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.lineWidth = 1.4; ctx.lineCap = 'round';
     for (const p of parts){
       const k1 = velocity(p.s), mid = [p.s[0] + k1.v[0]*dt/2, p.s[1] + k1.v[1]*dt/2], k2 = velocity(mid);
       p.s = [p.s[0] + k2.v[0]*dt, p.s[1] + k2.v[1]*dt];
-      p.life--;
+      p.life--; p.fast = k2.speed > 1.12;
       const [x, y] = toScreen(toZ(p.s));
-      if (p.life < 0 || x > W + 20 || y < -30 || y > H + 30 || inside(p.s)){ spawn(p, false); continue; }
-      if (p.px != null){
-        ctx.strokeStyle = k2.speed > 1.12 ? colors.a : colors.b;
-        ctx.globalAlpha = Math.min(1, 0.35 + (k2.speed - 0.6)*0.9);
-        ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(x, y); ctx.stroke();
+      if (p.life < 0 || x > W + 40 || y < -40 || y > H + 40 || inside(p.s)){ spawn(p, false); continue; }
+      p.trail.push(x, y);
+      if (p.trail.length > TRAIL*2) p.trail.splice(0, 2);
+    }
+    clear();
+    ctx.lineWidth = 1.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // deux moitiés de traînée (ancienne pâle, récente marquée) × deux couleurs (vitesse)
+    for (const [fast, color] of [[false, colors.b], [true, colors.a]]){
+      for (const [from, alpha] of [[0, 0.22], [0.5, 0.75]]){
+        ctx.beginPath();
+        for (const p of parts){
+          const t = p.trail, n = t.length / 2;
+          if (p.fast !== fast || n < 3) continue;
+          const i0 = Math.floor((n - 1)*from), i1 = from ? n - 1 : Math.floor((n - 1)*0.5);
+          ctx.moveTo(t[i0*2], t[i0*2 + 1]);
+          for (let i = i0 + 1; i <= i1; i++) ctx.lineTo(t[i*2], t[i*2 + 1]);
+        }
+        ctx.strokeStyle = color; ctx.globalAlpha = alpha; ctx.stroke();
       }
-      p.px = x; p.py = y;
     }
     ctx.globalAlpha = 1;
     drawFoil();
@@ -189,9 +200,12 @@ document.querySelectorAll('.case').forEach(c => c.addEventListener('pointermove'
     }
     ctx.globalAlpha = 1; drawFoil();
   }
-  function loop(){
+  let last = 0;
+  function loop(t){
     if (!running) return;
-    if (visible && !document.hidden) step(0.02);
+    // pas de temps lié au temps réel, pour une vitesse identique quel que soit l'écran (60 ou 144 Hz)
+    const dt = last ? Math.min(0.05, (t - last)/1000*1.1) : 0.018; last = t;
+    if (visible && !document.hidden) step(dt);
     requestAnimationFrame(loop);
   }
   $('alpha').addEventListener('input', e => { setAlpha(+e.target.value); if (reduceMotion) staticLines(); });
