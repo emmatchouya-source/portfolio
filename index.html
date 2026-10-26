@@ -4,75 +4,95 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Emmanuel Tchouya — Portfolio</title>
-<meta name="description" content="Portfolio d'Emmanuel Tchouya : projets en ingénierie aérospatiale, aérodynamique et propulsion.">
+<meta name="description" content="Emmanuel Tchouya — ingénierie système, intégration, exigences et essais aéronautiques. Maîtrise en génie aérospatial à l'ÉTS, Montréal.">
 <style>
 :root{
   --bg:#f7f7f5; --panel:#ffffff; --ink:#16181d; --muted:#5d6470; --line:#e3e4e8;
-  --accent:#1f4fd1; --accent-soft:#e8eefc; --todo:#b45309; --todo-bg:#fff4e5;
+  --accent:#1f4fd1; --accent-soft:#e8eefc; --accent2:#c97a00;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0e1014; --panel:#161920; --ink:#e8eaee; --muted:#9ba3b1; --line:#262b35;
-    --accent:#7a9cff; --accent-soft:#1c2540; --todo:#f2b84e; --todo-bg:#2b2213;
+    --accent:#7a9cff; --accent-soft:#1c2540; --accent2:#f2b84e;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0e1014; --panel:#161920; --ink:#e8eaee; --muted:#9ba3b1; --line:#262b35;
-  --accent:#7a9cff; --accent-soft:#1c2540; --todo:#f2b84e; --todo-bg:#2b2213;
+  --accent:#7a9cff; --accent-soft:#1c2540; --accent2:#f2b84e;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
-.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 nav{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 nav .wrap{display:flex;align-items:center;justify-content:space-between;height:56px;gap:16px}
 nav .brand{font-weight:700;color:var(--ink)}
 nav ul{display:flex;gap:20px;list-style:none;margin:0;padding:0;font-size:14px}
 nav ul a{color:var(--muted)}
 nav ul a:hover{color:var(--ink);text-decoration:none}
-.hero{padding:88px 0 64px}
+.hero{padding:84px 0 60px}
 .hero .kicker{color:var(--accent);font-weight:600;font-size:14px;letter-spacing:.4px;text-transform:uppercase}
 .hero h1{font-size:clamp(34px,6vw,56px);line-height:1.08;margin:10px 0 18px;letter-spacing:-.5px}
-.hero p{font-size:18px;color:var(--muted);max-width:640px;margin:0 0 28px}
+.hero p{font-size:18px;color:var(--muted);max-width:680px;margin:0 0 28px}
 .btns{display:flex;gap:12px;flex-wrap:wrap}
 .btn{display:inline-block;padding:10px 18px;border-radius:8px;border:1px solid var(--line);color:var(--ink);background:var(--panel);font-weight:600;font-size:15px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn:hover{text-decoration:none;filter:brightness(1.07)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:48px}
+.stat{border-left:3px solid var(--accent);padding:2px 0 2px 14px}
+.stat b{display:block;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{color:var(--muted);font-size:14px}
 section{padding:56px 0;border-top:1px solid var(--line)}
 section h2{font-size:26px;margin:0 0 24px;letter-spacing:-.2px}
 .about{display:grid;grid-template-columns:1.4fr 1fr;gap:32px}
-.facts{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;font-size:15px}
+.about p{margin:0 0 14px}
+.facts{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;font-size:15px;margin:0}
 .facts dt{color:var(--muted);font-size:13px}
 .facts dd{margin:0 0 12px}
-.skills{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.facts dd:last-child{margin-bottom:0}
+.skills{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
 .skill{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
 .skill h3{margin:0 0 10px;font-size:16px}
 .tags{display:flex;flex-wrap:wrap;gap:6px}
 .tag{font-size:13px;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--accent)}
-.projects{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.projects{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:20px}
 .project{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
-.project .thumb{aspect-ratio:16/9;background:var(--accent-soft);display:flex;align-items:center;justify-content:center}
+.project .thumb{aspect-ratio:16/8;background:var(--accent-soft);display:flex;align-items:center;justify-content:center}
 .project .thumb svg{width:100%;height:100%}
 .project .body{padding:18px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1}
+.project .ctx{color:var(--muted);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
 .project h3{margin:0;font-size:18px}
 .project p{margin:0;color:var(--muted);font-size:15px}
-.project .links{margin-top:auto;display:flex;gap:16px;font-size:14px;font-weight:600}
+.project .links{margin-top:auto;padding-top:4px;display:flex;gap:16px;font-size:14px;font-weight:600}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.cols h3.col{font-size:14px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 18px}
 .timeline{list-style:none;margin:0;padding:0;border-left:2px solid var(--line)}
 .timeline li{position:relative;padding:0 0 26px 24px}
+.timeline li:last-child{padding-bottom:0}
 .timeline li::before{content:"";position:absolute;left:-7px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--accent);border:2px solid var(--bg)}
 .timeline .when{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
-.timeline h3{margin:2px 0 4px;font-size:17px}
-.timeline p{margin:0;color:var(--muted);font-size:15px}
+.timeline h4{margin:2px 0 2px;font-size:16px}
+.timeline .where{font-size:14px;color:var(--muted);margin-bottom:6px}
+.timeline ul{margin:0;padding-left:18px;color:var(--muted);font-size:14.5px}
+.timeline ul li{padding:0 0 4px;border:0}
+.timeline ul li::before{display:none}
 .contact{display:flex;gap:12px;flex-wrap:wrap}
 footer{padding:28px 0 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
 footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.todo{background:var(--todo-bg);color:var(--todo);border:1px dashed var(--todo);border-radius:4px;padding:0 4px}
 #themeBtn{font:inherit;font-size:13px;padding:5px 10px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+svg .ln{stroke:var(--line)}
+svg .ac{stroke:var(--accent)}
+svg .ac2{stroke:var(--accent2)}
+svg .fa{fill:var(--accent)}
+svg .fa2{fill:var(--accent2)}
+svg .fp{fill:var(--panel)}
+svg .tx{fill:var(--muted);font:11px system-ui,sans-serif}
 @media (max-width:760px){
   nav ul{display:none}
-  .about{grid-template-columns:1fr}
+  .about,.cols{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .hero{padding:56px 0 40px}
 }
 </style>
@@ -83,8 +103,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
     <a class="brand" href="#">Emmanuel Tchouya</a>
     <ul>
       <li><a href="#apropos">À propos</a></li>
-      <li><a href="#competences">Compétences</a></li>
       <li><a href="#projets">Projets</a></li>
+      <li><a href="#competences">Compétences</a></li>
       <li><a href="#parcours">Parcours</a></li>
       <li><a href="#contact">Contact</a></li>
     </ul>
@@ -94,12 +114,18 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 
 <header class="hero">
   <div class="wrap">
-    <div class="kicker">Ingénierie aérospatiale</div>
+    <div class="kicker">Ingénierie système · Essais aéronautiques</div>
     <h1>Emmanuel Tchouya</h1>
-    <p><span class="todo">Une phrase d'accroche : votre spécialité et ce que vous cherchez (stage, emploi, collaboration).</span></p>
+    <p>Intégration, exigences et essais. En fin de maîtrise en génie aérospatial à l'ÉTS, après trois ans d'essais sur bancs moteurs et un stage sur le dirigeable cargo LCA60T chez Flying Whales. Disponible pour un poste en ingénierie système ou en essais dès janvier 2027.</p>
     <div class="btns">
       <a class="btn primary" href="#projets">Voir mes projets</a>
       <a class="btn" href="#contact">Me contacter</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><b>1 000+</b><span>exigences tracées</span></div>
+      <div class="stat"><b>8 h → 5 min</b><span>pour comparer deux révisions d'une spécification</span></div>
+      <div class="stat"><b>6</b><span>campagnes d'essais sur bancs moteurs</span></div>
+      <div class="stat"><b>8</b><span>rapports d'essais rédigés ou co-rédigés</span></div>
     </div>
   </div>
 </header>
@@ -109,31 +135,17 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
     <div class="wrap about">
       <div>
         <h2>À propos</h2>
-        <p><span class="todo">Deux ou trois phrases sur votre parcours, vos centres d'intérêt techniques et ce qui vous motive.</span></p>
-        <p><span class="todo">Un paragraphe sur la façon dont vous travaillez ou un résultat dont vous êtes fier.</span></p>
+        <p>Ingénieur en génie mécatronique de formation, je travaille à la jonction entre les exigences et le matériel : écrire ce qu'un système doit faire, préparer l'essai qui le prouve, puis dépouiller les mesures pour conclure.</p>
+        <p>Au Cameroun, au centre de R&amp;D de l'IUGET, j'ai préparé et mené des campagnes d'essais sur bancs moteurs : instrumentation, étalonnage, acquisition et rapports. Chez Flying Whales, j'ai rejoint l'équipe de la gondole du LCA60T, où j'ai tenu la traçabilité des exigences, analysé les essais au sol de la chaîne de propulsion électrique et automatisé la comparaison de spécifications dans 3DEXPERIENCE.</p>
+        <p>J'aime les outils qui font gagner du temps à une équipe. Quand une tâche se répète, je l'automatise, en Python le plus souvent.</p>
       </div>
       <dl class="facts">
-        <dt>Formation</dt><dd>École de technologie supérieure (ÉTS), Montréal</dd>
-        <dt>Domaine</dt><dd><span class="todo">ex. génie mécanique, aérospatial</span></dd>
-        <dt>Langues</dt><dd><span class="todo">Français, anglais…</span></dd>
-        <dt>Localisation</dt><dd><span class="todo">Ville, pays</span></dd>
+        <dt>Formation</dt><dd>Maîtrise en génie aérospatial, ÉTS (fin hiver 2027)<br>Ingénieur en génie mécatronique, ENSPD (2021)</dd>
+        <dt>Recherche</dt><dd>Poste en ingénierie système ou en essais</dd>
+        <dt>Disponibilité</dt><dd>Janvier 2027</dd>
+        <dt>Langues</dt><dd>Français (avancé), anglais (TOEIC 900)</dd>
+        <dt>Localisation</dt><dd>Montréal (Québec)</dd>
       </dl>
-    </div>
-  </section>
-
-  <section id="competences">
-    <div class="wrap">
-      <h2>Compétences</h2>
-      <div class="skills">
-        <div class="skill"><h3>Aérodynamique &amp; performances</h3>
-          <div class="tags"><span class="tag">Polaires</span><span class="tag">Performances avion</span><span class="tag">Optimisation de voilure</span></div></div>
-        <div class="skill"><h3>Propulsion</h3>
-          <div class="tags"><span class="tag todo">à compléter</span></div></div>
-        <div class="skill"><h3>Logiciels de CAO / simulation</h3>
-          <div class="tags"><span class="tag todo">ex. CATIA / 3DEXPERIENCE, ANSYS…</span></div></div>
-        <div class="skill"><h3>Programmation</h3>
-          <div class="tags"><span class="tag">JavaScript</span><span class="tag">HTML / CSS</span><span class="tag todo">Python, MATLAB…</span></div></div>
-      </div>
     </div>
   </section>
 
@@ -141,46 +153,135 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
     <div class="wrap">
       <h2>Projets</h2>
       <div class="projects">
+
         <article class="project">
           <div class="thumb" aria-hidden="true">
-            <svg viewBox="0 0 320 180">
-              <g stroke="currentColor" style="color:var(--line)" stroke-width="1">
-                <line x1="40" y1="150" x2="300" y2="150"/><line x1="40" y1="20" x2="40" y2="150"/>
-                <line x1="40" y1="85" x2="300" y2="85" stroke-dasharray="3 4"/><line x1="170" y1="20" x2="170" y2="150" stroke-dasharray="3 4"/>
+            <svg viewBox="0 0 320 160">
+              <rect x="40" y="22" width="100" height="116" rx="6" class="fp ln" stroke-width="1.5"/>
+              <rect x="180" y="22" width="100" height="116" rx="6" class="fp ln" stroke-width="1.5"/>
+              <g stroke-width="5" stroke-linecap="round">
+                <line x1="54" y1="44" x2="122" y2="44" class="ln"/><line x1="194" y1="44" x2="262" y2="44" class="ln"/>
+                <line x1="54" y1="62" x2="110" y2="62" class="ac2"/><line x1="194" y1="62" x2="250" y2="62" class="ac"/>
+                <line x1="54" y1="80" x2="126" y2="80" class="ln"/><line x1="194" y1="80" x2="266" y2="80" class="ln"/>
+                <line x1="54" y1="98" x2="100" y2="98" class="ln"/><line x1="194" y1="98" x2="240" y2="98" class="ac"/>
+                <line x1="54" y1="116" x2="118" y2="116" class="ac2"/><line x1="194" y1="116" x2="258" y2="116" class="ln"/>
               </g>
-              <path d="M52 150 C 70 70, 120 40, 290 28" fill="none" stroke="var(--accent)" stroke-width="3"/>
-              <line x1="40" y1="150" x2="200" y2="30" stroke="#d68a00" stroke-width="2" stroke-dasharray="6 5"/>
-              <circle cx="112" cy="96" r="6" fill="#d68a00"/>
-              <text x="122" y="112" font-size="12" fill="var(--muted)" font-family="system-ui">(L/D) max</text>
-              <text x="276" y="166" font-size="11" fill="var(--muted)" font-family="system-ui">CD</text>
-              <text x="20" y="26" font-size="11" fill="var(--muted)" font-family="system-ui">CL</text>
+              <path d="M148 80 h24 m-7 -7 l7 7 l-7 7" fill="none" class="ac" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
           <div class="body">
+            <div class="ctx">Flying Whales · 2026</div>
+            <h3>Comparateur de spécifications 3DEXPERIENCE</h3>
+            <p>Outil web et bureau qui compare deux révisions d'une spécification dans 3DEXPERIENCE et liste les exigences ajoutées, supprimées ou modifiées. Une comparaison qui prenait 8 h se fait en moins de 5 min ; l'outil a déjà servi sur 1 260 exigences.</p>
+            <div class="tags"><span class="tag">Python</span><span class="tag">API REST</span><span class="tag">PySide6</span><span class="tag">3DEXPERIENCE</span></div>
+          </div>
+        </article>
+
+        <article class="project">
+          <div class="thumb" aria-hidden="true">
+            <svg viewBox="0 0 320 160">
+              <line x1="40" y1="134" x2="290" y2="134" class="ln" stroke-width="1.5"/><line x1="40" y1="20" x2="40" y2="134" class="ln" stroke-width="1.5"/>
+              <line x1="40" y1="50" x2="290" y2="50" class="ac2" stroke-width="1.5" stroke-dasharray="5 4"/>
+              <text x="246" y="44" class="tx">exigence</text>
+              <path d="M44 128 C 90 120, 120 70, 170 64 S 250 60, 286 58" fill="none" class="ac" stroke-width="3"/>
+              <g class="fa">
+                <circle cx="62" cy="124" r="3"/><circle cx="88" cy="114" r="3"/><circle cx="110" cy="96" r="3"/><circle cx="132" cy="80" r="3"/>
+                <circle cx="158" cy="68" r="3"/><circle cx="184" cy="64" r="3"/><circle cx="212" cy="60" r="3"/><circle cx="240" cy="62" r="3"/><circle cx="266" cy="58" r="3"/>
+              </g>
+              <text x="252" y="150" class="tx">régime</text>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="ctx">Flying Whales · 2026</div>
+            <h3>Essais au sol de la propulsion électrique</h3>
+            <p>Analyse complète du rapport d'essais au sol de la chaîne de propulsion électrique du LCA60T (banc AKIRA, onduleur Brightloop, moteur Evolito) : 38 fichiers de mesures traités en Python, 13 exigences du SRD évaluées, recommandations pour la campagne suivante.</p>
+            <div class="tags"><span class="tag">Python</span><span class="tag">pandas</span><span class="tag">V&amp;V</span><span class="tag">Propulsion électrique</span></div>
+          </div>
+        </article>
+
+        <article class="project">
+          <div class="thumb" aria-hidden="true">
+            <svg viewBox="0 0 320 160">
+              <line x1="40" y1="134" x2="290" y2="134" class="ln" stroke-width="1.5"/><line x1="40" y1="20" x2="40" y2="134" class="ln" stroke-width="1.5"/>
+              <path d="M52 134 C 70 70, 120 40, 286 28" fill="none" class="ac" stroke-width="3"/>
+              <line x1="40" y1="134" x2="200" y2="30" class="ac2" stroke-width="2" stroke-dasharray="6 5"/>
+              <circle cx="110" cy="88" r="6" class="fa2"/>
+              <text x="120" y="104" class="tx">(L/D) max</text>
+              <text x="272" y="150" class="tx">CD</text><text x="22" y="26" class="tx">CL</text>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="ctx">Projet personnel · 2026</div>
             <h3>AéroOptim</h3>
-            <p>Application web autonome d'analyse et d'optimisation des performances aérodynamiques d'un avion : polaire, traînée, montée, plafond, distance franchissable, puis optimisation de l'envergure, de la surface et de l'altitude sous contraintes.</p>
-            <div class="tags"><span class="tag">JavaScript</span><span class="tag">Mécanique du vol</span><span class="tag">Nelder-Mead</span></div>
+            <p>Application web autonome d'analyse et d'optimisation des performances d'un avion : polaire, traînée, montée, plafond, distance franchissable, puis optimisation de l'envergure, de la surface et de l'altitude sous contraintes.</p>
+            <div class="tags"><span class="tag">JavaScript</span><span class="tag">Mécanique du vol</span><span class="tag">Optimisation</span></div>
             <div class="links"><a href="projets/aero-optim/">Lancer l'application →</a></div>
           </div>
         </article>
 
         <article class="project">
-          <div class="thumb"><span class="todo">Image du projet</span></div>
+          <div class="thumb" aria-hidden="true">
+            <svg viewBox="0 0 320 160">
+              <line x1="40" y1="134" x2="290" y2="134" class="ln" stroke-width="1.5"/><line x1="40" y1="20" x2="40" y2="134" class="ln" stroke-width="1.5"/>
+              <path d="M44 134 L 78 74 L 120 74 L 132 60 L 186 60 L 198 46 L 250 46 L 286 134" fill="none" class="ac" stroke-width="3" stroke-linejoin="round"/>
+              <path d="M44 134 L 84 64 L 286 64 L 286 134" fill="none" class="ac2" stroke-width="2" stroke-dasharray="6 5"/>
+              <text x="146" y="40" class="tx">montée par paliers</text>
+              <text x="262" y="150" class="tx">distance</text>
+            </svg>
+          </div>
           <div class="body">
-            <h3><span class="todo">Projet 2</span></h3>
-            <p><span class="todo">Contexte, ce que vous avez fait, outils utilisés et résultat chiffré.</span></p>
-            <div class="tags"><span class="tag todo">outil</span></div>
+            <div class="ctx">ÉTS · 2025</div>
+            <h3>Modèle de performance de l'A380</h3>
+            <p>Modèle complet de performance de l'Airbus A380 : atmosphère, aérodynamique (OpenVSP), propulsion et équations du mouvement. Comparaison de profils de montée par paliers et optimisation des vitesses de croisière (MRC, LRC, ECON).</p>
+            <div class="tags"><span class="tag">OpenVSP</span><span class="tag">Python / Matlab</span><span class="tag">Performance avion</span></div>
           </div>
         </article>
 
         <article class="project">
-          <div class="thumb"><span class="todo">Image du projet</span></div>
+          <div class="thumb" aria-hidden="true">
+            <svg viewBox="0 0 320 160">
+              <g class="ac" stroke-width="4" stroke-linecap="round">
+                <line x1="160" y1="80" x2="160" y2="30"/><line x1="160" y1="80" x2="160" y2="130"/>
+                <line x1="160" y1="80" x2="203" y2="55"/><line x1="160" y1="80" x2="117" y2="55"/>
+                <line x1="160" y1="80" x2="203" y2="105"/><line x1="160" y1="80" x2="117" y2="105"/>
+              </g>
+              <g class="fp ac2" stroke-width="2">
+                <circle cx="160" cy="30" r="16"/><circle cx="160" cy="130" r="16"/>
+                <circle cx="203" cy="55" r="16"/><circle cx="117" cy="55" r="16"/>
+                <circle cx="203" cy="105" r="16"/><circle cx="117" cy="105" r="16"/>
+              </g>
+              <circle cx="160" cy="80" r="13" class="fa"/>
+            </svg>
+          </div>
           <div class="body">
-            <h3><span class="todo">Projet 3</span></h3>
-            <p><span class="todo">Contexte, ce que vous avez fait, outils utilisés et résultat chiffré.</span></p>
-            <div class="tags"><span class="tag todo">outil</span></div>
+            <div class="ctx">ENSPD · 2020 – 2021</div>
+            <h3>Drone hexacoptère</h3>
+            <p>Conception et réalisation d'un hexacoptère : 8 kg de charge utile, 10 km de rayon d'action, 2 000 m d'altitude maximale. Fabrication du châssis, intégration de la propulsion, programmation des lois de commande, essais au sol puis en vol.</p>
+            <div class="tags"><span class="tag">Conception mécanique</span><span class="tag">Lois de commande</span><span class="tag">Essais en vol</span></div>
           </div>
         </article>
+
+      </div>
+    </div>
+  </section>
+
+  <section id="competences">
+    <div class="wrap">
+      <h2>Compétences</h2>
+      <div class="skills">
+        <div class="skill"><h3>Ingénierie système et certification</h3>
+          <div class="tags"><span class="tag">Traçabilité des exigences</span><span class="tag">Matrices V&amp;V</span><span class="tag">Moyens de conformité</span><span class="tag">CS-25</span><span class="tag">AC FAA</span><span class="tag">MIL / SAE</span><span class="tag">Gestion de configuration</span><span class="tag">Suivi fournisseurs</span><span class="tag">8D</span></div></div>
+        <div class="skill"><h3>Essais et analyse de données</h3>
+          <div class="tags"><span class="tag">Essais sur banc</span><span class="tag">Instrumentation</span><span class="tag">Acquisition</span><span class="tag">CAN</span><span class="tag">numpy / pandas / scipy</span><span class="tag">Matlab</span><span class="tag">Rapports d'essais</span></div></div>
+        <div class="skill"><h3>Aéronautique</h3>
+          <div class="tags"><span class="tag">Turbofans et turbopropulseurs</span><span class="tag">Propulsion électrique</span><span class="tag">Performance avion</span><span class="tag">Aérodynamique</span><span class="tag">Structures (FEA)</span><span class="tag">Systèmes avioniques</span></div></div>
+        <div class="skill"><h3>Logiciel et automatisation</h3>
+          <div class="tags"><span class="tag">Python (Flask, PySide6)</span><span class="tag">API REST</span><span class="tag">C / C++</span><span class="tag">C#</span><span class="tag">Fortran</span><span class="tag">VHDL</span><span class="tag">Git / GitLab</span><span class="tag">Docker</span></div></div>
+        <div class="skill"><h3>PLM, CAO et automatismes</h3>
+          <div class="tags"><span class="tag">3DEXPERIENCE</span><span class="tag">CATIA V5 / V6</span><span class="tag">TeamCenter – NX</span><span class="tag">SolidWorks</span><span class="tag">Fusion 360</span><span class="tag">LabVIEW</span><span class="tag">STM32</span><span class="tag">STEP 7</span></div></div>
+        <div class="skill"><h3>IA générative</h3>
+          <div class="tags"><span class="tag">Claude</span><span class="tag">ChatGPT</span><span class="tag">Copilot</span></div>
+          <p style="margin:10px 0 0;color:var(--muted);font-size:14px">Pour coder, analyser des données et rédiger, avec une vérification systématique de ce qu'ils produisent.</p></div>
       </div>
     </div>
   </section>
@@ -188,29 +289,45 @@ footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   <section id="parcours">
     <div class="wrap">
       <h2>Parcours</h2>
-      <ol class="timeline">
-        <li><div class="when"><span class="todo">Année – année</span></div><h3><span class="todo">Poste ou stage</span> · <span class="todo">Entreprise</span></h3><p><span class="todo">Missions principales et résultats.</span></p></li>
-        <li><div class="when"><span class="todo">Année – année</span></div><h3><span class="todo">Diplôme</span> · École de technologie supérieure</h3><p><span class="todo">Spécialisation, cours marquants, projets étudiants.</span></p></li>
-      </ol>
+      <div class="cols">
+        <div>
+          <h3 class="col">Expérience</h3>
+          <ol class="timeline">
+            <li><div class="when">Mai – déc. 2026</div><h4>Stagiaire en ingénierie système et intégration PLM</h4><div class="where">Flying Whales, Montréal · Gondole du dirigeable LCA60T</div>
+              <ul><li>Traçabilité de plus de 1 000 exigences (TLAR, dirigeable, gondole) et matrices de conformité.</li><li>Analyse des essais au sol de la chaîne de propulsion électrique.</li><li>Note bilingue de critères de vibration des écrans cockpit et de distorsion du pare-brise, à partir de la CS-25 et des guides FAA.</li><li>Suivi hebdomadaire du partenaire Delastek sur les livrables du cockpit.</li></ul></li>
+            <li><div class="when">2021 – 2024</div><h4>Assistant R&amp;D</h4><div class="where">Centre de R&amp;D de l'IUGET (CRDI), Douala, Cameroun</div>
+              <ul><li>6 campagnes d'essais sur bancs moteurs préparées et menées.</li><li>Instrumentation : vitesse, couple, poussée, températures, pression d'huile, vibrations, courants et tensions.</li><li>Étalonnage des capteurs, vérification des chaînes d'acquisition, 6 rapports d'essais.</li></ul></li>
+            <li><div class="when">2020 – 2021</div><h4>Stagiaire R&amp;D</h4><div class="where">CRDI, Douala, Cameroun</div>
+              <ul><li>Essais de moteurs et de systèmes embarqués ; 2 rapports d'essais co-rédigés.</li></ul></li>
+          </ol>
+        </div>
+        <div>
+          <h3 class="col">Formation</h3>
+          <ol class="timeline">
+            <li><div class="when">Été 2025 – hiver 2027</div><h4>Maîtrise en génie aérospatial</h4><div class="where">École de technologie supérieure (ÉTS), Montréal</div></li>
+            <li><div class="when">2021</div><h4>Diplôme d'ingénieur en génie mécatronique</h4><div class="where">École nationale supérieure polytechnique de Douala (ENSPD), Cameroun</div></li>
+            <li><div class="when">2018</div><h4>Licence de physique</h4><div class="where">Université de Ngaoundéré, Cameroun</div></li>
+          </ol>
+        </div>
+      </div>
     </div>
   </section>
 
   <section id="contact">
     <div class="wrap">
       <h2>Contact</h2>
-      <p style="color:var(--muted);margin-top:-8px">Une question, une opportunité de stage ou de collaboration ? Écrivez-moi.</p>
+      <p style="color:var(--muted);margin-top:-8px">Un poste en ingénierie système ou en essais, une question sur un projet ? Écrivez-moi.</p>
       <div class="contact">
-        <a class="btn primary" href="mailto:emmanuel.tchouya-tangwa.1@ens.etsmtl.ca">E-mail</a>
+        <a class="btn primary" href="mailto:Emmatchouya@gmail.com">Emmatchouya@gmail.com</a>
+        <a class="btn" href="https://www.linkedin.com/in/emmanuel-tchouya">LinkedIn</a>
         <a class="btn" href="https://github.com/emmatchouya-source">GitHub</a>
-        <a class="btn" href="#"><span class="todo">LinkedIn</span></a>
-        <a class="btn" href="#"><span class="todo">CV (PDF)</span></a>
       </div>
     </div>
   </section>
 </main>
 
 <footer>
-  <div class="wrap"><span>© <span id="year"></span> Emmanuel Tchouya</span><span>Fait à la main, en HTML et CSS.</span></div>
+  <div class="wrap"><span>© <span id="year"></span> Emmanuel Tchouya</span><span>Montréal (Québec)</span></div>
 </footer>
 
 <script>
