@@ -4,36 +4,44 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Contact — Emmanuel Tchouya</title>
-<meta name="description" content="Contacter Emmanuel Tchouya — ingénierie système et essais aéronautiques, Montréal.">
+<meta name="description" content="Contacter Emmanuel Tchouya — ingénierie système et essais aéronautiques, Montréal. Disponible janvier 2027.">
+<meta name="theme-color" content="#2b5cff">
+<script>document.documentElement.classList.add('js');try{var t=localStorage.getItem('pfTheme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<nav>
+<div class="bg-grid"></div><div class="bg-blob b1"></div><div class="bg-blob b2"></div>
+
+<nav id="nav">
   <div class="wrap">
-    <a class="brand" href="index.html" data-same-tab>Emmanuel Tchouya</a>
+    <a class="brand" href="index.html" data-same-tab aria-label="Accueil"><span class="mark">ET</span>Emmanuel Tchouya</a>
     <ul>
       <li><a data-same-tab href="index.html#apropos">À propos</a></li>
       <li><a data-same-tab href="index.html#projets">Projets</a></li>
       <li><a data-same-tab href="index.html#competences">Compétences</a></li>
       <li><a data-same-tab href="index.html#parcours">Parcours</a></li>
-      <li><a href="contact.html" style="color:var(--ink)">Contact</a></li>
     </ul>
-    <button id="themeBtn">Thème</button>
+    <div class="nav-actions">
+      <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Thème"></button>
+    </div>
   </div>
 </nav>
 
 <main class="page">
   <div class="wrap">
-    <a class="back" href="index.html" data-same-tab>← Retour au portfolio</a>
-    <h1>Me contacter</h1>
-    <p class="lead">Un poste en ingénierie système ou en essais, un projet, une question ? Je réponds généralement sous 48 h.</p>
+    <a class="back reveal" href="index.html" data-same-tab>← Retour au portfolio</a>
+    <h1 class="reveal" style="--d:.06s">Travaillons <em>ensemble</em></h1>
+    <p class="lead reveal" style="--d:.12s">Un poste en ingénierie système ou en essais, un projet, une question ? Je réponds généralement sous 48 h.</p>
 
     <div class="contact-grid">
-      <form class="form" id="form" novalidate>
+      <form class="form reveal" id="form" novalidate style="--d:.16s">
         <h2>Écrire un message</h2>
         <div class="row2">
-          <div class="f"><label for="nom">Nom</label><input id="nom" autocomplete="name" required></div>
-          <div class="f"><label for="org">Entreprise / organisation</label><input id="org" autocomplete="organization"></div>
+          <div class="f"><label for="nom">Nom</label><input id="nom" autocomplete="name" placeholder="Votre nom" required></div>
+          <div class="f"><label for="org">Entreprise</label><input id="org" autocomplete="organization" placeholder="Facultatif"></div>
         </div>
         <div class="f"><label for="objet">Objet</label>
           <select id="objet">
@@ -42,38 +50,38 @@
             <option>Question sur un projet du portfolio</option>
             <option>Autre</option>
           </select></div>
-        <div class="f"><label for="msg">Message</label><textarea id="msg" required></textarea></div>
-        <button type="submit">Envoyer</button>
+        <div class="f"><label for="msg">Message</label><textarea id="msg" placeholder="Le poste, l'équipe, le programme…" required></textarea></div>
+        <button class="btn primary" type="submit">Envoyer le message <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         <p class="err" id="err"></p>
         <p class="hint">Le bouton ouvre votre messagerie avec le message déjà rédigé, prêt à être envoyé. Aucune donnée n'est enregistrée sur ce site.</p>
       </form>
 
-      <div class="channels">
+      <div class="channels reveal" style="--d:.24s">
         <h2>Autres moyens</h2>
         <div class="channel">
           <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></div>
-          <a href="mailto:Emmatchouya@gmail.com" style="color:inherit"><b>E-mail</b><span id="mail">Emmatchouya@gmail.com</span></a>
+          <a href="mailto:Emmatchouya@gmail.com"><b>E-mail</b><span>Emmatchouya@gmail.com</span></a>
           <button class="copy" id="copy" type="button">Copier</button>
         </div>
-        <a class="channel" href="https://www.linkedin.com/in/emmanuel-tchouya" target="_blank" rel="noopener">
+        <a class="channel" href="https://www.linkedin.com/in/emmanuel-tchouya">
           <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm6.5 0h3.8v1.6h.06c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.77 2.65 4.77 6.1V21h-4v-5.2c0-1.24-.02-2.84-1.73-2.84-1.73 0-2 1.35-2 2.75V21h-4V9.5Z"/></svg></div>
           <div><b>LinkedIn</b><span>linkedin.com/in/emmanuel-tchouya</span></div>
         </a>
-        <a class="channel" href="https://github.com/emmatchouya-source" target="_blank" rel="noopener">
+        <a class="channel" href="https://github.com/emmatchouya-source">
           <div class="ic"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg></div>
           <div><b>GitHub</b><span>github.com/emmatchouya-source</span></div>
         </a>
-        <div class="avail"><b>Disponible dès janvier 2027</b><br>Basé à Montréal (Québec). Français et anglais.</div>
+        <div class="avail"><b>Disponible dès janvier 2027</b>Basé à Montréal (Québec) · français et anglais.</div>
       </div>
     </div>
   </div>
 </main>
 
 <footer>
-  <div class="wrap"><span>© <span id="year"></span> Emmanuel Tchouya</span><span>Montréal (Québec)</span></div>
+  <div class="wrap"><span>© <span id="year"></span> Emmanuel Tchouya · Montréal (Québec)</span></div>
 </footer>
 
-<script src="theme.js"></script>
+<script src="main.js"></script>
 <script>
 const EMAIL = 'Emmatchouya@gmail.com';
 document.getElementById('form').addEventListener('submit', e => {

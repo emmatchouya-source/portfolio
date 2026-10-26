@@ -3,98 +3,137 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Emmanuel Tchouya — Portfolio</title>
-<meta name="description" content="Emmanuel Tchouya — ingénierie système, intégration, exigences et essais aéronautiques. Maîtrise en génie aérospatial à l'ÉTS, Montréal.">
+<title>Emmanuel Tchouya — Ingénierie système et essais aéronautiques</title>
+<meta name="description" content="Emmanuel Tchouya — ingénierie système, intégration, exigences et essais aéronautiques. Maîtrise en génie aérospatial à l'ÉTS, Montréal. Disponible janvier 2027.">
+<meta property="og:title" content="Emmanuel Tchouya — Ingénierie système et essais aéronautiques">
+<meta property="og:description" content="Exigences, intégration et essais. Maîtrise en génie aérospatial (ÉTS), stage Flying Whales sur le dirigeable LCA60T.">
+<meta name="theme-color" content="#2b5cff">
+<script>document.documentElement.classList.add('js');try{var t=localStorage.getItem('pfTheme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<nav>
+<div class="bg-grid"></div><div class="bg-blob b1"></div><div class="bg-blob b2"></div>
+<div class="progress" id="progress"></div>
+
+<nav id="nav">
   <div class="wrap">
-    <a class="brand" href="#">Emmanuel Tchouya</a>
+    <a class="brand" href="#top" aria-label="Accueil"><span class="mark">ET</span>Emmanuel Tchouya</a>
     <ul>
       <li><a href="#apropos">À propos</a></li>
       <li><a href="#projets">Projets</a></li>
       <li><a href="#competences">Compétences</a></li>
       <li><a href="#parcours">Parcours</a></li>
-      <li><a href="contact.html">Contact</a></li>
     </ul>
-    <button id="themeBtn">Thème</button>
+    <div class="nav-actions">
+      <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Thème"></button>
+      <a class="btn primary sm" href="contact.html">Me contacter</a>
+    </div>
   </div>
 </nav>
 
-<header class="hero">
+<header class="hero" id="top">
   <div class="wrap">
-    <div class="kicker">Ingénierie système · Essais aéronautiques</div>
-    <h1>Emmanuel Tchouya</h1>
-    <p>Intégration, exigences et essais. En fin de maîtrise en génie aérospatial à l'ÉTS, après trois ans d'essais sur bancs moteurs et un stage sur le dirigeable cargo LCA60T chez Flying Whales. Disponible pour un poste en ingénierie système ou en essais dès janvier 2027.</p>
-    <div class="btns">
-      <a class="btn primary" href="#projets">Voir mes projets</a>
-      <a class="btn" href="contact.html">Me contacter</a>
+    <div class="hero-grid">
+      <div>
+        <div class="badge reveal"><span class="pulse"></span><b>Disponible janvier 2027</b> · Montréal (Québec)</div>
+        <h1 class="reveal" style="--d:.08s">Emmanuel Tchouya</h1>
+        <p class="role reveal" style="--d:.16s">Ingénierie système · Intégration · Essais aéronautiques</p>
+        <p class="lead reveal" style="--d:.24s">Je relie les exigences au matériel : écrire ce qu'un système doit faire, préparer l'essai qui le prouve, puis dépouiller les mesures pour conclure. En fin de maîtrise en génie aérospatial à l'ÉTS, après trois ans d'essais sur bancs moteurs et un stage sur le dirigeable cargo LCA60T chez Flying Whales.</p>
+        <div class="btns reveal" style="--d:.32s">
+          <a class="btn primary" href="#projets">Voir mes projets <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn" href="contact.html">Me contacter</a>
+          <a class="btn" href="https://www.linkedin.com/in/emmanuel-tchouya" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm6.5 0h3.8v1.6h.06c.53-1 1.830-2.06 3.77-2.06 4.03 0 4.77 2.65 4.77 6.1V21h-4v-5.2c0-1.24-.02-2.84-1.73-2.84-1.73 0-2 1.35-2 2.75V21h-4V9.5Z"/></svg>LinkedIn</a>
+        </div>
+      </div>
+      <figure class="flow-card reveal" style="--d:.2s;margin:0">
+        <div class="flow-head"><span><b>Écoulement autour d'un profil</b> · Joukowski</span><span id="flowInfo"></span></div>
+        <canvas id="flow" aria-label="Animation de l'écoulement de l'air autour d'un profil d'aile"></canvas>
+        <figcaption class="flow-foot">
+          <label for="alpha">Incidence α</label>
+          <input type="range" id="alpha" min="-4" max="14" step="0.5" value="6">
+          <span class="cl" id="clOut"></span>
+        </figcaption>
+      </figure>
     </div>
+
     <div class="stats">
-      <div class="stat"><b>1 000+</b><span>exigences tracées</span></div>
-      <div class="stat"><b>8 h → 5 min</b><span>pour comparer deux révisions d'une spécification</span></div>
-      <div class="stat"><b>6</b><span>campagnes d'essais sur bancs moteurs</span></div>
-      <div class="stat"><b>8</b><span>rapports d'essais rédigés ou co-rédigés</span></div>
+      <div class="stat reveal"><div class="n" data-count="1000" data-suffix="+">1 000+</div><div class="l">exigences tracées (TLAR, dirigeable, gondole)</div></div>
+      <div class="stat reveal" style="--d:.08s"><div class="n" data-count="96" data-suffix="×">96×</div><div class="l">plus rapide pour comparer deux révisions d'une spécification</div></div>
+      <div class="stat reveal" style="--d:.16s"><div class="n" data-count="6">6</div><div class="l">campagnes d'essais sur bancs moteurs</div></div>
+      <div class="stat reveal" style="--d:.24s"><div class="n" data-count="13">13</div><div class="l">exigences du SRD évaluées sur la propulsion électrique</div></div>
     </div>
   </div>
 </header>
 
 <main>
   <section id="apropos">
-    <div class="wrap about">
-      <div>
-        <h2>À propos</h2>
-        <p>Ingénieur en génie mécatronique de formation, je travaille à la jonction entre les exigences et le matériel : écrire ce qu'un système doit faire, préparer l'essai qui le prouve, puis dépouiller les mesures pour conclure.</p>
-        <p>Au Cameroun, au centre de R&amp;D de l'IUGET, j'ai préparé et mené des campagnes d'essais sur bancs moteurs : instrumentation, étalonnage, acquisition et rapports. Chez Flying Whales, j'ai rejoint l'équipe de la gondole du LCA60T, où j'ai tenu la traçabilité des exigences, analysé les essais au sol de la chaîne de propulsion électrique et automatisé la comparaison de spécifications dans 3DEXPERIENCE.</p>
-        <p>J'aime les outils qui font gagner du temps à une équipe. Quand une tâche se répète, je l'automatise, en Python le plus souvent.</p>
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="eyebrow">À propos</span><h2>De l'exigence à la preuve par l'essai</h2></div>
+      <div class="about">
+        <div class="text reveal">
+          <p>Ingénieur en génie mécatronique de formation, je travaille à la jonction entre l'ingénierie système et le banc d'essai.</p>
+          <p>Au centre de R&amp;D de l'IUGET, au Cameroun, j'ai préparé et mené des campagnes d'essais sur bancs moteurs : instrumentation, étalonnage, acquisition et rapports. Chez Flying Whales, dans l'équipe de la gondole du LCA60T, j'ai tenu la traçabilité des exigences, analysé les essais au sol de la propulsion électrique et automatisé la comparaison de spécifications dans 3DEXPERIENCE.</p>
+          <div class="values">
+            <div class="value"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></div><div><b>Exigences vérifiables</b><span>Traçabilité, matrices de conformité, moyens de conformité CS-25 / FAA.</span></div></div>
+            <div class="value"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div><div><b>Essais de bout en bout</b><span>Préparation, instrumentation, acquisition, dépouillement et rapport.</span></div></div>
+            <div class="value"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg></div><div><b>Automatisation utile</b><span>Quand une tâche se répète, je l'outille, le plus souvent en Python.</span></div></div>
+          </div>
+        </div>
+        <dl class="facts reveal" style="--d:.1s">
+          <div><dt>Recherche</dt><dd>Poste en ingénierie système ou en essais</dd></div>
+          <div><dt>Disponibilité</dt><dd>Janvier 2027 · Montréal (Québec)</dd></div>
+          <div><dt>Formation</dt><dd>M. Ing. génie aérospatial, ÉTS (hiver 2027)<br>Ingénieur génie mécatronique, ENSPD (2021)</dd></div>
+          <div><dt>Langues</dt><dd>Français (avancé) · anglais (TOEIC 900)</dd></div>
+          <div><dt>Environnement</dt><dd>3DEXPERIENCE, CATIA, Python, Matlab, LabVIEW</dd></div>
+        </dl>
       </div>
-      <dl class="facts">
-        <dt>Formation</dt><dd>Maîtrise en génie aérospatial, ÉTS (fin hiver 2027)<br>Ingénieur en génie mécatronique, ENSPD (2021)</dd>
-        <dt>Recherche</dt><dd>Poste en ingénierie système ou en essais</dd>
-        <dt>Disponibilité</dt><dd>Janvier 2027</dd>
-        <dt>Langues</dt><dd>Français (avancé), anglais (TOEIC 900)</dd>
-        <dt>Localisation</dt><dd>Montréal (Québec)</dd>
-      </dl>
     </div>
   </section>
 
   <section id="projets">
     <div class="wrap">
-      <h2>Projets</h2>
+      <div class="sec-head reveal"><span class="eyebrow">Projets</span><h2>Études de cas</h2><p>Pour chaque projet : le problème, ce que j'ai fait, et le résultat mesuré.</p></div>
       <div class="projects">
 
-        <article class="project">
+        <article class="case featured reveal">
           <div class="thumb" aria-hidden="true">
-            <svg viewBox="0 0 320 160">
-              <rect x="40" y="22" width="100" height="116" rx="6" class="fp ln" stroke-width="1.5"/>
-              <rect x="180" y="22" width="100" height="116" rx="6" class="fp ln" stroke-width="1.5"/>
-              <g stroke-width="5" stroke-linecap="round">
-                <line x1="54" y1="44" x2="122" y2="44" class="ln"/><line x1="194" y1="44" x2="262" y2="44" class="ln"/>
-                <line x1="54" y1="62" x2="110" y2="62" class="ac2"/><line x1="194" y1="62" x2="250" y2="62" class="ac"/>
-                <line x1="54" y1="80" x2="126" y2="80" class="ln"/><line x1="194" y1="80" x2="266" y2="80" class="ln"/>
-                <line x1="54" y1="98" x2="100" y2="98" class="ln"/><line x1="194" y1="98" x2="240" y2="98" class="ac"/>
-                <line x1="54" y1="116" x2="118" y2="116" class="ac2"/><line x1="194" y1="116" x2="258" y2="116" class="ln"/>
+            <svg viewBox="0 0 320 200">
+              <rect x="40" y="36" width="100" height="128" rx="8" class="fp ln" stroke-width="1.5"/>
+              <rect x="180" y="36" width="100" height="128" rx="8" class="fp ln" stroke-width="1.5"/>
+              <g stroke-width="6" stroke-linecap="round">
+                <line x1="56" y1="60" x2="122" y2="60" class="ln"/><line x1="196" y1="60" x2="262" y2="60" class="ln"/>
+                <line x1="56" y1="80" x2="110" y2="80" class="ac2"/><line x1="196" y1="80" x2="250" y2="80" class="te"/>
+                <line x1="56" y1="100" x2="126" y2="100" class="ln"/><line x1="196" y1="100" x2="266" y2="100" class="ln"/>
+                <line x1="56" y1="120" x2="100" y2="120" class="ln"/><line x1="196" y1="120" x2="240" y2="120" class="te"/>
+                <line x1="56" y1="140" x2="118" y2="140" class="ac2"/><line x1="196" y1="140" x2="258" y2="140" class="ln"/>
               </g>
-              <path d="M148 80 h24 m-7 -7 l7 7 l-7 7" fill="none" class="ac" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="160" cy="100" r="16" class="fa"/>
+              <path d="M152 100 h16 m-6 -6 l6 6 l-6 6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
           <div class="body">
-            <div class="ctx">Flying Whales · 2026</div>
+            <div class="top"><span class="ctx">Flying Whales · 2026</span><span class="metric">8 h → 5 min</span></div>
             <h3>Comparateur de spécifications 3DEXPERIENCE</h3>
-            <p>Outil web et bureau qui compare deux révisions d'une spécification dans 3DEXPERIENCE et liste les exigences ajoutées, supprimées ou modifiées. Une comparaison qui prenait 8 h se fait en moins de 5 min ; l'outil a déjà servi sur 1 260 exigences.</p>
+            <ul class="psr">
+              <li><b>Problème</b>Comparer deux révisions d'une spécification prenait une journée de travail, à la main.</li>
+              <li><b>Démarche</b>Outil web et bureau connecté à 3DEXPERIENCE qui liste les exigences ajoutées, supprimées ou modifiées.</li>
+              <li><b>Résultat</b>Moins de 5 minutes par comparaison ; déjà utilisé sur 1 260 exigences.</li>
+            </ul>
             <div class="tags"><span class="tag">Python</span><span class="tag">API REST</span><span class="tag">PySide6</span><span class="tag">3DEXPERIENCE</span></div>
           </div>
         </article>
 
-        <article class="project">
+        <article class="case reveal">
           <div class="thumb" aria-hidden="true">
             <svg viewBox="0 0 320 160">
               <line x1="40" y1="134" x2="290" y2="134" class="ln" stroke-width="1.5"/><line x1="40" y1="20" x2="40" y2="134" class="ln" stroke-width="1.5"/>
               <line x1="40" y1="50" x2="290" y2="50" class="ac2" stroke-width="1.5" stroke-dasharray="5 4"/>
-              <text x="246" y="44" class="tx">exigence</text>
-              <path d="M44 128 C 90 120, 120 70, 170 64 S 250 60, 286 58" fill="none" class="ac" stroke-width="3"/>
-              <g class="fa">
+              <text x="242" y="44" class="tx">exigence</text>
+              <path class="draw ac" style="--len:300" d="M44 128 C 90 120, 120 70, 170 64 S 250 60, 286 58" fill="none" stroke-width="3"/>
+              <g class="fte">
                 <circle cx="62" cy="124" r="3"/><circle cx="88" cy="114" r="3"/><circle cx="110" cy="96" r="3"/><circle cx="132" cy="80" r="3"/>
                 <circle cx="158" cy="68" r="3"/><circle cx="184" cy="64" r="3"/><circle cx="212" cy="60" r="3"/><circle cx="240" cy="62" r="3"/><circle cx="266" cy="58" r="3"/>
               </g>
@@ -102,18 +141,22 @@
             </svg>
           </div>
           <div class="body">
-            <div class="ctx">Flying Whales · 2026</div>
+            <div class="top"><span class="ctx">Flying Whales · 2026</span><span class="metric">13 exigences</span></div>
             <h3>Essais au sol de la propulsion électrique</h3>
-            <p>Analyse complète du rapport d'essais au sol de la chaîne de propulsion électrique du LCA60T (banc AKIRA, onduleur Brightloop, moteur Evolito) : 38 fichiers de mesures traités en Python, 13 exigences du SRD évaluées, recommandations pour la campagne suivante.</p>
-            <div class="tags"><span class="tag">Python</span><span class="tag">pandas</span><span class="tag">V&amp;V</span><span class="tag">Propulsion électrique</span></div>
+            <ul class="psr">
+              <li><b>Problème</b>Conclure sur la chaîne de propulsion du LCA60T : banc AKIRA, onduleur Brightloop, moteur Evolito.</li>
+              <li><b>Démarche</b>Traitement en Python de 38 fichiers de mesures, confrontation au SRD.</li>
+              <li><b>Résultat</b>13 exigences évaluées et des recommandations pour la campagne suivante.</li>
+            </ul>
+            <div class="tags"><span class="tag">Python</span><span class="tag">pandas</span><span class="tag">V&amp;V</span></div>
           </div>
         </article>
 
-        <article class="project">
+        <article class="case reveal" style="--d:.08s">
           <div class="thumb" aria-hidden="true">
             <svg viewBox="0 0 320 160">
               <line x1="40" y1="134" x2="290" y2="134" class="ln" stroke-width="1.5"/><line x1="40" y1="20" x2="40" y2="134" class="ln" stroke-width="1.5"/>
-              <path d="M52 134 C 70 70, 120 40, 286 28" fill="none" class="ac" stroke-width="3"/>
+              <path class="draw ac" style="--len:320" d="M52 134 C 70 70, 120 40, 286 28" fill="none" stroke-width="3"/>
               <line x1="40" y1="134" x2="200" y2="30" class="ac2" stroke-width="2" stroke-dasharray="6 5"/>
               <circle cx="110" cy="88" r="6" class="fa2"/>
               <text x="120" y="104" class="tx">(L/D) max</text>
@@ -121,33 +164,41 @@
             </svg>
           </div>
           <div class="body">
-            <div class="ctx">Projet personnel · 2026</div>
+            <div class="top"><span class="ctx">Projet personnel · 2026</span><span class="metric">Démo en ligne</span></div>
             <h3>AéroOptim</h3>
-            <p>Application web autonome d'analyse et d'optimisation des performances d'un avion : polaire, traînée, montée, plafond, distance franchissable, puis optimisation de l'envergure, de la surface et de l'altitude sous contraintes.</p>
+            <ul class="psr">
+              <li><b>Problème</b>Évaluer rapidement l'effet de la voilure sur les performances d'un avion.</li>
+              <li><b>Démarche</b>Modèle ISA, polaire, propulsion et croisière intégrée ; optimisation sous contraintes.</li>
+              <li><b>Résultat</b>Application web autonome : +31 % de distance trouvée sur un monomoteur léger.</li>
+            </ul>
             <div class="tags"><span class="tag">JavaScript</span><span class="tag">Mécanique du vol</span><span class="tag">Optimisation</span></div>
-            <div class="links"><a href="projets/aero-optim/">Lancer l'application →</a></div>
+            <div class="links"><a class="btn sm primary" href="projets/aero-optim/">Lancer l'application <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
           </div>
         </article>
 
-        <article class="project">
+        <article class="case reveal">
           <div class="thumb" aria-hidden="true">
             <svg viewBox="0 0 320 160">
               <line x1="40" y1="134" x2="290" y2="134" class="ln" stroke-width="1.5"/><line x1="40" y1="20" x2="40" y2="134" class="ln" stroke-width="1.5"/>
-              <path d="M44 134 L 78 74 L 120 74 L 132 60 L 186 60 L 198 46 L 250 46 L 286 134" fill="none" class="ac" stroke-width="3" stroke-linejoin="round"/>
-              <path d="M44 134 L 84 64 L 257 64 L 286 134" fill="none" class="ac2" stroke-linejoin="round" stroke-width="2" stroke-dasharray="6 5"/>
+              <path class="draw ac" style="--len:420" d="M44 134 L 78 74 L 120 74 L 132 60 L 186 60 L 198 46 L 250 46 L 286 134" fill="none" stroke-width="3" stroke-linejoin="round"/>
+              <path d="M44 134 L 84 64 L 257 64 L 286 134" fill="none" class="ac2" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
               <text x="146" y="40" class="tx">montée par paliers</text>
               <text x="262" y="150" class="tx">distance</text>
             </svg>
           </div>
           <div class="body">
-            <div class="ctx">ÉTS · 2025</div>
+            <div class="top"><span class="ctx">ÉTS · 2025</span><span class="metric">MRC · LRC · ECON</span></div>
             <h3>Modèle de performance de l'A380</h3>
-            <p>Modèle complet de performance de l'Airbus A380 : atmosphère, aérodynamique (OpenVSP), propulsion et équations du mouvement. Comparaison de profils de montée par paliers et optimisation des vitesses de croisière (MRC, LRC, ECON).</p>
+            <ul class="psr">
+              <li><b>Problème</b>Quel profil de vol minimise la consommation d'un très gros porteur ?</li>
+              <li><b>Démarche</b>Atmosphère, aérodynamique (OpenVSP), propulsion et équations du mouvement.</li>
+              <li><b>Résultat</b>Profils de montée par paliers comparés, vitesses de croisière optimisées.</li>
+            </ul>
             <div class="tags"><span class="tag">OpenVSP</span><span class="tag">Python / Matlab</span><span class="tag">Performance avion</span></div>
           </div>
         </article>
 
-        <article class="project">
+        <article class="case reveal" style="--d:.08s">
           <div class="thumb" aria-hidden="true">
             <svg viewBox="0 0 320 160">
               <g class="ac" stroke-width="4" stroke-linecap="round">
@@ -155,7 +206,7 @@
                 <line x1="160" y1="80" x2="203" y2="55"/><line x1="160" y1="80" x2="117" y2="55"/>
                 <line x1="160" y1="80" x2="203" y2="105"/><line x1="160" y1="80" x2="117" y2="105"/>
               </g>
-              <g class="fp ac2" stroke-width="2">
+              <g class="fp te" stroke-width="2">
                 <circle cx="160" cy="30" r="16"/><circle cx="160" cy="130" r="16"/>
                 <circle cx="203" cy="55" r="16"/><circle cx="117" cy="55" r="16"/>
                 <circle cx="203" cy="105" r="16"/><circle cx="117" cy="105" r="16"/>
@@ -164,10 +215,14 @@
             </svg>
           </div>
           <div class="body">
-            <div class="ctx">ENSPD · 2020 – 2021</div>
+            <div class="top"><span class="ctx">ENSPD · 2020 – 2021</span><span class="metric">8 kg · 10 km</span></div>
             <h3>Drone hexacoptère</h3>
-            <p>Conception et réalisation d'un hexacoptère : 8 kg de charge utile, 10 km de rayon d'action, 2 000 m d'altitude maximale. Fabrication du châssis, intégration de la propulsion, programmation des lois de commande, essais au sol puis en vol.</p>
-            <div class="tags"><span class="tag">Conception mécanique</span><span class="tag">Lois de commande</span><span class="tag">Essais en vol</span></div>
+            <ul class="psr">
+              <li><b>Problème</b>Concevoir un drone capable d'emporter 8 kg à 10 km et jusqu'à 2 000 m.</li>
+              <li><b>Démarche</b>Châssis, intégration de la propulsion, lois de commande.</li>
+              <li><b>Résultat</b>Drone fabriqué et testé au sol puis en vol.</li>
+            </ul>
+            <div class="tags"><span class="tag">Conception</span><span class="tag">Commande</span><span class="tag">Essais en vol</span></div>
           </div>
         </article>
 
@@ -177,45 +232,45 @@
 
   <section id="competences">
     <div class="wrap">
-      <h2>Compétences</h2>
+      <div class="sec-head reveal"><span class="eyebrow">Compétences</span><h2>Boîte à outils</h2></div>
       <div class="skills">
-        <div class="skill"><h3>Ingénierie système et certification</h3>
-          <div class="tags"><span class="tag">Traçabilité des exigences</span><span class="tag">Matrices V&amp;V</span><span class="tag">Moyens de conformité</span><span class="tag">CS-25</span><span class="tag">AC FAA</span><span class="tag">MIL / SAE</span><span class="tag">Gestion de configuration</span><span class="tag">Suivi fournisseurs</span><span class="tag">8D</span></div></div>
-        <div class="skill"><h3>Essais et analyse de données</h3>
+        <div class="skill reveal"><div class="head"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="8.5" y="14" width="7" height="7" rx="1"/><path d="M6.5 10v2h11v-2M12 12v2"/></svg></div><h3>Ingénierie système et certification</h3></div>
+          <div class="tags"><span class="tag">Traçabilité des exigences</span><span class="tag">Matrices V&amp;V</span><span class="tag">CS-25</span><span class="tag">AC FAA</span><span class="tag">MIL / SAE</span><span class="tag">Gestion de configuration</span><span class="tag">Suivi fournisseurs</span><span class="tag">8D</span></div></div>
+        <div class="skill reveal" style="--d:.06s"><div class="head"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></div><h3>Essais et analyse de données</h3></div>
           <div class="tags"><span class="tag">Essais sur banc</span><span class="tag">Instrumentation</span><span class="tag">Acquisition</span><span class="tag">CAN</span><span class="tag">numpy / pandas / scipy</span><span class="tag">Matlab</span><span class="tag">Rapports d'essais</span></div></div>
-        <div class="skill"><h3>Aéronautique</h3>
-          <div class="tags"><span class="tag">Turbofans et turbopropulseurs</span><span class="tag">Propulsion électrique</span><span class="tag">Performance avion</span><span class="tag">Aérodynamique</span><span class="tag">Structures (FEA)</span><span class="tag">Systèmes avioniques</span></div></div>
-        <div class="skill"><h3>Logiciel et automatisation</h3>
+        <div class="skill reveal" style="--d:.12s"><div class="head"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.300.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div><h3>Aéronautique</h3></div>
+          <div class="tags"><span class="tag">Turbofans, turbopropulseurs</span><span class="tag">Propulsion électrique</span><span class="tag">Performance avion</span><span class="tag">Aérodynamique</span><span class="tag">Structures (FEA)</span><span class="tag">Avionique</span></div></div>
+        <div class="skill reveal"><div class="head"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg></div><h3>Logiciel et automatisation</h3></div>
           <div class="tags"><span class="tag">Python (Flask, PySide6)</span><span class="tag">API REST</span><span class="tag">C / C++</span><span class="tag">C#</span><span class="tag">Fortran</span><span class="tag">VHDL</span><span class="tag">Git / GitLab</span><span class="tag">Docker</span></div></div>
-        <div class="skill"><h3>PLM, CAO et automatismes</h3>
+        <div class="skill reveal" style="--d:.06s"><div class="head"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7l9 5 9-5-9-5Z"/><path d="m3 17 9 5 9-5M3 12l9 5 9-5"/></svg></div><h3>PLM, CAO et automatismes</h3></div>
           <div class="tags"><span class="tag">3DEXPERIENCE</span><span class="tag">CATIA V5 / V6</span><span class="tag">TeamCenter – NX</span><span class="tag">SolidWorks</span><span class="tag">Fusion 360</span><span class="tag">LabVIEW</span><span class="tag">STM32</span><span class="tag">STEP 7</span></div></div>
-        <div class="skill"><h3>IA générative</h3>
+        <div class="skill reveal" style="--d:.12s"><div class="head"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17l.7 1.8 1.8.7-1.8.7L19 22l-.7-1.8-1.8-.7 1.8-.7z"/></svg></div><h3>IA générative</h3></div>
           <div class="tags"><span class="tag">Claude</span><span class="tag">ChatGPT</span><span class="tag">Copilot</span></div>
-          <p style="margin:10px 0 0;color:var(--muted);font-size:14px">Pour coder, analyser des données et rédiger, avec une vérification systématique de ce qu'ils produisent.</p></div>
+          <p>Pour coder, analyser des données et rédiger, avec une vérification systématique de ce qu'ils produisent.</p></div>
       </div>
     </div>
   </section>
 
   <section id="parcours">
     <div class="wrap">
-      <h2>Parcours</h2>
+      <div class="sec-head reveal"><span class="eyebrow">Parcours</span><h2>Expérience et formation</h2></div>
       <div class="cols">
-        <div>
-          <h3 class="col">Expérience</h3>
+        <div class="reveal">
+          <h3 class="col-title">Expérience</h3>
           <ol class="timeline">
             <li><div class="when">Mai – déc. 2026</div><h4>Stagiaire en ingénierie système et intégration PLM</h4><div class="where">Flying Whales, Montréal · Gondole du dirigeable LCA60T</div>
-              <ul><li>Traçabilité de plus de 1 000 exigences (TLAR, dirigeable, gondole) et matrices de conformité.</li><li>Analyse des essais au sol de la chaîne de propulsion électrique.</li><li>Note bilingue de critères de vibration des écrans cockpit et de distorsion du pare-brise, à partir de la CS-25 et des guides FAA.</li><li>Suivi hebdomadaire du partenaire Delastek sur les livrables du cockpit.</li></ul></li>
+              <ul><li>Traçabilité de plus de 1 000 exigences et matrices de conformité.</li><li>Analyse des essais au sol de la chaîne de propulsion électrique.</li><li>Note bilingue de critères de vibration des écrans cockpit et de distorsion du pare-brise (CS-25, guides FAA).</li><li>Suivi hebdomadaire du partenaire Delastek sur les livrables du cockpit.</li></ul></li>
             <li><div class="when">2021 – 2024</div><h4>Assistant R&amp;D</h4><div class="where">Centre de R&amp;D de l'IUGET (CRDI), Douala, Cameroun</div>
-              <ul><li>6 campagnes d'essais sur bancs moteurs préparées et menées.</li><li>Instrumentation : vitesse, couple, poussée, températures, pression d'huile, vibrations, courants et tensions.</li><li>Étalonnage des capteurs, vérification des chaînes d'acquisition, 6 rapports d'essais.</li></ul></li>
+              <ul><li>6 campagnes d'essais sur bancs moteurs préparées et menées.</li><li>Instrumentation : vitesse, couple, poussée, températures, pression d'huile, vibrations, courants et tensions.</li><li>Étalonnage, vérification des chaînes d'acquisition, 6 rapports d'essais.</li></ul></li>
             <li><div class="when">2020 – 2021</div><h4>Stagiaire R&amp;D</h4><div class="where">CRDI, Douala, Cameroun</div>
               <ul><li>Essais de moteurs et de systèmes embarqués ; 2 rapports d'essais co-rédigés.</li></ul></li>
           </ol>
         </div>
-        <div>
-          <h3 class="col">Formation</h3>
+        <div class="reveal" style="--d:.1s">
+          <h3 class="col-title">Formation</h3>
           <ol class="timeline">
             <li><div class="when">Été 2025 – hiver 2027</div><h4>Maîtrise en génie aérospatial</h4><div class="where">École de technologie supérieure (ÉTS), Montréal</div></li>
-            <li><div class="when">2021</div><h4>Diplôme d'ingénieur en génie mécatronique</h4><div class="where">École nationale supérieure polytechnique de Douala (ENSPD), Cameroun</div></li>
+            <li><div class="when">2021</div><h4>Diplôme d'ingénieur en génie mécatronique</h4><div class="where">École nationale supérieure polytechnique de Douala (ENSPD)</div></li>
             <li><div class="when">2018</div><h4>Licence de physique</h4><div class="where">Université de Ngaoundéré, Cameroun</div></li>
           </ol>
         </div>
@@ -223,23 +278,29 @@
     </div>
   </section>
 
-  <section id="contact">
-    <div class="wrap">
-      <h2>Contact</h2>
-      <p style="color:var(--muted);margin-top:-8px">Un poste en ingénierie système ou en essais, une question sur un projet ? Écrivez-moi.</p>
-      <div class="contact">
-        <a class="btn primary" href="contact.html">Me contacter</a>
-        <a class="btn" href="https://www.linkedin.com/in/emmanuel-tchouya">LinkedIn</a>
-        <a class="btn" href="https://github.com/emmatchouya-source">GitHub</a>
+  <div class="wrap">
+    <div class="cta reveal">
+      <div class="inner">
+        <div><h2>Un poste en ingénierie système ou en essais ?</h2><p>Disponible dès janvier 2027 à Montréal. Parlons de votre programme.</p></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <a class="btn" href="contact.html">Me contacter <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn ghost" href="https://www.linkedin.com/in/emmanuel-tchouya">LinkedIn</a>
+        </div>
       </div>
     </div>
-  </section>
+  </div>
 </main>
 
 <footer>
-  <div class="wrap"><span>© <span id="year"></span> Emmanuel Tchouya</span><span>Montréal (Québec)</span></div>
+  <div class="wrap">
+    <span>© <span id="year"></span> Emmanuel Tchouya · Montréal (Québec)</span>
+    <span class="soc">
+      <a class="icon-btn" href="https://www.linkedin.com/in/emmanuel-tchouya" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm6.5 0h3.8v1.6h.06c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.77 2.65 4.77 6.1V21h-4v-5.2c0-1.24-.02-2.84-1.73-2.84-1.73 0-2 1.35-2 2.75V21h-4V9.5Z"/></svg></a>
+      <a class="icon-btn" href="https://github.com/emmatchouya-source" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.370-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.110-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg></a>
+    </span>
+  </div>
 </footer>
 
-<script src="theme.js"></script>
+<script src="main.js"></script>
 </body>
 </html>
