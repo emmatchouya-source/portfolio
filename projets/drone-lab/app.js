@@ -5,7 +5,7 @@ import {configuration,csv,report,generateC,download} from './exports.js';
 import {BOARDS} from './boards.js';
 import {customBoard,arduinoZip} from './arduino.js';
 import {createBoardPicker} from './board-picker.js';
-import {setupAgent} from './agent-client.js';
+import {setupAgent} from './agent-client.js?v=connection-1';
 
 const $=id=>document.getElementById(id),labels={hover:'VOL STATIONNAIRE',square:'CIRCUIT CARRÉ',circle:'ORBITE CIRCULAIRE',eight:'TRAJECTOIRE EN HUIT',waypoints:'POINTS DE PASSAGE'};
 const fields={

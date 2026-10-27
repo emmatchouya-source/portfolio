@@ -5,7 +5,7 @@
   <meta name="description" content="Laboratoire de vol autonome : simulation 3D, dynamique du quadricoptère, capteurs, commande en cascade et export C de référence.">
   <meta name="theme-color" content="#0b1017"><title>DroneLab — Laboratoire de vol autonome</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1017'/%3E%3Cpath d='m8 8 16 16M8 24 24 8' stroke='%2357dfbc' stroke-width='3'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=agent-1">
+  <link rel="stylesheet" href="styles.css?v=agent-connection-1">
 </head>
 <body>
   <header class="topbar">
@@ -132,7 +132,7 @@
     <p>Installe l’agent une fois, puis prépare et téléverse le programme depuis cette page. Arduino IDE n’est pas nécessaire.</p>
     <ol class="agent-steps">
       <li><b>Télécharge et ouvre l’installateur.</b><p>Ouvre le fichier téléchargé et garde la fenêtre de l’agent ouverte. Installation dans ton compte, sans commande à saisir.</p><a id="agentDownload" class="button primary" href="https://github.com/emmatchouya-source/portfolio/releases/download/dronelab-agent-v1.0.0/DroneLab-Agent-Setup.exe">↓ Installer l’agent · Windows x64 · 28 Mo</a><p class="hint">Déjà installé ? <a href="dronelab-agent:open">Ouvrir DroneLab Agent</a></p></li>
-      <li><b>Connecte l’agent.</b><p>Autorise l’accès local si le navigateur le demande, puis accepte la connexion dans la fenêtre de l’agent.</p><button id="agentConnect" class="button outline">Connecter l’agent</button></li>
+      <li><b>Connecte l’agent.</b><p>Autorise l’accès local si le navigateur le demande, puis accepte la connexion dans la fenêtre de l’agent.</p><div class="agent-connection-row"><button id="agentConnect" class="button outline">Connecter l’agent</button><span id="agentConnection" class="agent-connection" data-state="offline" role="status" aria-live="polite" aria-atomic="true">Agent non connecté</span></div></li>
       <li><b>Branche la carte en USB.</b><p>La carte choisie dans le panneau Cartes sera utilisée avec tes paramètres appliqués.</p><label for="agentPort">Port USB</label><div class="agent-port-row"><select id="agentPort"><option value="">Connecte l’agent pour voir les ports</option></select><button id="agentPortsRefresh" class="button outline" aria-label="Actualiser les ports USB">Actualiser</button></div><div class="agent-actions"><button id="agentPrepare" class="button outline">1. Préparer et compiler</button><button id="agentUpload" class="button primary">2. Téléverser sur la carte</button></div><p class="hint">Le téléversement remplace le programme présent sur la carte. Les sorties moteurs du programme de banc restent inactives.</p></li>
     </ol>
     <p id="agentStatus" role="status" aria-live="polite">Agent non connecté.</p>
@@ -141,5 +141,5 @@
     <p id="agentPlatform" class="hint amber-text" hidden>L’installateur proposé fonctionne sur Windows x64. Une version macOS / Linux n’est pas encore proposée.</p>
     <p class="hint">L’agent ne demande pas de droits administrateur. Certains pilotes USB ou les règles de ton entreprise peuvent en nécessiter. Cet exécutable n’est pas signé : Windows peut afficher une vérification ou en bloquer l’ouverture. <a href="https://github.com/emmatchouya-source/portfolio/releases/tag/dronelab-agent-v1.0.0" target="_blank" rel="noopener">Version et empreinte SHA-256 ↗</a></p>
   </dialog>
-  <noscript>Active JavaScript pour utiliser le simulateur DroneLab.</noscript><script type="module" src="app.js?v=agent-1"></script>
+  <noscript>Active JavaScript pour utiliser le simulateur DroneLab.</noscript><script type="module" src="app.js?v=agent-connection-1"></script>
 </body></html>
