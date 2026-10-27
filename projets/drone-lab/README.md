@@ -32,6 +32,34 @@ Les réglages appliqués sont mémorisés localement si le navigateur l’autori
 | `app.js` | Interface, paramètres, import/export et horloge à pas fixe |
 | `exports.js` | Formats JSON/CSV et paramétrage du code C |
 | `controller.c` | Loi de commande C99 autonome à adapter au matériel |
+| `boards.js` | Catalogue sourcé de cartes et statuts de compilation |
+| `arduino.js` | Génération du projet Arduino de banc et de portage |
+| `zip.js` | Archive ZIP sans compression, UTF-8 et CRC32 |
+
+## Cartes Arduino et export de projet
+
+L’onglet **Cartes** propose **73 profils** : UNO R4 Minima/WiFi et Nano R4 ; Nano 33 BLE/Sense et leurs révisions ; Nano RP2040 Connect, Nano ESP32, Nano Matter ; GIGA R1, Portenta H7 et variantes Lite, Portenta C33, Nicla ; Zero, MKR, M0 et Due ; AVR classiques et megaAVR ; compatibles ESP32, RP2040/RP2350 et Teensy. Les variantes et clones non recensés, notamment les variantes STM32, disposent d’un profil personnalisé utilisant leur FQBN exact.
+
+Ce catalogue n’est pas une liste de montages qualifiés pour voler. Une carte 32 bits apporte une cible de portage ; une carte 8 bits peut servir à un banc de calcul et à des travaux de stabilisation réduits, mais la pile autonome complète n’y est pas déclarée compatible. Les cartes très anciennes, clones, modules intégrés ou produits Linux/MCU peuvent nécessiter une autre chaîne de compilation, un câblage spécifique ou un portage séparé. Aucun inventaire ne peut garantir toutes les variantes commercialisées.
+
+Le catalogue conserve la source fabricant de chaque profil. Les mémoires affichées sont les limites du cœur de compilation lorsqu’elles sont déclarées, et non une mesure de mémoire libre ni une addition des ressources de plusieurs processeurs. Les choix de partition et de processeur peuvent modifier ces limites. Les capteurs embarqués ne sont pas automatiquement pris en charge par la sélection d’une carte.
+
+Le bouton **Télécharger le projet .zip** produit un dossier dont le nom correspond au fichier `.ino`, avec :
+
+- Le sketch Arduino, les paramètres de commande appliqués et le profil de la carte.
+- `dl_controller.h`, version C/C++ du contrôleur de référence.
+- `dl_hal.h`, les interfaces à compléter pour l’estimateur, les capteurs, la consigne, l’armement et les ESC.
+- Le manifeste, la configuration simulée et les instructions Arduino IDE/CLI.
+
+Décompresser l’archive, ouvrir le `.ino`, installer le paquet de cartes indiqué et choisir la carte exacte et le port USB. Le projet peut être téléversé comme **programme de banc**. Moniteur série à 115200 bauds : `i` affiche l’état, `b` mesure un échantillon de 32 pas de calcul du contrôleur, `r` réinitialise les défauts lorsque la carte est désarmée. Aucune commande série ne permet d’armer les moteurs.
+
+Les sorties sont désactivées par `DL_ACTUATORS_ENABLED=0` ; les adaptateurs matériels sont également des stubs qui refusent l’armement et la fourniture d’un état. Aucun GPIO de moteur n’est configuré. Le profil 8 bits limite en plus l’export au banc avec `DL_LIMITED_PROFILE=1`. Les fonctions de lecture et d’écriture n’inventent pas de mesures et ne produisent pas un PWM générique présenté comme commande d’ESC.
+
+La branche de portage inclut un contrôle d’âge de l’état, une détection de retard de boucle, des sorties nulles et un défaut mémorisé. Cela ne remplace pas un superviseur de vol : les pilotes, conversions de repère, calibrations, consignes, politique d’arrêt et protections indépendantes du matériel restent à fournir. Le benchmark ne mesure ni les pilotes ni l’ordonnancement complet ; les valeurs du moniteur série ne constituent pas une borne du pire temps d’exécution en vol. La cadence de 240 Hz doit être vérifiée sur la boucle entière, y compris les interruptions et communications. La taille et la précision de `double` dépendent du cœur cible.
+
+Le statut de compilation distingue explicitement les cibles réellement compilées des profils non vérifiés. Même une compilation réussie ne valide ni le temps réel, ni les capteurs, ni les ESC, ni un vol. **Aucun téléversement USB depuis le navigateur n’est implémenté.**
+
+Sources du catalogue : [cœurs officiels Arduino](https://github.com/arduino), [Espressif Arduino-ESP32](https://github.com/espressif/arduino-esp32), [Silicon Labs Arduino](https://github.com/SiliconLabs/arduino), [Arduino-Pico](https://github.com/earlephilhower/arduino-pico), [paquet PJRC Teensy](https://www.pjrc.com/teensy/package_teensy_index.json). [Téléverser avec Arduino IDE](https://docs.arduino.cc/software/ide-v2/tutorials/getting-started/ide-v2-uploading-a-sketch/).
 
 ### Repères et unités
 
@@ -114,6 +142,18 @@ Sous Windows sans compilateur, une chaîne locale peut être installée dans les
 Vérification initiale : **22 contrôles numériques réussis**, parcours de l’interface et des trois gabarits, pause, rejet des paramètres invalides, téléchargement C, absence d’erreur JavaScript et absence de débordement horizontal sur mobile. Le C exporté a été compilé en C99 avec `-Wall -Wextra -Werror -pedantic`, puis comparé à JavaScript sur une séquence de 100 états : écart maximal observé **0 N** dans cet environnement (tolérance de test : 10⁻⁹ N). Les sorties désarmées et les entrées invalides sont également vérifiées. Cette comparaison ne qualifie pas l’exécution sur une carte embarquée.
 
 Les gains, inerties, bruits et critères de réussite constituent un cas de développement reproductible ; ils ne représentent pas une identification ni une validation d’un drone réel.
+
+Vérification des exports Arduino :
+
+```sh
+python tests/arduino_export.py
+```
+
+Ce test vérifie les 73 profils, les noms de fichiers, le manifeste, la désactivation des sorties, le CRC32 des ZIP, leur extraction, les profils personnalisés et l’interface. Il prépare des projets dans `.test-artifacts/arduino-projects/`. `tests/arduino_compile.py` compile ensuite dix cibles UNO R4, AVR et Due lorsque leurs cœurs sont installés dans la configuration Arduino CLI locale des artefacts. Il n’effectue jamais de téléversement et ne se connecte à aucune carte.
+
+Vérification du 27 octobre 2026 avec Arduino CLI 1.5.1 : compilation réussie du modèle de banc avec les paramètres initiaux pour UNO R4 Minima/WiFi et Nano R4 (cœur `arduino:renesas_uno` 1.6.0), UNO, Nano ATmega328, Mega 2560, Leonardo et Micro (cœur `arduino:avr` 1.8.8), Due Native et Programming Port (cœur `arduino:sam` 1.6.12). Les autres profils restent marqués **non vérifiés**. Les sorties étaient désactivées pour toutes ces compilations ; aucun capteur ou matériel de vol n’a été testé.
+
+`tests/record_arduino_validation.py` reporte les compilations réussies dans le catalogue sans y copier les chemins locaux. Sous Windows, les anciens compilateurs ARM peuvent nécessiter un chemin court : le script de compilation copie uniquement ces outils dans le dossier temporaire du système lorsque nécessaire. Aucun outil de compilation ni artefact binaire n’est publié avec l’application.
 
 ## Références
 

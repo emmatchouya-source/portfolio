@@ -1,4 +1,4 @@
-const VERSION='1.0.0';
+const VERSION='1.1.0';
 export function configuration(sim){return {format:'dronelab-config',version:1,config:{...sim.c,inertia:[...sim.c.inertia]},waypoints:sim.waypoints.map(p=>[...p])};}
 export function csv(sim){
   const columns=['time_s','east_m','north_m','up_m','ve_mps','vn_mps','vu_mps','roll_rad','pitch_rad','yaw_rad','estimated_e_m','estimated_n_m','estimated_u_m','target_e_m','target_n_m','target_u_m','m1_N','m2_N','m3_N','m4_N','error_m','battery_fraction','mode','gyro_x_radps','gyro_y_radps','gyro_z_radps','accel_x_mps2','accel_y_mps2','accel_z_mps2','gps_e_m','gps_n_m','gps_u_m','baro_m','gps_age_s'];
