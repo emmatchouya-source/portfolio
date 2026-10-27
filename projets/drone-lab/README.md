@@ -57,7 +57,27 @@ Les sorties sont désactivées par `DL_ACTUATORS_ENABLED=0` ; les adaptateurs ma
 
 La branche de portage inclut un contrôle d’âge de l’état, une détection de retard de boucle, des sorties nulles et un défaut mémorisé. Cela ne remplace pas un superviseur de vol : les pilotes, conversions de repère, calibrations, consignes, politique d’arrêt et protections indépendantes du matériel restent à fournir. Le benchmark ne mesure ni les pilotes ni l’ordonnancement complet ; les valeurs du moniteur série ne constituent pas une borne du pire temps d’exécution en vol. La cadence de 240 Hz doit être vérifiée sur la boucle entière, y compris les interruptions et communications. La taille et la précision de `double` dépendent du cœur cible.
 
-Le statut de compilation distingue explicitement les cibles réellement compilées des profils non vérifiés. Même une compilation réussie ne valide ni le temps réel, ni les capteurs, ni les ESC, ni un vol. **Aucun téléversement USB depuis le navigateur n’est implémenté.**
+Le statut de compilation distingue explicitement les cibles réellement compilées des profils non vérifiés. Même une compilation réussie ne valide ni le temps réel, ni les capteurs, ni les ESC, ni un vol.
+
+### Installation et téléversement depuis la page
+
+Dans **Cartes**, cliquer sur **Installer et téléverser depuis cette page** :
+
+1. Télécharger puis ouvrir **DroneLab-Agent-Setup.exe** (Windows 10 / 11 x64). L’agent s’installe dans le compte courant ; garder sa fenêtre ouverte.
+2. Cliquer sur **Connecter l’agent**. Autoriser le réseau local si Chrome / Edge le demande, puis accepter la connexion dans la fenêtre de l’agent.
+3. Choisir la carte dans le panneau Cartes, appliquer les paramètres de simulation et brancher la carte en USB. Actualiser les ports au besoin.
+4. **Préparer et compiler** télécharge les outils nécessaires à cette carte et compile le programme de banc. La première préparation nécessite Internet et peut prendre plusieurs minutes.
+5. **Téléverser sur la carte** recompile les paramètres appliqués puis remplace le programme de la carte. Le résultat indique séparément compilation et téléversement. Les sorties moteurs restent inactives.
+
+Arduino IDE n’est pas requis. L’agent conserve ses fichiers dans `%LOCALAPPDATA%\DroneLabAgent` et enregistre uniquement le protocole `dronelab-agent:` dans le registre du compte utilisateur pour le bouton **Ouvrir DroneLab Agent**. Il ne crée ni service ni démarrage automatique. Fermer sa fenêtre arrête le serveur local, sauf pendant une opération en cours. Une version macOS / Linux n’est pas encore distribuée.
+
+L’installation ne demande pas d’élévation administrateur et désactive les scripts d’installation de pilotes des paquets Arduino. Une carte qui exige un pilote USB absent, une procédure de bootloader ou un outil externe peut nécessiter une intervention distincte ; les règles d’un poste d’entreprise peuvent bloquer l’exécutable. L’installateur n’a pas de signature d’éditeur Windows. Aucune modification des protections du système n’est proposée. La distribution et son empreinte SHA-256 sont accessibles dans la [version de l’agent](https://github.com/emmatchouya-source/portfolio/releases/tag/dronelab-agent-v1.0.0).
+
+Le serveur écoute uniquement sur `127.0.0.1:47831`. Il autorise l’origine exacte du portfolio, demande un accord dans sa fenêtre et fournit un jeton en mémoire valable une heure. Les requêtes sont bornées, les tâches appartiennent au jeton qui les a créées, et un seul traitement s’exécute à la fois. La page envoie un profil et des paramètres numériques ; elle ne peut fournir ni code source, ni commande, ni URL de téléchargement. L’agent utilise les modèles de banc embarqués et impose `DL_ACTUATORS_ENABLED=0`. Les paquets proviennent des index fabricants autorisés ; seuls les dix profils déjà vérifiés ont une version de cœur fixée, les autres restent des cibles de portage à vérifier.
+
+Validation : compilation réelle du programme produit par l’agent pour UNO AVR, autotest de l’exécutable Windows (CLI embarqué et interface Tk), contrôles HTTP d’origine/jeton et parcours web avec un CLI simulé. **Aucun téléversement sur une carte physique ni essai en vol n’a été réalisé.** L’autotest n’effectue pas une installation dans le profil utilisateur et ne modifie pas le registre. Le comportement des pilotes et bootloaders réels reste à valider avec chaque carte.
+
+Sources : [accès au réseau local dans Chrome](https://developer.chrome.com/blog/local-network-access), [Arduino CLI](https://github.com/arduino/arduino-cli), [code et construction de l’agent](../../agent/README.md).
 
 Sources du catalogue : [cœurs officiels Arduino](https://github.com/arduino), [Espressif Arduino-ESP32](https://github.com/espressif/arduino-esp32), [Silicon Labs Arduino](https://github.com/SiliconLabs/arduino), [Arduino-Pico](https://github.com/earlephilhower/arduino-pico), [paquet PJRC Teensy](https://www.pjrc.com/teensy/package_teensy_index.json). [Téléverser avec Arduino IDE](https://docs.arduino.cc/software/ide-v2/tutorials/getting-started/ide-v2-uploading-a-sketch/).
 
@@ -153,7 +173,7 @@ Ce test vérifie les 73 profils, les noms de fichiers, le manifeste, la désacti
 
 Vérification du 27 octobre 2026 avec Arduino CLI 1.5.1 : compilation réussie du modèle de banc avec les paramètres initiaux pour UNO R4 Minima/WiFi et Nano R4 (cœur `arduino:renesas_uno` 1.6.0), UNO, Nano ATmega328, Mega 2560, Leonardo et Micro (cœur `arduino:avr` 1.8.8), Due Native et Programming Port (cœur `arduino:sam` 1.6.12). Les autres profils restent marqués **non vérifiés**. Les sorties étaient désactivées pour toutes ces compilations ; aucun capteur ou matériel de vol n’a été testé.
 
-`tests/record_arduino_validation.py` reporte les compilations réussies dans le catalogue sans y copier les chemins locaux. Sous Windows, les anciens compilateurs ARM peuvent nécessiter un chemin court : le script de compilation copie uniquement ces outils dans le dossier temporaire du système lorsque nécessaire. Aucun outil de compilation ni artefact binaire n’est publié avec l’application.
+`tests/record_arduino_validation.py` reporte les compilations réussies dans le catalogue sans y copier les chemins locaux. Sous Windows, les anciens compilateurs ARM peuvent nécessiter un chemin court : le script de compilation copie uniquement ces outils dans le dossier temporaire du système lorsque nécessaire. Les exécutables restent séparés du site statique et sont distribués dans une version GitHub de l’agent.
 
 ## Références
 

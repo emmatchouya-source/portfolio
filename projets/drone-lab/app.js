@@ -5,6 +5,7 @@ import {configuration,csv,report,generateC,download} from './exports.js';
 import {BOARDS} from './boards.js';
 import {customBoard,arduinoZip} from './arduino.js';
 import {createBoardPicker} from './board-picker.js';
+import {setupAgent} from './agent-client.js';
 
 const $=id=>document.getElementById(id),labels={hover:'VOL STATIONNAIRE',square:'CIRCUIT CARRÉ',circle:'ORBITE CIRCULAIRE',eight:'TRAJECTOIRE EN HUIT',waypoints:'POINTS DE PASSAGE'};
 const fields={
@@ -109,6 +110,7 @@ for(const id of ['customBoardToggle','customBoardName','customBoardFqbn','custom
 $('openHardware').onclick=()=>choosePanel('hardware');
 $('exportArduino').onclick=async()=>{try{const b=currentBoard(),r=await fetch('controller.c');if(!r.ok)throw Error('Impossible de charger le modèle de commande.');download(`DroneLab_${b.id.replace(/[^A-Za-z0-9_-]/g,'_')}.zip`,arduinoZip(await r.text(),sim,b),'application/zip');toast(dirty?'Projet exporté avec la configuration active, sorties moteurs inactives. Réglages non appliqués exclus.':'Projet Arduino exporté · sorties moteurs inactives.');}catch(e){toast(e.message,true);}};
 $('boardSelect').value=boardLabel(selectedBoard);boardPicker.refresh();showBoard();
+setupAgent({getBoard:currentBoard,getConfiguration:()=>configuration(sim),isDirty:()=>dirty});
 function parseImport(data){if(data.format!=='dronelab-config'||data.version!==1||!data.config||!Array.isArray(data.waypoints)||data.waypoints.length>30)throw Error('Format de configuration non reconnu.');const allowed=Object.keys(DEFAULTS),clean={};for(const k of allowed)if(Object.hasOwn(data.config,k))clean[k]=data.config[k];return {c:config(clean),wp:data.waypoints};}
 $('importConfig').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Fichier trop volumineux.');const {c,wp}=parseImport(JSON.parse(await file.text()));newSim(c,wp);waypoints=wp.map(p=>[...p]);fill(c);toast('Configuration importée et appliquée.');}catch(e){toast(`Import refusé : ${e.message}`,true);}event.target.value='';};
 $('about').onclick=()=>$('aboutDialog').showModal();$('closeAbout').onclick=()=>$('aboutDialog').close();$('aboutDialog').addEventListener('click',e=>{if(e.target===$('aboutDialog')){const r=$('aboutDialog').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$('aboutDialog').close();}});
