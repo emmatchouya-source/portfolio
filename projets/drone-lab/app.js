@@ -21,7 +21,7 @@ let waypoints=[[0,0,5],[6,0,5],[6,6,5],[0,0,5]],sim,playing=false,dirty=false,ac
 const scene=new Scene($('scene'));
 function toast(message,error=false){$('toast').textContent=message;$('toast').classList.toggle('error',error);$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,error?7000:3500);}
 function markDirty(){dirty=true;$('dirtyBadge').hidden=false;}
-function choosePanel(name){document.querySelectorAll('[data-panel]').forEach(b=>{const active=b.dataset.panel===name;b.classList.toggle('active',active);b.setAttribute('aria-selected',active);});document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===`panel-${name}`));}
+function choosePanel(name){document.querySelectorAll('[data-panel]').forEach(b=>{const active=b.dataset.panel===name;b.classList.toggle('active',active);b.setAttribute('aria-selected',active);});document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===`panel-${name}`));$('configActions').hidden=!['mission','aircraft','control','sensors'].includes(name);}
 document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',()=>choosePanel(b.dataset.panel)));
 $('openExport').onclick=()=>{choosePanel('export');if(innerWidth<=720)$('panel-export').scrollIntoView({behavior:'smooth',block:'center'});};
 function showWaypointEditor(){$('waypointEditor').hidden=$('mission').value!=='waypoints';}
