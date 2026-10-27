@@ -23,7 +23,7 @@ def main():
             errors=[]
             page.on('pageerror',lambda e:errors.append(str(e)))
             page.goto(f'http://127.0.0.1:{server.server_port}/projets/drone-lab/',wait_until='networkidle')
-            page.wait_for_selector('#boardSelect option',state='attached')
+            page.wait_for_selector('#boardOptions option',state='attached')
             result=page.evaluate('''async()=>{
               const {BOARDS}=await import('./boards.js');
               const {Simulation}=await import('./core.js');
@@ -61,11 +61,12 @@ def main():
             (artifact/'arduino-projects.json').write_text(json.dumps(result['projects'],ensure_ascii=False),encoding='utf-8')
             page.get_by_role('button',name='Cartes',exact=True).click()
             assert page.locator('#dirtyBadge').is_hidden()
-            page.locator('#boardSearch').fill('Nano')
+            assert page.locator('#boardSearch').count()==0, 'Search and selection must be one field'
+            page.locator('#boardSelect').fill('Nano')
+            assert page.locator('#exportArduino').is_disabled(), 'Partial query must not export the previous board'
             assert 'pour ce filtre' in page.locator('#boardCount').inner_text()
             page.locator('#boardGroup').select_option('Arduino 8 bits')
-            page.locator('#boardSearch').fill('')
-            page.locator('#boardSelect').select_option('arduino-avr-uno')
+            page.locator('#boardSelect').fill('Arduino UNO · banc limité')
             assert 'BANC UNIQUEMENT' in page.locator('#boardDetails').inner_text()
             assert page.locator('#dirtyBadge').is_hidden(), 'Hardware selection must not dirty simulation parameters'
             with page.expect_download() as event:
@@ -88,7 +89,7 @@ def main():
             event.value.save_as(artifact/'custom-board.zip')
             page.locator('#customBoardToggle').uncheck()
             page.locator('#boardGroup').select_option('')
-            page.locator('#boardSelect').select_option('arduino-renesas_uno-minima')
+            page.locator('#boardSelect').fill('Arduino UNO R4 Minima')
             page.screenshot(path=str(artifact/'boards-desktop.png'),full_page=True)
             page.set_viewport_size({'width':390,'height':844})
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),'Hardware UI mobile overflow'

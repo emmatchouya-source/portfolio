@@ -61,8 +61,8 @@
           <div class="section-title"><span>01</span><h2>Carte de commande</h2></div>
           <p class="hint" id="boardCount">Catalogue de profils Arduino et compatibles.</p>
           <label class="field wide">Famille<select id="boardGroup"><option value="">Toutes les familles</option><option>Arduino 32 bits</option><option>Arduino 8 bits</option><option>Compatibles Arduino</option></select></label>
-          <label class="field wide">Rechercher une carte<input type="search" id="boardSearch" placeholder="UNO, Nano, Portenta, ESP32…" autocomplete="off"></label>
-          <label class="field wide">Modèle<select id="boardSelect"></select></label>
+          <label class="field wide">Carte Arduino<input type="search" id="boardSelect" list="boardOptions" placeholder="Rechercher ou choisir une carte…" autocomplete="off" aria-describedby="boardCount"></label>
+          <datalist id="boardOptions"></datalist>
           <label class="toggle"><input id="customBoardToggle" type="checkbox"><span>Autre carte / variante STM32</span></label>
           <div id="customBoardFields" hidden>
             <label class="field wide">Nom de la carte<input id="customBoardName" type="text" maxlength="80" placeholder="Ma carte STM32"></label>

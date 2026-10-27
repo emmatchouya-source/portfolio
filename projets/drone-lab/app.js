@@ -78,18 +78,24 @@ $('exportReport').onclick=()=>jsonDownload('dronelab-report.json',report(sim));
 $('exportC').onclick=async()=>{try{const r=await fetch('controller.c');if(!r.ok)throw Error('Le modèle C ne peut pas être chargé. Utilise le serveur local ou le site hébergé.');download('dronelab_controller.c',generateC(await r.text(),sim.c),'text/x-c;charset=utf-8');toast('Loi de commande C exportée avec les paramètres actifs.');}catch(e){toast(e.message,true);}};
 let selectedBoard=BOARDS.find(b=>b.fqbn==='arduino:renesas_uno:minima');
 try{const saved=localStorage.getItem('droneLabBoard');selectedBoard=BOARDS.find(b=>b.id===saved)||selectedBoard;}catch{/* Optional persistence. */}
-function currentBoard(){return $('customBoardToggle').checked?customBoard({name:$('customBoardName').value,fqbn:$('customBoardFqbn').value,limited:$('customBoardLimited').checked}):selectedBoard;}
-function renderBoardList(){
-  const query=$('boardSearch').value.trim().toLowerCase(),group=$('boardGroup').value;
-  const matches=BOARDS.filter(b=>(!group||b.group===group)&&`${b.name} ${b.architecture} ${b.core}`.toLowerCase().includes(query));
-  $('boardSelect').replaceChildren();
-  const visible=matches.some(b=>b.id===selectedBoard.id)?matches:[selectedBoard,...matches];
-  for(const b of visible){const option=document.createElement('option');option.value=b.id;option.textContent=b.name+(b.limited?' · banc limité':'');option.selected=b.id===selectedBoard.id;$('boardSelect').append(option);}
-  $('boardCount').textContent=`${BOARDS.length} profils recensés · ${matches.length} pour ce filtre. Un profil personnalisé couvre les autres variantes.`;
+const boardLabel=b=>b.name+(b.limited?' · banc limité':'');
+function currentBoard(){
+  if($('customBoardToggle').checked)return customBoard({name:$('customBoardName').value,fqbn:$('customBoardFqbn').value,limited:$('customBoardLimited').checked});
+  const label=$('boardSelect').value.trim(),group=$('boardGroup').value;
+  const board=BOARDS.find(b=>boardLabel(b)===label&&(!group||b.group===group));
+  if(!board)throw Error('Choisis une carte dans les suggestions pour préparer son projet.');
+  return board;
+}
+function renderBoardList(rebuild=true){
+  const query=$('boardSelect').value.trim().toLowerCase(),group=$('boardGroup').value;
+  const options=BOARDS.filter(b=>!group||b.group===group);
+  if(rebuild){$('boardOptions').replaceChildren();for(const b of options){const option=document.createElement('option');option.value=boardLabel(b);option.label=`${b.group} · ${b.architecture} · ${b.core}`;$('boardOptions').append(option);}}
+  const matches=options.filter(b=>`${boardLabel(b)} ${b.group} ${b.architecture} ${b.core}`.toLowerCase().includes(query));
+  $('boardCount').textContent=`${BOARDS.length} profils recensés · ${matches.length} pour ce filtre. Saisis un nom puis choisis une suggestion.`;
 }
 const formatBytes=n=>Number.isFinite(n)?`${(n/1024).toLocaleString('fr-FR',{maximumFractionDigits:1})} Kio`:'Selon les options du cœur';
 function showBoard(){
-  const custom=$('customBoardToggle').checked;$('customBoardFields').hidden=!custom;$('boardSelect').disabled=custom;$('boardGroup').disabled=custom;$('boardSearch').disabled=custom;
+  const custom=$('customBoardToggle').checked;$('customBoardFields').hidden=!custom;$('boardSelect').disabled=custom;$('boardGroup').disabled=custom;
   const box=$('boardDetails');box.replaceChildren();
   try{
     const b=currentBoard(),title=document.createElement('h3');title.textContent=b.name;box.append(title);
@@ -99,12 +105,15 @@ function showBoard(){
     const note=document.createElement('p');note.textContent=b.notes;box.append(note);$('boardSource').hidden=!b.source;if(b.source)$('boardSource').href=b.source;$('exportArduino').disabled=false;
   }catch(e){const note=document.createElement('p');note.textContent=e.message;box.append(note);$('exportArduino').disabled=true;$('boardSource').hidden=true;}
 }
-$('boardSearch').oninput=renderBoardList;$('boardGroup').onchange=renderBoardList;
-$('boardSelect').onchange=()=>{selectedBoard=BOARDS.find(b=>b.id===$('boardSelect').value);try{localStorage.setItem('droneLabBoard',selectedBoard.id);}catch{/* Optional persistence. */}showBoard();};
+$('boardGroup').onchange=()=>{if($('boardGroup').value&&selectedBoard.group!==$('boardGroup').value)$('boardSelect').value='';renderBoardList();showBoard();};
+$('boardSelect').oninput=()=>{
+  try{selectedBoard=currentBoard();try{localStorage.setItem('droneLabBoard',selectedBoard.id);}catch{/* Optional persistence. */}}catch{/* Partial search: wait for an exact suggestion. */}
+  renderBoardList(false);showBoard();
+};
 for(const id of ['customBoardToggle','customBoardName','customBoardFqbn','customBoardLimited'])$(id).addEventListener('input',showBoard);
 $('openHardware').onclick=()=>choosePanel('hardware');
 $('exportArduino').onclick=async()=>{try{const b=currentBoard(),r=await fetch('controller.c');if(!r.ok)throw Error('Impossible de charger le modèle de commande.');download(`DroneLab_${b.id.replace(/[^A-Za-z0-9_-]/g,'_')}.zip`,arduinoZip(await r.text(),sim,b),'application/zip');toast(dirty?'Projet exporté avec la configuration active, sorties moteurs inactives. Réglages non appliqués exclus.':'Projet Arduino exporté · sorties moteurs inactives.');}catch(e){toast(e.message,true);}};
-renderBoardList();showBoard();
+$('boardSelect').value=boardLabel(selectedBoard);renderBoardList();showBoard();
 function parseImport(data){if(data.format!=='dronelab-config'||data.version!==1||!data.config||!Array.isArray(data.waypoints)||data.waypoints.length>30)throw Error('Format de configuration non reconnu.');const allowed=Object.keys(DEFAULTS),clean={};for(const k of allowed)if(Object.hasOwn(data.config,k))clean[k]=data.config[k];return {c:config(clean),wp:data.waypoints};}
 $('importConfig').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Fichier trop volumineux.');const {c,wp}=parseImport(JSON.parse(await file.text()));newSim(c,wp);waypoints=wp.map(p=>[...p]);fill(c);toast('Configuration importée et appliquée.');}catch(e){toast(`Import refusé : ${e.message}`,true);}event.target.value='';};
 $('about').onclick=()=>$('aboutDialog').showModal();$('closeAbout').onclick=()=>$('aboutDialog').close();$('aboutDialog').addEventListener('click',e=>{if(e.target===$('aboutDialog')){const r=$('aboutDialog').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$('aboutDialog').close();}});
