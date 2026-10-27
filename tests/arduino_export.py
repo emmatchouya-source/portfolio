@@ -23,7 +23,7 @@ def main():
             errors=[]
             page.on('pageerror',lambda e:errors.append(str(e)))
             page.goto(f'http://127.0.0.1:{server.server_port}/projets/drone-lab/',wait_until='networkidle')
-            page.wait_for_selector('#boardOptions option',state='attached')
+            page.wait_for_selector('#boardOptions [role=option]',state='attached')
             result=page.evaluate('''async()=>{
               const {BOARDS}=await import('./boards.js');
               const {Simulation}=await import('./core.js');
@@ -64,9 +64,25 @@ def main():
             assert page.locator('#boardSearch').count()==0, 'Search and selection must be one field'
             page.locator('#boardSelect').fill('Nano')
             assert page.locator('#exportArduino').is_disabled(), 'Partial query must not export the previous board'
+            assert page.locator('#boardOptions').is_visible(), 'Suggestions must be visible in the page'
+            assert page.locator('#boardOptions [role=option]').count()>1
+            assert page.locator('#boardDetails').is_hidden(), 'No empty details box during search'
+            page.locator('#boardSelect').press('ArrowDown')
+            page.locator('#boardSelect').press('Enter')
+            assert page.locator('#boardSelect').input_value()=='Arduino Nano R4'
+            assert page.locator('#boardOptions').is_hidden()
+            assert page.locator('#boardDetails').is_visible()
+            page.locator('#boardSelect').fill('aucune-carte-xyz')
+            assert page.locator('#boardOptions').inner_text()=='Aucune carte trouvée.'
+            assert page.locator('#boardDetails').is_hidden()
+            page.locator('#boardSelect').press('Escape')
+            assert page.locator('#boardOptions').is_hidden()
             assert 'pour ce filtre' in page.locator('#boardCount').inner_text()
             page.locator('#boardGroup').select_option('Arduino 8 bits')
-            page.locator('#boardSelect').fill('Arduino UNO · banc limité')
+            page.locator('#boardSelect').fill('uno')
+            page.locator('#boardOptions [data-board-id="arduino-avr-uno"]').click()
+            assert page.locator('#boardSelect').input_value()=='Arduino UNO · banc limité'
+            assert page.locator('#boardOptions').is_hidden()
             assert 'BANC UNIQUEMENT' in page.locator('#boardDetails').inner_text()
             assert page.locator('#dirtyBadge').is_hidden(), 'Hardware selection must not dirty simulation parameters'
             with page.expect_download() as event:
@@ -91,7 +107,17 @@ def main():
             page.locator('#boardGroup').select_option('')
             page.locator('#boardSelect').fill('Arduino UNO R4 Minima')
             page.screenshot(path=str(artifact/'boards-desktop.png'),full_page=True)
-            page.set_viewport_size({'width':390,'height':844})
+            desktop_url=page.url
+            page=browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
+            page.goto(desktop_url,wait_until='networkidle')
+            page.get_by_role('button',name='Cartes',exact=True).tap()
+            page.locator('#boardSelect').fill('nano')
+            assert page.locator('#boardOptions').is_visible(), 'Mobile suggestions must be visible'
+            page.locator('#boardOptions [data-board-id="arduino-renesas_uno-nanor4"]').tap()
+            assert page.locator('#boardSelect').input_value()=='Arduino Nano R4'
+            page.locator('#boardSelect').fill('')
+            assert page.locator('#boardDetails').is_hidden()
+            page.screenshot(path=str(artifact/'picker-mobile.png'),full_page=True)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),'Hardware UI mobile overflow'
             assert not errors,errors
             browser.close()

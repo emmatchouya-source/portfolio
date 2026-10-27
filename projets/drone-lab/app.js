@@ -4,6 +4,7 @@ import {Scene,drawAttitude,drawChart,chartSpec,COLORS} from './renderer.js';
 import {configuration,csv,report,generateC,download} from './exports.js';
 import {BOARDS} from './boards.js';
 import {customBoard,arduinoZip} from './arduino.js';
+import {createBoardPicker} from './board-picker.js';
 
 const $=id=>document.getElementById(id),labels={hover:'VOL STATIONNAIRE',square:'CIRCUIT CARRÉ',circle:'ORBITE CIRCULAIRE',eight:'TRAJECTOIRE EN HUIT',waypoints:'POINTS DE PASSAGE'};
 const fields={
@@ -86,34 +87,28 @@ function currentBoard(){
   if(!board)throw Error('Choisis une carte dans les suggestions pour préparer son projet.');
   return board;
 }
-function renderBoardList(rebuild=true){
-  const query=$('boardSelect').value.trim().toLowerCase(),group=$('boardGroup').value;
-  const options=BOARDS.filter(b=>!group||b.group===group);
-  if(rebuild){$('boardOptions').replaceChildren();for(const b of options){const option=document.createElement('option');option.value=boardLabel(b);option.label=`${b.group} · ${b.architecture} · ${b.core}`;$('boardOptions').append(option);}}
-  const matches=options.filter(b=>`${boardLabel(b)} ${b.group} ${b.architecture} ${b.core}`.toLowerCase().includes(query));
-  $('boardCount').textContent=`${BOARDS.length} profils recensés · ${matches.length} pour ce filtre. Saisis un nom puis choisis une suggestion.`;
-}
+function saveBoard(board){selectedBoard=board;try{localStorage.setItem('droneLabBoard',board.id);}catch{/* Optional persistence. */}}
 const formatBytes=n=>Number.isFinite(n)?`${(n/1024).toLocaleString('fr-FR',{maximumFractionDigits:1})} Kio`:'Selon les options du cœur';
 function showBoard(){
   const custom=$('customBoardToggle').checked;$('customBoardFields').hidden=!custom;$('boardSelect').disabled=custom;$('boardGroup').disabled=custom;
-  const box=$('boardDetails');box.replaceChildren();
+  const box=$('boardDetails');box.hidden=true;box.replaceChildren();$('boardHelp').hidden=true;
   try{
     const b=currentBoard(),title=document.createElement('h3');title.textContent=b.name;box.append(title);
     const status=document.createElement('span');status.className='board-status';status.textContent=b.limited?'BANC UNIQUEMENT · PROFIL 8 BITS LIMITÉ':'PROJET DE PORTAGE · CADENCE À MESURER';box.append(status);
     const dl=document.createElement('dl');
     for(const [label,value] of [['Architecture',b.architecture],['Flash : limite déclarée par le cœur',formatBytes(b.flash)],['RAM : limite déclarée par le cœur',formatBytes(b.ram)],['Paquet Arduino',b.core],['Cible de compilation (FQBN)',b.fqbn],['Vérification du modèle initial',b.validation?`Cœur ${b.validation.coreVersion} · compilation réussie`:'Non vérifiée pour cette cible'],['Validation en vol','Non réalisée']]){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;dl.append(dt,dd);}box.append(dl);
-    const note=document.createElement('p');note.textContent=b.notes;box.append(note);$('boardSource').hidden=!b.source;if(b.source)$('boardSource').href=b.source;$('exportArduino').disabled=false;
-  }catch(e){const note=document.createElement('p');note.textContent=e.message;box.append(note);$('exportArduino').disabled=true;$('boardSource').hidden=true;}
+    const note=document.createElement('p');note.textContent=b.notes;box.append(note);box.hidden=false;$('boardSource').hidden=!b.source;if(b.source)$('boardSource').href=b.source;$('exportArduino').disabled=false;
+  }catch(e){$('boardHelp').textContent=e.message;$('boardHelp').hidden=!$('boardSelect').value&&!custom;$('exportArduino').disabled=true;$('boardSource').hidden=true;}
 }
-$('boardGroup').onchange=()=>{if($('boardGroup').value&&selectedBoard.group!==$('boardGroup').value)$('boardSelect').value='';renderBoardList();showBoard();};
-$('boardSelect').oninput=()=>{
-  try{selectedBoard=currentBoard();try{localStorage.setItem('droneLabBoard',selectedBoard.id);}catch{/* Optional persistence. */}}catch{/* Partial search: wait for an exact suggestion. */}
-  renderBoardList(false);showBoard();
-};
-for(const id of ['customBoardToggle','customBoardName','customBoardFqbn','customBoardLimited'])$(id).addEventListener('input',showBoard);
+const boardPicker=createBoardPicker({input:$('boardSelect'),list:$('boardOptions'),boards:BOARDS,label:boardLabel,getGroup:()=>$('boardGroup').value,
+  onInput:()=>{try{saveBoard(currentBoard());}catch{/* Partial query: wait for selection. */}showBoard();},
+  onSelect:board=>{saveBoard(board);showBoard();},
+  onResults:count=>{$('boardCount').textContent=`${BOARDS.length} profils recensés · ${count} pour ce filtre. Saisis un nom puis choisis une suggestion.`;}});
+$('boardGroup').onchange=()=>{if($('boardGroup').value&&selectedBoard.group!==$('boardGroup').value)$('boardSelect').value='';boardPicker.refresh();showBoard();};
+for(const id of ['customBoardToggle','customBoardName','customBoardFqbn','customBoardLimited'])$(id).addEventListener('input',()=>{boardPicker.close();showBoard();});
 $('openHardware').onclick=()=>choosePanel('hardware');
 $('exportArduino').onclick=async()=>{try{const b=currentBoard(),r=await fetch('controller.c');if(!r.ok)throw Error('Impossible de charger le modèle de commande.');download(`DroneLab_${b.id.replace(/[^A-Za-z0-9_-]/g,'_')}.zip`,arduinoZip(await r.text(),sim,b),'application/zip');toast(dirty?'Projet exporté avec la configuration active, sorties moteurs inactives. Réglages non appliqués exclus.':'Projet Arduino exporté · sorties moteurs inactives.');}catch(e){toast(e.message,true);}};
-$('boardSelect').value=boardLabel(selectedBoard);renderBoardList();showBoard();
+$('boardSelect').value=boardLabel(selectedBoard);boardPicker.refresh();showBoard();
 function parseImport(data){if(data.format!=='dronelab-config'||data.version!==1||!data.config||!Array.isArray(data.waypoints)||data.waypoints.length>30)throw Error('Format de configuration non reconnu.');const allowed=Object.keys(DEFAULTS),clean={};for(const k of allowed)if(Object.hasOwn(data.config,k))clean[k]=data.config[k];return {c:config(clean),wp:data.waypoints};}
 $('importConfig').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Fichier trop volumineux.');const {c,wp}=parseImport(JSON.parse(await file.text()));newSim(c,wp);waypoints=wp.map(p=>[...p]);fill(c);toast('Configuration importée et appliquée.');}catch(e){toast(`Import refusé : ${e.message}`,true);}event.target.value='';};
 $('about').onclick=()=>$('aboutDialog').showModal();$('closeAbout').onclick=()=>$('aboutDialog').close();$('aboutDialog').addEventListener('click',e=>{if(e.target===$('aboutDialog')){const r=$('aboutDialog').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$('aboutDialog').close();}});

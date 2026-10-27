@@ -5,7 +5,7 @@
   <meta name="description" content="Laboratoire de vol autonome : simulation 3D, dynamique du quadricoptère, capteurs, commande en cascade et export C de référence.">
   <meta name="theme-color" content="#0b1017"><title>DroneLab — Laboratoire de vol autonome</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1017'/%3E%3Cpath d='m8 8 16 16M8 24 24 8' stroke='%2357dfbc' stroke-width='3'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=board-picker-3">
 </head>
 <body>
   <header class="topbar">
@@ -61,8 +61,11 @@
           <div class="section-title"><span>01</span><h2>Carte de commande</h2></div>
           <p class="hint" id="boardCount">Catalogue de profils Arduino et compatibles.</p>
           <label class="field wide">Famille<select id="boardGroup"><option value="">Toutes les familles</option><option>Arduino 32 bits</option><option>Arduino 8 bits</option><option>Compatibles Arduino</option></select></label>
-          <label class="field wide">Carte Arduino<input type="search" id="boardSelect" list="boardOptions" placeholder="Rechercher ou choisir une carte…" autocomplete="off" aria-describedby="boardCount"></label>
-          <datalist id="boardOptions"></datalist>
+          <div class="board-picker">
+            <label class="field wide" for="boardSelect">Carte Arduino<input type="search" id="boardSelect" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="boardOptions" placeholder="Rechercher ou choisir une carte…" autocomplete="off" aria-describedby="boardCount boardHelp"></label>
+            <ul id="boardOptions" role="listbox" aria-label="Cartes proposées" hidden></ul>
+          </div>
+          <p id="boardHelp" class="hint" role="status" hidden></p>
           <label class="toggle"><input id="customBoardToggle" type="checkbox"><span>Autre carte / variante STM32</span></label>
           <div id="customBoardFields" hidden>
             <label class="field wide">Nom de la carte<input id="customBoardName" type="text" maxlength="80" placeholder="Ma carte STM32"></label>
@@ -70,7 +73,7 @@
             <label class="toggle"><input id="customBoardLimited" type="checkbox"><span>Profil limité / 8 bits</span></label>
             <p class="hint">Copier l’identifiant exact obtenu avec Arduino CLI ou le fabricant, avec les options du microcontrôleur si nécessaires.</p>
           </div>
-          <div id="boardDetails" class="board-details" aria-live="polite"></div>
+          <div id="boardDetails" class="board-details" aria-live="polite" hidden></div>
           <div class="section-title"><span>02</span><h2>Projet Arduino</h2></div>
           <button id="exportArduino" class="button primary full">↓ Télécharger le projet .zip</button>
           <p class="hint">Décompresser, ouvrir le fichier .ino, choisir la carte et le port USB dans Arduino IDE, puis compiler et téléverser.</p>
@@ -122,5 +125,5 @@
   </div>
   <div id="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="aboutDialog"><div class="dialog-head"><h2>Un laboratoire pour développer la commande.</h2><button id="closeAbout" class="button icon" aria-label="Fermer">×</button></div><p>DroneLab simule un quadricoptère X à six degrés de liberté. La scène 3D représente le véritable état calculé par la dynamique. La commande utilise par défaut un état estimé à partir des capteurs simulés.</p><p>Les modèles de poussée, vent, traînée, capteurs et batterie sont simplifiés et non identifiés sur un drone réel. Le filtre complémentaire peut dériver, notamment pendant des accélérations soutenues ou sans GNSS.</p><p>Le contrôleur C exporté est une base de développement. Il ne constitue pas un micrologiciel de vol complet. L’intégration matérielle, les essais avec simulateur externe et contrôleur réel, les essais sur banc puis en vol restent à réaliser.</p><p>Pas de liaison avec un drone réel, de traitement caméra, d’évitement d’obstacles, de CFD, de SITL PX4 ou d’HIL dans cette version.</p><p>Références : <a href="https://docs.px4.io/main/en/flight_stack/controller_diagrams" target="_blank" rel="noopener">architecture de commande PX4</a> · <a href="https://docs.px4.io/main/en/simulation/" target="_blank" rel="noopener">validation par simulation</a>.</p><a class="button outline" href="README.md">Documentation technique</a></dialog>
-  <noscript>Active JavaScript pour utiliser le simulateur DroneLab.</noscript><script type="module" src="app.js"></script>
+  <noscript>Active JavaScript pour utiliser le simulateur DroneLab.</noscript><script type="module" src="app.js?v=board-picker-3"></script>
 </body></html>
