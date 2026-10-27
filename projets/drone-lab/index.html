@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Laboratoire de vol autonome : simulation 3D, dynamique du quadricoptère, capteurs, commande en cascade et export C de référence.">
+  <meta name="theme-color" content="#0b1017"><title>DroneLab — Laboratoire de vol autonome</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1017'/%3E%3Cpath d='m8 8 16 16M8 24 24 8' stroke='%2357dfbc' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="DroneLab accueil"><span class="brand-icon">✣</span><span>DRONE<span class="accent">LAB</span><small>LABORATOIRE DE VOL AUTONOME</small></span></a>
+    <div class="project-label"><span class="dot"></span>QUADRICOPTÈRE X <span class="version">v1.0 · navigateur</span></div>
+    <div class="header-actions"><a href="../../index.html#projets" class="text-link">← Portfolio</a><button id="openExport" class="button outline">↗ Exporter</button></div>
+  </header>
+  <div class="workspace">
+    <aside class="sidebar">
+      <div class="sidebar-heading"><span class="eyebrow">Configuration de l’essai</span><span id="dirtyBadge" class="badge" hidden>Modifié</span></div>
+      <nav class="tabs" aria-label="Configuration">
+        <button data-panel="mission" class="active" aria-selected="true">Mission</button><button data-panel="aircraft" aria-selected="false">Drone</button><button data-panel="control" aria-selected="false">Commande</button><button data-panel="sensors" aria-selected="false">Capteurs</button><button data-panel="export" aria-selected="false">Exports</button>
+      </nav>
+      <div class="panel-scroll">
+        <section id="panel-mission" class="panel active">
+          <div class="section-title"><span>01</span><h2>Plan de vol</h2></div>
+          <label class="field wide">Trajectoire<select id="mission"><option value="square">Circuit carré</option><option value="hover">Vol stationnaire</option><option value="circle">Orbite circulaire</option><option value="eight">Trajectoire en huit</option><option value="waypoints">Points de passage</option></select></label>
+          <div id="mission-fields"></div>
+          <div id="waypointEditor" hidden>
+            <p class="hint">Coordonnées locales ENU, en mètres. Est / Nord / altitude.</p>
+            <div id="waypointList"></div><button id="addWaypoint" class="button outline full">+ Ajouter un point</button>
+          </div>
+          <div class="section-title"><span>02</span><h2>Environnement</h2></div>
+          <div id="environment-fields"></div>
+          <div class="info-card"><span class="mini-label">SÉQUENCE AUTONOME</span><p>Décollage → stabilisation → trajectoire → maintien. Retour et atterrissage disponibles à tout moment.</p></div>
+        </section>
+        <section id="panel-aircraft" class="panel">
+          <div class="section-title"><span>01</span><h2>Plateforme</h2></div>
+          <label class="field wide">Gabarit de départ<select id="preset"><option value="standard">Standard · 1,5 kg</option><option value="micro">Léger · 250 g</option><option value="heavy">Lourd · 4 kg</option></select></label>
+          <div id="aircraft-fields"></div>
+          <div class="info-card"><span class="mini-label">MODÈLE À 6 DEGRÉS DE LIBERTÉ</span><p>Corps rigide, attitude par quaternion, quatre poussées indépendantes, inerties, retard moteur, traînée quadratique et batterie simplifiée.</p></div>
+        </section>
+        <section id="panel-control" class="panel">
+          <div class="section-title"><span>01</span><h2>Architecture en cascade</h2></div>
+          <div class="cascade"><span>Position</span><b>↓</b><span>Vitesse · PI + anticipation</span><b>↓</b><span>Attitude · quaternion</span><b>↓</b><span>Vitesses angulaires · PID</span><b>↓</b><span>Allocation des 4 moteurs</span></div>
+          <label class="field wide">État utilisé par la commande<select id="feedback"><option value="estimate">Estimation à partir des capteurs</option><option value="truth">État physique exact · comparaison</option></select></label>
+          <div id="control-fields"></div>
+          <p class="hint">Les gains s’appliquent après réinitialisation. La saturation bloque l’intégration des deux boucles PI/PID.</p>
+        </section>
+        <section id="panel-sensors" class="panel">
+          <div class="section-title"><span>01</span><h2>Chaîne de mesure</h2></div>
+          <div id="sensor-fields"></div>
+          <table class="sensor-spec"><thead><tr><th>Capteur</th><th>Cadence</th><th>Bruit σ × niveau</th></tr></thead><tbody>
+            <tr><td>Gyroscope</td><td>240 Hz</td><td>0,002 rad/s</td></tr><tr><td>Accéléromètre</td><td>240 Hz</td><td>0,025 m/s²</td></tr><tr><td>GNSS position</td><td>10 Hz</td><td>0,12 m</td></tr><tr><td>GNSS vitesse</td><td>10 Hz</td><td>0,04 m/s</td></tr><tr><td>Baromètre</td><td>24 Hz</td><td>0,06 m</td></tr><tr><td>Magnétomètre</td><td>48 Hz</td><td>0,006 relatif</td></tr><tr><td>Télémètre sol</td><td>24 Hz</td><td>0,015 m · &lt;12 m</td></tr>
+          </tbody></table>
+          <div class="info-card"><span class="mini-label">ESTIMATEUR COMPLÉMENTAIRE</span><p>Propagation inertielle, correction gravité / magnétomètre, fusion GNSS, baromètre et télémètre. Biais gyro fixes simulés. Ce filtre n’est pas un EKF.</p></div>
+          <div class="section-title"><span>02</span><h2>Injection de défauts</h2></div>
+          <label class="toggle"><input id="gpsDropout" type="checkbox"><span>Couper le GNSS</span></label>
+          <label class="field wide">Panne moteur<select id="motorFailure"><option value="-1">Aucune</option><option value="0">M1 · avant gauche</option><option value="1">M2 · arrière gauche</option><option value="2">M3 · arrière droit</option><option value="3">M4 · avant droit</option></select></label>
+          <p class="hint">GNSS perdu &gt; 1,2 s : descente. Panne d’un moteur : descente tentée ; un quadricoptère peut perdre sa stabilité.</p>
+        </section>
+        <section id="panel-export" class="panel">
+          <div class="section-title"><span>01</span><h2>Résultats & code</h2></div>
+          <p class="hint">Télécharge les paramètres de l’essai, les mesures ou le contrôleur de référence.</p>
+          <button id="exportConfig" class="export-card"><span>{ }</span><div><b>Configuration JSON</b><small>Drone, gains, environnement, mission</small></div><i>↓</i></button>
+          <button id="exportCsv" class="export-card"><span>≋</span><div><b>Télémétrie CSV</b><small>20 Hz · jusqu’à 10 minutes récentes</small></div><i>↓</i></button>
+          <button id="exportReport" class="export-card"><span>↗</span><div><b>Rapport d’essai JSON</b><small>Résultats, événements et limites</small></div><i>↓</i></button>
+          <button id="exportC" class="export-card"><span>C</span><div><b>Contrôleur C99</b><small>Position, attitude, PID et allocation</small></div><i>↓</i></button>
+          <label class="button outline full import-label">↑ Importer une configuration<input type="file" id="importConfig" accept=".json,application/json" hidden></label>
+          <div class="info-card amber"><span class="mini-label">PÉRIMÈTRE DU CODE EXPORTÉ</span><p>Le fichier C contient la loi de commande et les paramètres. Les pilotes capteurs, l’estimateur, les sorties ESC et le superviseur de vol dépendent du matériel et restent à intégrer.</p></div>
+          <a href="README.md" class="text-link">Consulter la documentation technique ↗</a>
+        </section>
+      </div>
+      <div class="sidebar-footer"><button id="applyConfig" class="button outline full">Appliquer et réinitialiser</button><button id="defaults" class="quiet">Rétablir les paramètres initiaux</button></div>
+    </aside>
+    <main class="main">
+      <div class="titlebar"><div><span class="eyebrow">SIMULER · MESURER · DÉVELOPPER</span><h1>Le vol, sous contrôle.</h1></div><span class="simulation-tag"><span class="dot"></span>SIMULATION LOCALE</span></div>
+      <section class="scene-card" aria-label="Vue 3D du drone">
+        <div class="scene-toolbar"><div class="scene-title"><span class="live-square"></span>ESPACE DE VOL <span id="missionLabel">CIRCUIT CARRÉ</span></div><div class="view-buttons"><button id="orbitView" class="active" title="Vue en perspective">3D</button><button id="topView" title="Vue de dessus">Dessus</button><button id="followView" aria-pressed="false" title="Suivre le drone">Suivre</button><button id="resetView" title="Recentrer la caméra">↺</button></div></div>
+        <div class="viewport"><canvas id="scene" aria-label="Vue 3D interactive. Glisser pour tourner la caméra, molette pour zoomer."></canvas>
+          <div class="scene-status"><span class="dot" id="statusDot"></span><strong id="flightStatus">Prêt au décollage</strong><span id="elapsed">00:00.0</span></div>
+          <div class="scene-metrics"><div><span>ALTITUDE</span><strong id="altitudeValue">0.00 <small>m</small></strong></div><div><span>VITESSE</span><strong id="speedValue">0.00 <small>m/s</small></strong></div><div><span>ÉCART CONSIGNE</span><strong id="errorValue">0.00 <small>m</small></strong></div></div>
+          <div class="scene-legend"><span><i class="line planned"></i>Consigne</span><span><i class="line flown"></i>Trajectoire</span><span><i class="point"></i>Estimation</span></div>
+          <div class="camera-help">Glisser : orbite <span>·</span> Molette : zoom <span>·</span> Repère ENU / mètres</div>
+          <div class="horizon"><canvas id="attitude" width="132" height="132" aria-label="Horizon artificiel"></canvas><span id="attitudeText">R 0.0° · T 0.0°</span></div>
+        </div>
+        <div class="transport"><div class="transport-main"><button id="play" class="button primary">▶ Lancer la mission</button><button id="reset" class="button icon" title="Réinitialiser l’essai" aria-label="Réinitialiser l’essai">↺</button><span class="divider"></span><button id="hold" class="button subtle">Maintenir</button><button id="rtl" class="button subtle">Retour</button><button id="land" class="button subtle">Atterrir</button></div><div class="transport-extra"><button id="disturb" class="button subtle" title="Appliquer une perturbation de vitesse et rotation">↯ Perturber</button><label class="speed-select">Temps<select id="timescale" aria-label="Vitesse de simulation"><option value="1">×1</option><option value="2">×2</option><option value="4">×4</option></select></label></div></div>
+      </section>
+      <section class="kpi-grid" aria-label="Indicateurs d’essai">
+        <div class="kpi"><span>ERREUR RMS POSITION</span><strong id="rmsValue">— <small>m</small></strong><small>Depuis le décollage</small></div>
+        <div class="kpi"><span>ERREUR D’ESTIMATION</span><strong id="estValue">0.00 <small>m</small></strong><small>Position estimée / réelle</small></div>
+        <div class="kpi"><span>BATTERIE SIMULÉE</span><strong id="batteryValue">100 <small>%</small></strong><small id="powerValue">16.8 V · 0.0 A</small></div>
+        <div class="kpi"><span>SATURATION MOTEURS</span><strong id="saturationValue">0.0 <small>%</small></strong><small>Part des pas de commande</small></div>
+      </section>
+      <section class="analysis-grid">
+        <div class="chart-card"><div class="card-header"><h2>Télémétrie</h2><select id="chartType" aria-label="Courbe de télémétrie"><option value="altitude">Altitude · consigne / réelle / estimée</option><option value="attitude">Attitude · roulis / tangage / lacet</option><option value="motors">Poussées moteurs</option><option value="error">Erreur de suivi</option></select></div><canvas id="chart" aria-label="Courbes des trente dernières secondes"></canvas><div id="chartLegend" class="chart-legend"></div></div>
+        <div class="health-card"><div class="card-header"><h2>État du système</h2><span class="mini-label">EN DIRECT</span></div><div class="health-row"><span>Chaîne de commande</span><b id="feedbackStatus">CAPTEURS</b></div><div class="health-row"><span>GNSS · 10 Hz</span><b id="gpsStatus">ACTIF</b></div><div class="health-row"><span>IMU · 240 Hz</span><b id="imuStatus">ACTIVE</b></div><div class="health-row"><span>Point de passage</span><b id="waypointStatus">—</b></div><div class="motor-bars" id="motorBars"></div></div>
+      </section>
+      <section class="event-card"><div class="card-header"><h2>Journal de vol</h2><span class="mini-label" id="sampleCount">0 MESURE</span></div><ol id="eventLog"><li><time>00:00</time><span>Configure l’essai, puis lance la mission.</span></li></ol></section>
+      <footer class="main-footer"><span><i class="dot"></i>Physique 240 Hz · Télémétrie 20 Hz · Sans dépendance externe</span><button id="about" class="quiet">Modèle & limites ↗</button></footer>
+    </main>
+  </div>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="aboutDialog"><div class="dialog-head"><h2>Un laboratoire pour développer la commande.</h2><button id="closeAbout" class="button icon" aria-label="Fermer">×</button></div><p>DroneLab simule un quadricoptère X à six degrés de liberté. La scène 3D représente le véritable état calculé par la dynamique. La commande utilise par défaut un état estimé à partir des capteurs simulés.</p><p>Les modèles de poussée, vent, traînée, capteurs et batterie sont simplifiés et non identifiés sur un drone réel. Le filtre complémentaire peut dériver, notamment pendant des accélérations soutenues ou sans GNSS.</p><p>Le contrôleur C exporté est une base de développement. Il ne constitue pas un micrologiciel de vol complet. L’intégration matérielle, les essais avec simulateur externe et contrôleur réel, les essais sur banc puis en vol restent à réaliser.</p><p>Pas de liaison avec un drone réel, de traitement caméra, d’évitement d’obstacles, de CFD, de SITL PX4 ou d’HIL dans cette version.</p><p>Références : <a href="https://docs.px4.io/main/en/flight_stack/controller_diagrams" target="_blank" rel="noopener">architecture de commande PX4</a> · <a href="https://docs.px4.io/main/en/simulation/" target="_blank" rel="noopener">validation par simulation</a>.</p><a class="button outline" href="README.md">Documentation technique</a></dialog>
+  <noscript>Active JavaScript pour utiliser le simulateur DroneLab.</noscript><script type="module" src="app.js"></script>
+</body></html>
