@@ -1,7 +1,8 @@
-import {VERSION} from './model.js?v=1.3.0';
-import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,dot,cross} from './trajectory.js?v=1.3.0';
-import {PHASE_LABELS} from './airport-config.js?v=1.3.0';
-import {phaseBudget} from './airport-report.js?v=1.3.0';
+import {VERSION} from './model.js?v=1.3.1';
+import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,dot,cross} from './trajectory.js?v=1.3.1';
+import {PHASE_LABELS} from './airport-config.js?v=1.3.1';
+import {phaseBudget} from './airport-report.js?v=1.3.1';
+import {SUN_DIRECTION,drawGroundShadow} from './shadow.js?v=1.3.1';
 const $=id=>document.getElementById(id),RAD=Math.PI/180;
 const f=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
 const clock=s=>{const t=Math.round(s);return [Math.floor(t/3600),Math.floor(t/60)%60,t%60].map(v=>String(v).padStart(2,'0')).join(':');};
@@ -27,12 +28,13 @@ function aircraftMesh(){
 }
 const MESH=aircraftMesh();
 function shaded(color,normal){
-  const n=Math.hypot(...normal)||1,light=clamp(.72+.27*Math.abs(dot(normal,[-.3,-.4,.86]))/n,.6,1);
+  const n=Math.hypot(...normal)||1,light=clamp(.72+.27*Math.abs(dot(normal,SUN_DIRECTION))/n,.6,1);
   return '#'+[1,3,5].map(i=>Math.round(parseInt(color.slice(i,i+2),16)*light).toString(16).padStart(2,'0')).join('');
 }
 export class TrajectoryPlayer {
   constructor(){
     this.canvas=$('flightCanvas');this.ctx=this.canvas.getContext('2d');this.tracks={};this.active=null;this.time=0;this.playing=false;
+    this.shadowMask=document.createElement('canvas');
     this.visible=false;this.onScreen=false;this.frame=0;this.lastFrame=0;this.stale=false;this.view='orbit';this.zoom=1;this.yaw=-1.1;this.elevation=.48;this.pan=[0,0];this.points=new Map();
     $('flightPlay').onclick=()=>this.toggle();$('flightRestart').onclick=()=>this.seek(0,true);
     $('flightTimeline').oninput=e=>this.seek(Number(e.target.value));
@@ -191,6 +193,10 @@ export class TrajectoryPlayer {
     };
     const polygon=(points,fill,stroke)=>{const a=points.map(project);if(a.some(p=>!p))return;c.beginPath();a.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=.45;c.stroke();}};
     const label=(p,text,color='#94b1c2',align='left')=>{const a=project(p);if(!a||a[0]<10||a[0]>w-12||a[1]<70||a[1]>h-65||(a[0]>w-90&&a[1]>h-240))return;c.fillStyle=color;c.font='11px Consolas, monospace';c.textAlign=align;c.fillText(text,a[0]+5,a[1]-7);c.textAlign='left';};
+    const pos=point?world(point):null;
+    const pitch=point?((point.visualPitch??point.alpha??0)*RAD+(point.gamma||0)):0,cp=Math.cos(pitch),sp=Math.sin(pitch),meshScale=local?0.25:1;
+    const transform=v=>[pos[0]+meshScale*(v[0]*cp-v[2]*sp),pos[1]+meshScale*v[1],pos[2]+meshScale*(v[0]*sp+v[2]*cp)];
+    const faces=point?MESH.map(face=>{const points=face.points.map(transform);return {...face,points,depth:points.reduce((sum,p)=>sum+(project(p)?.[2]||0),0)/points.length};}):[];
     const sky=c.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#102337');sky.addColorStop(.6,'#173549');sky.addColorStop(1,'#102b39');c.fillStyle=sky;c.fillRect(0,0,w,h);
     polygon([[-60,-90,0],[300,-90,0],[300,90,0],[-60,90,0]],'#16313b');
     for(let x=-40;x<=280;x+=20)line([[x,-90,0],[x,90,0]],x%60===0?'#365361':'#24424e');
@@ -204,6 +210,10 @@ export class TrajectoryPlayer {
       };
       runway(0,this.snapshot.config.tora,this.snapshot.config.depElevation,'DÉPART');
       runway(this.snapshot.config.distance*1000,this.snapshot.config.lda,this.snapshot.config.arrElevation,'ARRIVÉE');
+    }
+    if(point){
+      const elevation=airport?(['approach','flare','landing-roll'].includes(point.phase)?this.snapshot.config.arrElevation:['takeoff-roll','rotation','initial-climb'].includes(point.phase)?this.snapshot.config.depElevation:0):0;
+      drawGroundShadow(c,this.shadowMask,faces,{center:pos,groundZ:world({x:point.x,h:elevation})[2]+.04,heightMetres:point.h-elevation,worldScale:scale},project,w,h,dpr);
     }
     if(this.view!=='follow'){
       for(let i=0;i<=4;i++){const x=i*60;label([x,-30,0],f((origin+x/scale)/1000)+' km');}
@@ -223,12 +233,9 @@ export class TrajectoryPlayer {
         }
       }
       const trail=this.active.renderRows.filter(p=>p.seconds<=this.time).map(world);trail.push(world(point));line(trail,TEAL,3);
-      const pos=world(point),ground=[pos[0],0,0];line([ground,pos],'#74c6b266',1,[4,5]);
-      const groundScreen=project(ground);if(groundScreen){c.fillStyle='#00000035';c.beginPath();c.ellipse(groundScreen[0],groundScreen[1],16,5,0,0,2*Math.PI);c.fill();}
+      const ground=[pos[0],0,0];line([ground,pos],'#74c6b266',1,[4,5]);
       if(this.view!=='follow'){label(world(this.active.rows[0]),'DÉBUT',TEAL);label(world(this.active.rows.at(-1)),'FIN',TEAL,'right');}
-      const pitch=(point.visualPitch??point.alpha??0)*RAD+(point.gamma||0),cp=Math.cos(pitch),sp=Math.sin(pitch),meshScale=local?0.25:1;
-      const transform=v=>[pos[0]+meshScale*(v[0]*cp-v[2]*sp),pos[1]+meshScale*v[1],pos[2]+meshScale*(v[0]*sp+v[2]*cp)];
-      const faces=MESH.map(face=>{const points=face.points.map(transform);return {...face,points,depth:points.reduce((sum,p)=>sum+(project(p)?.[2]||0),0)/points.length};}).sort((a,b)=>b.depth-a.depth);
+      faces.sort((a,b)=>b.depth-a.depth);
       for(const face of faces){const [a,b,d]=face.points,normal=cross(b.map((v,i)=>v-a[i]),d.map((v,i)=>v-a[i]));polygon(face.points,shaded(face.color,normal),'#25465655');}
       const p=project(pos);if(p){c.strokeStyle='#6ae0bf70';c.beginPath();c.arc(p[0],p[1],this.view==='follow'?65:22,0,Math.PI*2);c.stroke();c.fillStyle='#b7e9de';c.font='11px Consolas, monospace';c.fillText('A380 · '+f(point.h)+' m',clamp(p[0]+(this.view==='follow'?-40:28),12,w-130),p[1]-(this.view==='follow'?82:26));}
       const z=(this.height||13000)*scale*exaggeration;

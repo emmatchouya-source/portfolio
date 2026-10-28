@@ -1,5 +1,18 @@
 # Vérification de la version 1.0.0
 
+## Version 1.3.1 — ombre dans la scène 3D
+
+- Remplacement de l’ellipse en pixels par la projection de la silhouette du maillage sur le sol local, avec la même direction lumineuse que l’avion.
+- Projection en perspective, altitude locale des pistes, indépendance du décalage horizontal vis-à-vis de l’exagération verticale et adoucissement du contour avec la hauteur réelle.
+- Masque de silhouettes rempli une seule fois : les faces superposées ne multiplient pas l’opacité. Atténuation visuelle à grande hauteur ; aucune ombre ponctuelle fixe en croisière.
+- Éclairage fixe et avion agrandi : rendu illustratif, sans géolocalisation du soleil ni simulation photométrique. Aucun changement des équations de vol ou de l’optimisation.
+- Contrôle géométrique par intersection rayon-plan, comparaison raster des faces superposées, caméras de départ/arrivée/dessus/côté, rotation, arrondi, arrêt et affichage mobile.
+
+```text
+python -X utf8 tests/test_a380_shadow.py
+python -X utf8 tests/test_a380_trajectory.py
+```
+
 ## Version 1.3.0 — décollage et atterrissage
 
 - Mode vol complet avec neuf phases : accélération, rotation, montée après envol, montée initiale, croisière, descente, approche, arrondi, freinage.

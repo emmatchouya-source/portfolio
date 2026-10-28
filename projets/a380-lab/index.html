@@ -5,14 +5,14 @@
   <meta name="description" content="Laboratoire de performance de vol de l’A380 : profils par paliers, optimisation sous contraintes, MRC, LRC, ECON et études reproductibles.">
   <meta name="theme-color" content="#12283b">
   <title>A380 Cruise Lab — Analyse et optimisation</title>
-  <link rel="stylesheet" href="style.css?v=1.3.0">
-  <link rel="stylesheet" href="finite.css?v=1.3.0">
+  <link rel="stylesheet" href="style.css?v=1.3.1">
+  <link rel="stylesheet" href="finite.css?v=1.3.1">
 </head>
 <body>
 <a class="skip" href="#workspace">Aller aux résultats</a>
 <header class="masthead">
   <a class="brand" href="../../"><span class="brand-mark">ET<span>↗</span></span><span>A380 <b>CRUISE LAB</b><small>Performance & optimisation</small></span></a>
-  <div class="mast-meta"><span class="status-dot"></span> Laboratoire numérique <span class="version">v1.3.0</span><a href="../../#projets">Portfolio ↗</a></div>
+  <div class="mast-meta"><span class="status-dot"></span> Laboratoire numérique <span class="version">v1.3.1</span><a href="../../#projets">Portfolio ↗</a></div>
 </header>
 <div class="app-shell">
 <aside class="configuration" aria-label="Paramètres de l’étude">
@@ -119,6 +119,7 @@
       <p id="flightHelp" class="hint">Glisser pour tourner, molette ou pincement pour zoomer, Maj + glisser pour déplacer. Au clavier sur la scène : flèches pour orienter, + / − pour zoomer, R pour recentrer, espace pour lire ou mettre en pause. La lecture se met en pause lorsqu’on quitte la vue.</p>
       <p id="flightLimits" class="scope">Trajectoire longitudinale : l’écart latéral reste nul. Le mode vol complet ajoute les phases au sol, la montée initiale, la descente, l’approche et l’arrondi, avec des hypothèses basse vitesse paramétriques. Les montées suivent une trajectoire progressive à pente et courbure continues. Leur durée, leur carburant et la poussée requise sont intégrés avec l’équilibre des forces. Le taux configuré est une limite maximale, pas une performance garantie de l’avion. L’échelle verticale est exagérée et l’avion est agrandi pour la lecture. Le sol est schématique. Cette vue n’ajoute pas de dynamique de virage ou de pilotage à six degrés de liberté.</p>
       <p id="flightAttitudeNote" class="hint"></p>
+      <p class="hint">Éclairage fixe illustratif : ombre de la silhouette projetée sur le sol local. L’avion est agrandi pour rester lisible ; l’ombre ne représente pas une empreinte à l’échelle.</p>
       <div id="flightClimbAudit" class="table-wrap" aria-label="Bilan des montées calculées"></div>
       <div id="flightPhaseAudit" class="table-wrap" aria-label="Bilan par phase du vol complet"></div>
     </article>
@@ -154,6 +155,6 @@
 </main>
 </div>
 <dialog id="errorDialog"><h2>Vérifier les paramètres</h2><p id="errorMessage"></p><form method="dialog"><button class="primary">Compris</button></form></dialog>
-<script type="module" src="app.js?v=1.3.0"></script>
+<script type="module" src="app.js?v=1.3.1"></script>
 </body>
 </html>
