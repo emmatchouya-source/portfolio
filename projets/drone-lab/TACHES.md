@@ -2,7 +2,7 @@
 
 Ce suivi distingue simulation vérifiée, compilation réelle et validation matérielle. Une case cochée ne signifie pas une qualification en vol.
 
-## Lot 1 — Multirotors recommandés (publication en cours)
+## Lot 1 — Multirotors recommandés (livré : site 1.2 / agent 1.1)
 
 - [x] Ajouter Quad +, Quad H, Hexa X/+, Octo X/+ et conserver Quad X.
 - [x] Centraliser positions, nombre et sens des moteurs dans un catalogue commun au simulateur et à l’agent.
@@ -14,10 +14,12 @@ Ce suivi distingue simulation vérifiée, compilation réelle et validation mat�
 - [x] Vérifier chaque géométrie : équilibre des forces/moments, stationnaire, missions, perturbations, saturation et arrêts.
 - [x] Comparer les sorties JavaScript et C pour chaque géométrie et compiler des projets Arduino représentatifs.
 - [x] Tester sélection, application, import/export et affichage mobile dans le navigateur.
-- [ ] Construire et publier l’agent Windows compatible ; empêcher l’ancien agent de compiler une autre géométrie comme un Quad X.
-- [ ] Publier le site et vérifier la version HTTPS.
+- [x] Construire et publier l’agent Windows compatible ; empêcher l’ancien agent de compiler une autre géométrie comme un Quad X.
+- [x] Publier le site et vérifier la version HTTPS.
 
 Preuves locales : 130 contrôles numériques/d’export, 700 pas JavaScript/C sur les sept géométries, dix cibles Arduino Quad X et quatorze couples carte/géométrie (sept géométries sur UNO AVR et UNO R4 Minima). Le parcours navigateur/agent utilise un USB simulé ; deux projets générés par l’agent ont également été compilés réellement. Aucun téléversement physique ni vol n’est revendiqué.
+
+Publication vérifiée : les 130 contrôles et le parcours navigateur/agent passent aussi sur le site HTTPS. L’exécutable 1.1 a passé son autotest (CLI, Tk et génération des sept géométries), et son téléchargement public correspond à l’empreinte publiée. [Ouvrir DroneLab](https://emmatchouya-source.github.io/portfolio/projets/drone-lab/?v=airframes-1) · [Agent Windows 1.1](https://github.com/emmatchouya-source/portfolio/releases/tag/dronelab-agent-v1.1.0).
 
 ## Lot 2 — Géométries planes avancées
 
