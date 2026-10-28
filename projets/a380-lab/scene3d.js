@@ -34,7 +34,7 @@ export class TrajectoryPlayer {
     this.visible=false;this.onScreen=false;this.frame=0;this.lastFrame=0;this.stale=false;this.view='orbit';this.zoom=1;this.yaw=-1.1;this.elevation=.48;this.pan=[0,0];this.points=new Map();
     $('flightPlay').onclick=()=>this.toggle();$('flightRestart').onclick=()=>this.seek(0,true);
     $('flightTimeline').oninput=e=>this.seek(Number(e.target.value));
-    $('flightProfile').onchange=e=>{this.pause();this.active=this.tracks[e.target.value];this.time=Math.min(this.time,this.active?.seconds||0);this.sync();this.invalidate();};
+    $('flightProfile').onchange=e=>{this.pause();this.active=this.tracks[e.target.value];this.time=Math.min(this.time,this.active?.seconds||0);this.profileDetails();this.sync();this.invalidate();};
     $('flightCamera').onchange=e=>this.preset(e.target.value);
     $('flightCompare').onchange=()=>this.invalidate();
     $('flightExaggeration').oninput=()=>{this.sync();this.invalidate();};
@@ -66,14 +66,25 @@ export class TrajectoryPlayer {
     this.pause();this.snapshot=snapshot;
     this.tracks={recommended:prepareTrajectory(result.best,'Recommandé'),baseline:prepareTrajectory(result.baseline,'Référence')};
     this.model=snapshot.tables?.schema==='a380-project/v1'?'project-data/reconstructed-unvalidated':snapshot.tables?'user-supplied/unvalidated':'parametric-demonstration/unvalidated';
-    this.active=this.tracks.recommended||this.tracks.baseline;this.time=0;this.stale=false;
+    this.active=this.tracks.baseline||this.tracks.recommended;this.time=0;this.stale=false;
     for(const option of $('flightProfile').options)option.disabled=!this.tracks[option.value];
-    $('flightProfile').value=this.tracks.recommended?'recommended':'baseline';
+    $('flightProfile').value=this.tracks.baseline?'baseline':'recommended';
     const all=Object.values(this.tracks).filter(Boolean);
     this.distance=Math.max(1,...all.map(t=>t.distance));this.height=Math.max(10000,...all.flatMap(t=>t.rows.map(p=>p.h)));
     $('flightExaggeration').value=String(clamp(Math.round(this.distance*1000/this.height/4),1,400));
     $('flightExample').hidden=Boolean(this.active)||!$('verificationCase');
-    this.preset('orbit');this.sync();this.invalidate();
+    this.referenceFailure=result.baseline?.reasons?.join(' ; ')||'Contraintes du modèle non respectées';
+    this.profileDetails();this.preset('orbit');this.sync();this.invalidate();
+  }
+  profileDetails(){
+    const active=this.active,c=this.snapshot.config,configured=this.tracks.baseline===active;
+    const name=configured?'Profil configuré (référence)':'Profil optimisé (recommandé)';
+    $('flightProfileNote').textContent=active?`${name} : ${active.events.length} montée(s), de ${f(active.rows[0].h)} à ${f(active.rows.at(-1).h)} m. `+(configured?'Les montées suivent les paramètres appliqués.':this.tracks.baseline?`Vous avez configuré ${c.steps} montée(s) dans la référence ; l’optimisation choisit son propre nombre de montées, dans la limite de ${c.maxSteps}.`:`Le profil configuré est non admissible : ${this.referenceFailure}. Seul le profil optimisé est disponible.`):`Profil configuré non admissible : ${this.referenceFailure}.`;
+    const container=$('flightStages');container.replaceChildren();
+    if(active)for(const [i,p] of [active.rows[0],...active.events.map(e=>active.rows[e.index])].entries()){
+      const button=document.createElement('button');button.className='compact';button.textContent=`Palier ${i+1} · ${f(p.h)} m`;
+      button.onclick=()=>this.seek(p.seconds,true);container.append(button);
+    }
   }
   setStale(value){this.stale=value;this.sync();}
   setVisible(value){this.visible=value;if(!value)this.pause();else this.invalidate();}
@@ -111,6 +122,7 @@ export class TrajectoryPlayer {
     $('flightEmpty').hidden=has;
     put('flightState',this.stale?'Paramètres modifiés · lecture de la dernière étude calculée':!has?'Aucune trajectoire admissible':this.playing?'Lecture en cours':this.time>=active.seconds?'Trajectoire terminée':'Lecture en pause');
     $('flightState').classList.toggle('stale',this.stale);
+    $('flightPending').hidden=!this.stale;
     const values={Distance:point?.x,Altitude:point?.h,Mach:point?.mach,TAS:point?point.tas*3.6:null,Mass:point?point.mass/1000:null,Fuel:point?point.burn/1000:null,Alpha:point?.alpha,Stab:point?.stab};
     for(const [key,value] of Object.entries(values))put('flight'+key,value==null?'—':f(value,['Mach','Alpha','Stab'].includes(key)?3:['Mass','Fuel'].includes(key)?2:0));
     put('flightStage',has?`Palier ${point.leg+1} / ${active.events.length+1} · écart latéral 0 m`:'Calculer un profil admissible pour lancer la lecture.');

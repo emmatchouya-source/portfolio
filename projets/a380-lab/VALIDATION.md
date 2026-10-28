@@ -1,5 +1,13 @@
 # Vérification de la version 1.0.0
 
+## Correction 1.1.2 — profil configuré dans la vue 3D
+
+La vue 3D sélectionne le profil configuré admissible avant le profil optimisé. Les équations et l’optimiseur restent inchangés. Un test sépare volontairement deux montées configurées de zéro montée autorisée à l’optimiseur : télémétrie 8 000 / 8 600 / 9 200 m, changements à l’instant exact des transitions, rendu du canvas, export CSV et sélection indépendante des deux profils. Il vérifie aussi le recalcul depuis la vue 3D, la mise en page mobile et le remplacement explicite d’une référence rejetée par une trajectoire optimisée admissible.
+
+```text
+python -X utf8 tests/test_a380_steps.py
+```
+
 ## Correction 1.1.1 — démarrage et diagnostic de faisabilité
 
 Le démarrage utilise le cas de vérification numérique à 300 t, tandis que le cas du rapport à 500 t reste sélectionnable. Les équations, les données et les limites physiques du modèle sont inchangées.

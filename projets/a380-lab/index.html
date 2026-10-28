@@ -5,13 +5,13 @@
   <meta name="description" content="Laboratoire de performance en croisière de l’A380 : profils par paliers, optimisation sous contraintes, MRC, LRC, ECON et études reproductibles.">
   <meta name="theme-color" content="#12283b">
   <title>A380 Cruise Lab — Analyse et optimisation</title>
-  <link rel="stylesheet" href="style.css?v=1.1.1">
+  <link rel="stylesheet" href="style.css?v=1.1.2">
 </head>
 <body>
 <a class="skip" href="#workspace">Aller aux résultats</a>
 <header class="masthead">
   <a class="brand" href="../../"><span class="brand-mark">ET<span>↗</span></span><span>A380 <b>CRUISE LAB</b><small>Performance & optimisation</small></span></a>
-  <div class="mast-meta"><span class="status-dot"></span> Laboratoire numérique <span class="version">v1.1.1</span><a href="../../#projets">Portfolio ↗</a></div>
+  <div class="mast-meta"><span class="status-dot"></span> Laboratoire numérique <span class="version">v1.1.2</span><a href="../../#projets">Portfolio ↗</a></div>
 </header>
 <div class="app-shell">
 <aside class="configuration" aria-label="Paramètres de l’étude">
@@ -83,11 +83,13 @@
       <div class="panel-heading"><div><span class="eyebrow">SIMULATION / LECTURE DE LA MISSION</span><h3>La trajectoire, dans l’espace et dans le temps</h3></div><span class="pill" id="flightModel">En attente de calcul</span></div>
       <p class="subtle">Lecture des points calculés : position, altitude, vitesse, masse et carburant restent synchronisés. Choisissez le profil à suivre et orientez la caméra autour de l’avion.</p>
       <div class="flight-view-options">
-        <label>Profil suivi <select id="flightProfile" disabled><option value="recommended">Recommandé</option><option value="baseline">Référence</option></select></label>
+        <label>Profil suivi <select id="flightProfile" disabled><option value="baseline">Configuré (référence)</option><option value="recommended">Optimisé (recommandé)</option></select></label>
         <label>Caméra <select id="flightCamera"><option value="orbit">Vue d’ensemble</option><option value="follow">Suivi de l’avion</option><option value="top">Vue de dessus</option><option value="side">Vue de profil</option></select></label>
         <label class="flight-check"><input id="flightCompare" type="checkbox" checked> Superposer les deux profils</label>
         <button id="flightResetCamera" class="compact">Recentrer la caméra</button>
       </div>
+      <p id="flightProfileNote" class="hint" aria-live="polite">Le profil configuré sera affiché après le calcul.</p>
+      <div id="flightPending" class="flight-pending" hidden><p>Paramètres modifiés : la vue affiche encore la dernière étude calculée.</p><button id="flightRecalculate" class="primary">Appliquer et recalculer la trajectoire</button></div>
       <div class="flight-viewport">
         <canvas id="flightCanvas" tabindex="0" role="img" aria-label="Vue 3D interactive de l’avion et de sa trajectoire de croisière" aria-describedby="flightHelp flightLimits">La télémétrie de la trajectoire est disponible dans les valeurs sous la scène.</canvas>
         <div class="flight-scene-top"><span id="flightState" role="status">En attente de trajectoire</span><span id="flightScale">Altitude ×1 · avion agrandi</span></div>
@@ -96,6 +98,7 @@
       </div>
       <div class="flight-playback"><button id="flightPlay" class="primary" disabled aria-pressed="false">▶ Lire</button><button id="flightRestart" disabled aria-label="Revenir au début de la trajectoire">↤ Début</button><label>Vitesse de lecture <select id="flightSpeed"><option value="60">×60</option><option value="300" selected>×300</option><option value="1200">×1 200</option><option value="3600">×3 600</option></select></label><output id="flightTime" aria-label="Temps simulé et durée totale">— / —</output></div>
       <label class="flight-timeline-label" for="flightTimeline">Position dans la mission</label><input id="flightTimeline" class="flight-timeline" type="range" min="0" max="1" value="0" step="any" disabled>
+      <div id="flightStages" class="flight-stages" role="group" aria-label="Accéder aux paliers calculés"></div>
       <div class="flight-telemetry" aria-label="Télémétrie à l’instant sélectionné">
         <div><span>DISTANCE AU SOL</span><strong id="flightDistance">—</strong><small>km</small></div><div><span>ALTITUDE</span><strong id="flightAltitude">—</strong><small>m</small></div><div><span>MACH</span><strong id="flightMach">—</strong><small>M</small></div><div><span>VITESSE VRAIE</span><strong id="flightTAS">—</strong><small>km/h</small></div>
         <div><span>MASSE</span><strong id="flightMass">—</strong><small>t</small></div><div><span>CARBURANT BRÛLÉ</span><strong id="flightFuel">—</strong><small>t</small></div><div><span>INCIDENCE α</span><strong id="flightAlpha">—</strong><small>°</small></div><div><span>STABILISATEUR</span><strong id="flightStab">—</strong><small>°</small></div>
@@ -137,6 +140,6 @@
 </main>
 </div>
 <dialog id="errorDialog"><h2>Vérifier les paramètres</h2><p id="errorMessage"></p><form method="dialog"><button class="primary">Compris</button></form></dialog>
-<script type="module" src="app.js?v=1.1.1"></script>
+<script type="module" src="app.js?v=1.1.2"></script>
 </body>
 </html>

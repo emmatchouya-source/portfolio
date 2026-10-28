@@ -60,6 +60,8 @@ def main(base):
             page.locator('#exportStudy').click()
         event.value.save_as(ARTIFACTS/'3d-study.json')
         study=json.loads((ARTIFACTS/'3d-study.json').read_text(encoding='utf-8'))
+        expect(page.locator('#flightProfile')).to_have_value('baseline')
+        page.locator('#flightProfile').select_option('recommended')
         selected=study['result']['best']
         seek(page,selected['seconds'])
         expect(page.locator('#flightDistance')).to_have_text('4\u202f569')

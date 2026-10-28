@@ -1,11 +1,12 @@
 import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck} from './model.js';
 import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js';
-import {TrajectoryPlayer} from './scene3d.js';
+import {TrajectoryPlayer} from './scene3d.js?v=1.1.2';
 import {SCENARIO_LABELS,identifyScenario,scenarioConfig} from './scenarios.js';
 const $=id=>document.getElementById(id),form=$('studyForm');
 const trajectory=new TrajectoryPlayer();
 $('flightExample').onclick=()=>loadScenario('verification');
 $('recoverScenario').onclick=()=>loadScenario('verification');
+$('flightRecalculate').onclick=()=>form.requestSubmit();
 const f=(v,d=0)=>Number(v).toLocaleString('fr-FR',{maximumFractionDigits:d,minimumFractionDigits:d});
 const duration=s=>{const minutes=Math.round(s/60);return `${Math.floor(minutes/60)} h ${String(minutes%60).padStart(2,'0')}`;};
 let tables=null,result=null,snapshot=null,worker=null,started=0,createdAt=null;
@@ -54,7 +55,7 @@ function busy(on){
   $('run').disabled=on;$('cancel').hidden=!on;$('progress').hidden=!on;
   for(const el of form.elements)if(el.matches('input,select'))el.disabled=on;
   for(const id of ['reset','projectSource','parametric','importButton','importData','template'])$(id).disabled=on;
-  for(const id of ['recoverScenario','verificationCase','flightExample'])if($(id))$(id).disabled=on;
+  for(const id of ['recoverScenario','verificationCase','flightExample','flightRecalculate'])if($(id))$(id).disabled=on;
   if($('restoreStudy'))$('restoreStudy').disabled=on;
   for(const id of ['exportStudy','exportCSV','printReport'])$(id).disabled=on||!result;
   if(!on)modelState();
