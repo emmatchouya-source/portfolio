@@ -1,5 +1,13 @@
 # DroneLab
 
+> **En bref.** Simulateur de vol autonome de multirotors (4, 6 et 8 moteurs) dans le navigateur, pour développer et vérifier une loi de commande avant tout matériel.
+>
+> - **Physique et commande** : corps rigide à 6 degrés de liberté, capteurs simulés (IMU, GNSS, baromètre, magnétomètre, télémètre), estimateur, commande en cascade position → vitesse → attitude → vitesse angulaire, allocation pour 7 géométries.
+> - **Vérification** : 130 contrôles automatisés (équilibre, missions, perturbations, perte GNSS, panne moteur) ; contrôleur C99 exporté identique à la version JavaScript sur 700 pas ; programme de banc compilé pour Arduino UNO et UNO R4.
+> - **Limites assumées** : modèles non identifiés, aucun téléversement physique ni essai en vol.
+>
+> **[Ouvrir la démo](https://emmatchouya-source.github.io/portfolio/projets/drone-lab/)** · aucune installation requise. L'agent Windows de téléversement est facultatif.
+
 Laboratoire de développement et d’essai de commande pour multirotors plans à 4, 6 et 8 moteurs. Le simulateur statique fonctionne sans compte, CDN ou service distant. Le téléversement optionnel utilise un agent Windows local et les outils Arduino. La scène est un rendu 3D en perspective sur Canvas 2D, avec rotation de caméra, zoom, vue de dessus et suivi. Le modèle physique détermine le mouvement affiché.
 
 ## Géométries disponibles
@@ -34,7 +42,7 @@ Ouvrir `http://localhost:8080/projets/drone-lab/`. Les modules ES et le chargeme
 4. Injecter une impulsion, couper le GNSS ou désactiver un moteur. Observer l’état réel, l’estimation, les courbes et le journal.
 5. Exporter la configuration, la télémétrie CSV, le rapport JSON ou le contrôleur C99. Les exports utilisent la configuration **appliquée**, jamais les modifications en attente.
 
-Les réglages appliqués sont mémorisés localement si le navigateur l’autorise. Les vols, journaux et mesures restent en mémoire ; recharger la page les efface. La télémétrie conserve les 12 000 derniers points (10 minutes à 20 Hz), la trace 3D les 2 400 derniers points (2 minutes). Le rapport indique la plage retenue. Les indicateurs RMS, maximum et saturation portent sur tout l’essai depuis le décollage, y compris les transitions, et non uniquement sur la trajectoire stabilisée.
+Les réglages appliqués sont mémorisés localement si le navigateur l’autorise. Les vols, journaux et mesures restent en mémoire ; recharger la page les efface. La télémétrie conserve les 12 000 derniers points (10 minutes à 20 Hz), la trace 3D les 2 400 derniers points (2 minutes). Le rapport indique la plage retenue. L’erreur RMS affichée porte sur la phase de trajectoire uniquement (après le décollage, hors retour et atterrissage). Pour le carré et les points de passage, c’est l’écart au segment parcouru, car la consigne saute d’un point au suivant ; pour le cercle, le huit et le stationnaire, l’écart à la consigne continue ; la valeur depuis le décollage est rappelée en dessous. Le rapport JSON fournit les deux (`tracking_*` et `rms/max_position_error_m`) ; la saturation porte sur tout l’essai.
 
 ## Architecture
 

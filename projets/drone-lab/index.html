@@ -116,7 +116,7 @@
         <div class="transport"><div class="transport-main"><button id="play" class="button primary">▶ Lancer la mission</button><button id="reset" class="button icon" title="Réinitialiser l’essai" aria-label="Réinitialiser l’essai">↺</button><span class="divider"></span><button id="hold" class="button subtle">Maintenir</button><button id="rtl" class="button subtle">Retour</button><button id="land" class="button subtle">Atterrir</button></div><div class="transport-extra"><button id="disturb" class="button subtle" title="Appliquer une perturbation de vitesse et rotation">↯ Perturber</button><label class="speed-select">Temps<select id="timescale" aria-label="Vitesse de simulation"><option value="1">×1</option><option value="2">×2</option><option value="4">×4</option></select></label></div></div>
       </section>
       <section class="kpi-grid" aria-label="Indicateurs d’essai">
-        <div class="kpi"><span>ERREUR RMS POSITION</span><strong id="rmsValue">— <small>m</small></strong><small>Depuis le décollage</small></div>
+        <div class="kpi"><span>ERREUR RMS POSITION</span><strong id="rmsValue">— <small>m</small></strong><small id="rmsNote">Après le décollage</small></div>
         <div class="kpi"><span>ERREUR D’ESTIMATION</span><strong id="estValue">0.00 <small>m</small></strong><small>Position estimée / réelle</small></div>
         <div class="kpi"><span>BATTERIE SIMULÉE</span><strong id="batteryValue">100 <small>%</small></strong><small id="powerValue">16.8 V · 0.0 A</small></div>
         <div class="kpi"><span>SATURATION MOTEURS</span><strong id="saturationValue">0.0 <small>%</small></strong><small>Part des pas de commande</small></div>

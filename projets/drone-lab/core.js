@@ -113,7 +113,7 @@ export class Simulation {
     this.t=0;this.mode='ready';this.phase='Au sol';this.target={p:[0,0,0],v:[0,0,0],a:[0,0,0],yaw:0};
     this.geometry=geometry(this.c);this.motors=Array(this.geometry.count).fill(0);this.command=[...this.motors];this.energy=0;this.battery=1;this.voltage=16.8;this.current=0;
     this.dropout=false;this.failedMotor=-1;this.events=[];this.history=[];this.trail=[];this.route=route(this.c,this.waypoints);this.waypoint=0;this.dwell=0;this.missionTime=null;
-    this.metrics={samples:0,sumError2:0,maxError:0,saturation:0};this.hold=[0,0,this.c.altitude];this.reason='';this.landed=false;
+    this.metrics={samples:0,sumError2:0,maxError:0,saturation:0,trackSamples:0,trackError2:0,trackMax:0};this.hold=[0,0,this.c.altitude];this.reason='';this.landed=false;
     this.sensors.sample(this.s,0,false);
   }
   log(msg){if(this.events.length>200)this.events.shift();this.events.push({t:this.t,message:msg});}
@@ -191,6 +191,17 @@ export class Simulation {
     if(!s.p.concat(s.v,s.q,s.w,this.estimate.p,this.estimate.q).every(Number.isFinite)){this.mode='crashed';this.phase='Erreur numérique';this.motors.fill(0);this.command.fill(0);this.log('État non fini · arrêt');return;}
     const error=norm(sub(this.target.p,s.p));
     if(active){this.metrics.samples++;this.metrics.sumError2+=error*error;this.metrics.maxError=Math.max(this.metrics.maxError,error);if(this.controller.saturated)this.metrics.saturation++;}
+    // Suivi : phase de trajectoire uniquement (décollage, retour et atterrissage exclus).
+    if(active&&this.mode==='mission'&&this.missionTime!==null){
+      // Circuits à points de passage : écart au segment parcouru (la consigne saute d'un point au suivant).
+      // Cercle, huit, stationnaire : écart à la consigne continue.
+      let track=error;
+      if(['square','waypoints'].includes(c.mission)){
+        const b=this.route[this.waypoint],a=this.waypoint?this.route[this.waypoint-1]:[0,0,c.altitude],ab=sub(b,a),l2=dot(ab,ab);
+        const k=l2>1e-9?clamp(dot(sub(s.p,a),ab)/l2,0,1):0;track=norm(sub(s.p,add(a,scale(ab,k))));
+      }
+      this.metrics.trackSamples++;this.metrics.trackError2+=track*track;this.metrics.trackMax=Math.max(this.metrics.trackMax,track);
+    }
     const sampleIndex=Math.round(this.t/DT);
     if(sampleIndex%12===0){
       const angles=euler(s.q);this.history.push({t:this.t,p:[...s.p],v:[...s.v],angles,estimated:[...this.estimate.p],target:[...this.target.p],motors:[...this.motors],error,battery:this.battery,mode:this.mode,gyro:[...this.sensors.gyro],accel:[...this.sensors.accel],gps:[...this.sensors.gps.p],baro:this.sensors.baro,gpsAge:this.sensors.gpsAge});
@@ -198,4 +209,5 @@ export class Simulation {
     }
   }
   get rms(){return Math.sqrt(this.metrics.sumError2/(this.metrics.samples||1));}
+  get trackingRms(){return this.metrics.trackSamples?Math.sqrt(this.metrics.trackError2/this.metrics.trackSamples):null;}
 }
