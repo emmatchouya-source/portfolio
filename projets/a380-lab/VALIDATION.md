@@ -1,5 +1,22 @@
 # Vérification de la version 1.0.0
 
+## Extension 1.1.0 — trajectoire 3D
+
+La version 1.1 ajoute uniquement une lecture spatiale et temporelle des points calculés. Les équations de performance, contraintes et données numériques restent celles de la version 1.0.
+
+- 20 contrôles supplémentaires : projection perspective, repère caméra, interpolation temporelle, coordonnées physiques, conservation des sauts d’altitude, bornage aux extrémités et rejet des profils infaisables.
+- Essais dans Edge : télémétrie synchronisée, lecture/pause, retour au début, changement de profil et de caméra, zoom, vrai geste tactile de pincement, superposition, capture PNG et export des coordonnées CSV.
+- Contrôle du cas source 500 t sans animation fictive, puis lecture du cas de vérification source à 300 t. Contrôles sur ordinateur et en largeur mobile de 390 px.
+- Les 40 contrôles du noyau, les deux intégrations SciPy DOP853 et les essais existants d’import/export, PDF et interface ont été relancés avec succès.
+
+Le curseur conserve la durée exacte, y compris les fractions de seconde. La lecture ne lisse pas les changements de palier instantanés. L’exagération verticale et le zoom n’affectent pas les coordonnées exportées. Les captures de contrôle sont dans `.test-artifacts/a380/3d-*.png`.
+
+```text
+python -X utf8 tests/test_a380_trajectory.py
+```
+
+## Vérifications du modèle initial
+
 Exécutée le 28 octobre 2026 sous Windows, Python 3.13, SciPy 1.18.1 et Microsoft Edge via Playwright. Ce dossier décrit une vérification numérique et fonctionnelle ; il ne constitue pas une validation en vol.
 
 | Vérification | Résultat |

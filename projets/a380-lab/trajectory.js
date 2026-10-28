@@ -1,0 +1,40 @@
+// Playback samples the computed cruise trajectory; it never integrates new dynamics.
+export function prepareTrajectory(result,label){
+  if(!result?.feasible||!Array.isArray(result.rows)||result.rows.length<2)return null;
+  const rows=result.rows;
+  if(rows.some((p,i)=>['seconds','x','h','mass','burn','mach','tas','gs','flow'].some(k=>!Number.isFinite(p[k]))||
+    (i&&(p.seconds<rows[i-1].seconds||p.x<rows[i-1].x))))return null;
+  const events=[];
+  for(let i=1;i<rows.length;i++)if(rows[i].seconds===rows[i-1].seconds&&rows[i].h!==rows[i-1].h)
+    events.push({seconds:rows[i].seconds,x:rows[i].x,from:rows[i-1].h,to:rows[i].h,index:i});
+  return {label,rows,events,seconds:rows.at(-1).seconds,distance:rows.at(-1).x};
+}
+export function sampleTrajectory(track,seconds){
+  if(!track||!Number.isFinite(seconds))return null;
+  const rows=track.rows,t=Math.max(rows[0].seconds,Math.min(track.seconds,seconds));
+  // Upper bound chooses the POST-step sample at duplicate timestamps. No ramp is invented.
+  let lo=0,hi=rows.length;
+  while(lo<hi){const mid=(lo+hi)>>>1;if(rows[mid].seconds<=t)lo=mid+1;else hi=mid;}
+  const index=Math.max(0,lo-1),a=rows[index],b=rows[Math.min(index+1,rows.length-1)];
+  const u=b.seconds>a.seconds?(t-a.seconds)/(b.seconds-a.seconds):0,p={...a,seconds:t};
+  for(const key of ['x','h','mass','burn','mach','tas','gs','flow','thrust','available','cl','cd','alpha','stab','n1','n1c'])
+    if(Number.isFinite(a[key])&&Number.isFinite(b[key]))p[key]=a[key]+u*(b[key]-a[key]);
+  p.y=0;p.z=p.h;p.xMetres=p.x*1000;p.leg=track.events.filter(e=>e.seconds<=t).length;
+  return p;
+}
+export function playbackCSV(track,version,model){
+  const headers=['time_s','longitudinal_m','lateral_m','altitude_m','mach','tas_m_s','groundspeed_m_s','mass_kg','fuel_burn_kg','alpha_deg','stabilizer_deg','profile','model_status','version'];
+  const quote=v=>'"'+String(v).replaceAll('"','""')+'"';
+  return [headers.join(','),...track.rows.map(p=>[p.seconds,p.x*1000,0,p.h,p.mach,p.tas,p.gs,p.mass,p.burn,p.alpha??'',p.stab??'',track.label,model,version]
+    .map(v=>typeof v==='number'?v.toPrecision(12):quote(v)).join(','))].join('\r\n');
+}
+export const clamp=(x,min,max)=>Math.max(min,Math.min(max,x));
+const sub=(a,b)=>a.map((v,i)=>v-b[i]);
+export const dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
+export const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const unit=a=>{const n=Math.hypot(...a);return a.map(v=>v/n);};
+export function perspectiveCamera(eye,target,width,height){
+  const forward=unit(sub(target,eye)),right=unit(cross(forward,[0,0,1])),up=cross(right,forward);
+  const lens=height/(2*Math.tan(.63/2));
+  return {forward,right,up,project:p=>{const d=sub(p,eye),depth=dot(d,forward);return depth>.5?[width/2+lens*dot(d,right)/depth,height*.53-lens*dot(d,up)/depth,depth]:null;}};
+}

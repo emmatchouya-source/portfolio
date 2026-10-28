@@ -1,6 +1,9 @@
 import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck} from './model.js';
 import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js';
+import {TrajectoryPlayer} from './scene3d.js';
 const $=id=>document.getElementById(id),form=$('studyForm');
+const trajectory=new TrajectoryPlayer();
+$('flightExample').onclick=()=>$('verificationCase')?.click();
 const f=(v,d=0)=>Number(v).toLocaleString('fr-FR',{maximumFractionDigits:d,minimumFractionDigits:d});
 const duration=s=>{const minutes=Math.round(s/60);return `${Math.floor(minutes/60)} h ${String(minutes%60).padStart(2,'0')}`;};
 let tables=null,result=null,snapshot=null,worker=null,started=0,createdAt=null;
@@ -13,6 +16,7 @@ function readConfig(){const c={};for(const k of Object.keys(DEFAULT))c[k]=k==='o
 function setConfig(c){for(const k of Object.keys(DEFAULT))form.elements[k].value=c[k];}
 function activateTab(name,focus=false){
   document.querySelectorAll('[data-tab]').forEach(b=>{const active=b.dataset.tab===name;b.setAttribute('aria-selected',active);b.tabIndex=active?0:-1;$(b.dataset.tab).hidden=!active;if(active&&focus)b.focus();});
+  trajectory.setVisible(name==='trajectory');
 }
 document.querySelectorAll('[data-tab]').forEach(b=>{
   b.onclick=()=>activateTab(b.dataset.tab);
@@ -20,6 +24,7 @@ document.querySelectorAll('[data-tab]').forEach(b=>{
 });
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>activateTab(b.dataset.go,true));
 function markDirty(){
+  trajectory.setStale(true);
   $('dirty').textContent='Paramètres modifiés : relancez l’analyse pour les appliquer.';
   if(result)status('Paramètres modifiés · les résultats affichés correspondent à la dernière étude calculée.');
 }
@@ -34,6 +39,7 @@ function modelState(){
   $('modelNotice').innerHTML=isProject(tables)?'<b>Modèle reconstruit à partir des fichiers du projet MGA803.</b> 490 cas OpenVSP et coefficients moteur fournis. Équilibrage calculé, sans validation en vol ; limites de régime corrigé définies pour l’étude.':imported?`<b>Tables de croisière importées : ${esc(tables.name)}.</b> Provenance déclarée par l’utilisateur, sans validation automatique de la fidélité physique. Interpolation limitée au domaine fourni.`:'<b>Modèle paramétrique de démonstration.</b> Polaire et propulsion synthétiques pour comparer les hypothèses. Pour utiliser les fichiers fournis, activez le modèle du projet dans « Modèle & données ».';
 }
 function busy(on){
+  if(on)trajectory.pause();
   $('run').disabled=on;$('cancel').hidden=!on;$('progress').hidden=!on;
   for(const el of form.elements)if(el.matches('input,select'))el.disabled=on;
   for(const id of ['reset','projectSource','parametric','importButton','importData','template'])$(id).disabled=on;
@@ -107,6 +113,7 @@ function render(){
   $('failureSummary').innerHTML=`<h4>Motifs d’exclusion lors du balayage initial</h4><div class="failure-list">${Object.entries(result.failures).map(([reason,n])=>`<span>${esc(reason)} : ${f(n)}</span>`).join('')||'<span>Aucune exclusion</span>'}</div><p class="hint">Un profil peut contribuer à plusieurs motifs. Les points hors domaine ne sont pas extrapolés.</p>`;
   const conv=result.convergence;
   $('validation').innerHTML=result.checks.map(x=>`<div class="check ${x.pass?'':'failed'}"><strong>${x.pass?'PASS':'ÉCHEC'}</strong>${esc(x.name)}</div>`).join('')+`<div class="check"><strong>${conv?'CONVERGENCE RK4':'CONVERGENCE NON ÉVALUÉE'}</strong>${conv?`5 km / 2,5 km : écart ${f(conv.deltaKg,6)} kg (${f(conv.relative*100,8)} %).`:'Aucun profil admissible à vérifier.'}</div><div class="check"><strong>PÉRIMÈTRE DES CONTRAINTES</strong>Contrôle aux étapes RK4 et aux transitions. Absence de preuve continue entre échantillons.</div><div class="check"><strong>FIDÉLITÉ PHYSIQUE</strong>${snapshot.tables?'Tables importées : provenance déclarée, validation physique à fournir.':'Modèle de démonstration ; aucune comparaison à des données de vol.'}</div>`;
+  trajectory.setStudy(result,snapshot);
 }
 function setupHeat(){
   const cells=[...$('heatChart').querySelectorAll('.heat-cell')];
@@ -178,4 +185,5 @@ try{
 }catch{/* Corrupt or unavailable local storage must not block startup. */}
 setConfig(DEFAULT);modelState();
 $('validation').innerHTML=selfCheck().map(x=>`<div class="check"><strong>${x.pass?'PASS':'ÉCHEC'}</strong>${esc(x.name)}</div>`).join('');
+if(new URLSearchParams(location.search).get('view')==='3d')activateTab('trajectory');
 if(new URLSearchParams(location.search).get('model')==='parametric')run();else useProject(true);

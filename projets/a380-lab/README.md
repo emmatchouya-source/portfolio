@@ -35,6 +35,24 @@ Ouvrir `http://localhost:8080/projets/a380-lab/`. Un navigateur moderne supporta
 
 L’étude initiale utilise 4 569 km, 500 000 kg, 10 668 m, Mach 0,75 et Δh = 600 m selon le tableau II du rapport. Le carburant initial de 120 t, la réserve de 15 t et les limites d’étude sont des hypothèses supplémentaires. **Dans le modèle du projet reconstruit, le cas 500 t dépasse le domaine de poussée retenu. L’application le signale sans produire de faux optimum.** Un cas de vérification à 300 t / 8 km est proposé pour exercer le solveur dans un domaine différent ; ce n’est pas une mission opérationnelle A380 validée. Le modèle paramétrique reste utilisable pour une exploration séparée. Réinitialiser restaure l’étude et le modèle du projet. La dernière étude calculée peut être restaurée depuis le stockage local du navigateur.
 
+## Trajectoire 3D — version 1.1
+
+L’onglet **Trajectoire 3D** anime un avion à quatre moteurs sur les points de la mission calculée. Le lien `?view=3d` ouvre directement cette vue. Lecture/pause, retour au début, curseur temporel et vitesses ×60 / ×300 / ×1 200 / ×3 600. Chaque position est accompagnée de la distance, altitude, Mach, TAS, masse, carburant et, en mode projet, incidence et stabilisateur équilibrés.
+
+La caméra permet une vue d’ensemble, un suivi de l’avion, une vue de dessus et une vue de profil. Rotation à la souris ou au toucher, zoom à la molette ou par pincement, translation avec Maj + glisser, boutons et raccourcis clavier. L’autre profil peut être superposé pour comparaison. La lecture démarre uniquement sur demande et s’arrête lorsqu’on quitte la vue ou la page visible.
+
+La scène utilise une projection perspective de géométries 3D, rendue en Canvas, sans bibliothèque ou service externe. Elle représente le **repère d’étude longitudinal**, sans latitude/longitude, relief réel ou courbure terrestre. X = distance au sol en mètres, Y = 0 et Z = altitude du modèle. Le maillage de l’avion est illustratif et agrandi pour la lecture. L’exagération verticale de 1 à 400 est explicitement affichée et modifie seulement le rendu.
+
+La position et la télémétrie sont interpolées entre les points calculés, avec sélection du point **après le changement de palier** aux instants dupliqués. Les montées instantanées restent des sauts d’altitude ; aucune rampe ou énergie de montée supplémentaire n’est inventée. Les segments concernés sont indiqués en orange. Le pitch de l’avion reprend l’incidence du mode projet ; en mode réduit, où cette attitude n’est pas calculée, l’avion est présenté horizontalement. Ni virage, roulis, dynamique 6DOF, ni nouvelles forces ne sont calculés par cette lecture.
+
+Une mission rejetée n’est pas animée. Le bouton du cas de vérification est également disponible dans la scène vide. Modifier les entrées marque la lecture comme correspondant à la dernière étude calculée ; il faut relancer l’analyse pour appliquer les changements. La caméra, le zoom et le curseur n’affectent jamais les résultats d’optimisation.
+
+Exports supplémentaires : capture PNG avec contexte du modèle et échelle, et CSV des coordonnées **physiques** (mètres), temps et télémétrie du profil choisi. Le CSV conserve les deux positions au même instant lors d’un changement de palier, indépendamment de l’exagération visuelle. Le dossier PDF d’étude conserve les graphiques scientifiques existants ; la vue interactive s’exporte séparément en PNG.
+
+```text
+python -X utf8 tests/test_a380_trajectory.py
+```
+
 ## Modèle, unités et hypothèses
 
 Les calculs internes utilisent exclusivement le SI : m, s, kg, N, K. Le formulaire utilise km pour la distance et mg/(N·s) pour la TSFC de référence.
