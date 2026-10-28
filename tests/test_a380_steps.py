@@ -20,8 +20,9 @@ def main(base):
         page=browser.new_page(viewport={'width':1512,'height':1080}, accept_downloads=True)
         errors=[]
         page.on('pageerror', lambda e: errors.append(str(e)))
-        page.goto(base+'/projets/a380-lab/?view=3d', wait_until='domcontentloaded')
+        page.goto(base+'/projets/a380-lab/?view=3d&scenario=climbs', wait_until='domcontentloaded')
         complete(page)
+        expect(page.locator('#studyScenario')).to_have_value('climbs')
         expect(page.locator('#flightProfile')).to_have_value('baseline')
         # Two configured climbs, but deliberately no climbs allowed in the optimizer.
         page.locator('[name=steps]').select_option('2')
@@ -35,7 +36,7 @@ def main(base):
         expect(page.locator('#flightPending')).to_be_hidden()
         expect(page.locator('#flightProfile')).to_have_value('baseline')
         expect(page.locator('#flightProfileNote')).to_contain_text('2 montée(s)')
-        expect(page.locator('#flightStages button')).to_have_count(3)
+        expect(page.locator('#flightStages button')).to_have_count(5)
         with page.expect_download() as event:
             page.locator('#exportStudy').click()
         study=json.loads(event.value.path().read_text(encoding='utf-8'))
@@ -43,29 +44,39 @@ def main(base):
         assert reference['feasible'], reference.get('reasons')
         assert reference['profile']['steps']==2
         assert study['result']['best']['profile']['steps']==0
-        transitions=[(a,b) for a,b in zip(reference['rows'],reference['rows'][1:]) if a['h']!=b['h']]
+        transitions=reference['climbs']
         assert len(transitions)==2
-        seek(page,transitions[0][1]['seconds']-2)
+        assert study['qualification']['flightValidated'] is False
+        assert all(b['seconds']>a['seconds'] for a,b in zip(reference['rows'],reference['rows'][1:]))
+        seek(page,(transitions[0]['startSeconds']+transitions[0]['endSeconds'])/2)
         page.locator('#flightCanvas').scroll_into_view_if_needed()
         page.locator('#flightSpeed').select_option('60')
+        before_time=float(page.locator('#flightTimeline').input_value())
         page.locator('#flightPlay').click()
-        page.wait_for_function("document.querySelector('#flightAltitude').textContent==='8\\u202f600'")
+        page.wait_for_function('(t)=>Number(document.querySelector("#flightTimeline").value)>t+5',arg=before_time)
         page.locator('#flightPlay').click()
-        for i,(a,b) in enumerate(transitions):
-            assert a['seconds']==b['seconds']
-            seek(page,b['seconds']-.001)
-            expect(page.locator('#flightAltitude')).to_have_text(format(int(a['h']),',').replace(',','\u202f'))
+        for i,e in enumerate(transitions):
+            assert e['duration']>0 and e['burn']>0
+            page.get_by_role('button',name='Montée '+str(i+1)+' · milieu',exact=True).click()
+            altitude=float(page.locator('#flightAltitude').inner_text().replace('\u202f',''))
+            assert e['from']<altitude<e['to']
+            assert float(page.locator('#flightROC').inner_text().replace(',','.'))>0
+            expect(page.locator('#flightStage')).to_contain_text('Montée vers le palier '+str(i+2))
             before=page.locator('#flightCanvas').evaluate('el=>el.toDataURL()')
-            page.locator('#flightStages button').nth(i+1).click()
-            expect(page.locator('#flightAltitude')).to_have_text(format(int(b['h']),',').replace(',','\u202f'))
+            page.get_by_role('button',name='Palier '+str(i+2)+' · '+format(int(e['to']),',').replace(',','\u202f')+' m',exact=True).click()
+            expect(page.locator('#flightAltitude')).to_have_text(format(int(e['to']),',').replace(',','\u202f'))
             expect(page.locator('#flightStage')).to_contain_text('Palier '+str(i+2)+' / 3')
             page.wait_for_timeout(80)
             assert before!=page.locator('#flightCanvas').evaluate('el=>el.toDataURL()')
         with page.expect_download() as event:
             page.locator('#flightCSV').click()
         rows=list(csv.DictReader(io.StringIO(event.value.path().read_text(encoding='utf-8'))))
-        assert {float(r['altitude_m']) for r in rows}=={8000,8600,9200}
+        assert {8000,8600,9200}<={float(r['altitude_m']) for r in rows}
+        assert any(8000<float(r['altitude_m'])<8600 and float(r['vertical_speed_m_s'])>0 for r in rows)
+        assert max(float(r['vertical_speed_m_s']) for r in rows)<=1.27
+        expect(page.locator('#flightClimbAudit tbody tr')).to_have_count(2)
         page.locator('#flightCamera').select_option('side')
+        page.get_by_role('button',name='Montée 2 · milieu',exact=True).click()
         page.locator('#trajectory').screenshot(path=str(ARTIFACTS/'3d-configured-steps.png'))
         page.locator('#flightProfile').select_option('recommended')
         expect(page.locator('#flightProfileNote')).to_contain_text('0 montée(s)')
@@ -86,7 +97,7 @@ def main(base):
         assert page.locator('#flightProfile option[value=baseline]').evaluate('el=>el.disabled')
         expect(page.locator('#flightProfileNote')).to_contain_text('configuré est non admissible')
         assert not errors, errors
-        print('Step climbs PASS: configured default, 8000/8600/9200 m, exact transitions, canvas, CSV, optimizer distinction, recalculation, mobile, infeasible fallback', flush=True)
+        print('Finite climbs UI PASS: configured default, smooth heights, animated climb, ROC/pitch telemetry, duration/fuel audit, CSV, optimizer distinction, recalculation, mobile, infeasible fallback', flush=True)
         browser.close()
 
 

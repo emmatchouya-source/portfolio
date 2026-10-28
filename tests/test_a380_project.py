@@ -28,7 +28,8 @@ def independent_trim(data, point, config):
         ch = {k: float(g((ah, mach))) for k, g in grids['ht'].items()}
         lift = [q * wb['Sref'] * cw['cl'], q * ht['Sref'] * (ch['cl'] * math.cos(eps) - ch['cd'] * math.sin(eps))]
         drag = [q * wb['Sref'] * cw['cd'], q * ht['Sref'] * (ch['cd'] * math.cos(eps) + ch['cl'] * math.sin(eps))]
-        thrust = sum(drag) / math.cos(ar + phi)
+        gamma=point.get('gamma',0)
+        thrust = (sum(drag)+mass*(9.80665*math.sin(gamma)+point.get('accel',0))) / math.cos(ar + phi)
         moment = q * wb['Sref'] * wb['Cref'] * cw['cm']
         locations = [[-delta, 0, 0], [ht['Xcg'] - wb['Xcg'] - delta, 0, ht['Zcg'] - wb['Zcg']]]
         for location, l, d in zip(locations, lift, drag):
@@ -37,7 +38,7 @@ def independent_trim(data, point, config):
         for x, z in [(-1.7, -.5), (-6, -1.6)]:
             force = [-thrust / 2 * math.cos(phi), 0, thrust / 2 * math.sin(phi)]
             moment += np.cross([x - delta, 0, z], force)[1]
-        r = [(sum(lift) + thrust * math.sin(ar + phi) - mass * 9.80665) / (mass * 9.80665),
+        r = [(sum(lift) + thrust * math.sin(ar + phi) - mass * (9.80665*math.cos(gamma)+point.get('normalAccel',0))) / (mass * 9.80665),
              moment / (q * wb['Sref'] * wb['Cref'])]
         return (thrust, r) if full else r
 

@@ -35,8 +35,10 @@ function engineCurve(t,mach){
   const value={fn:series(t.engine.thrustPolynomial),wf:series(t.engine.flowPolynomial)};cache.set(mach,value);return value;
 }
 const horner=(p,x)=>p.reduceRight((v,c)=>v*x+c,0);
-export function projectTrim(c,mass,mach,q,t,interpolate){
+export function projectTrim(c,mass,mach,q,t,interpolate,motion={}){
   const wb=t.surfaces.wb,ht=t.surfaces.ht,weight=mass*G,phi=2*RAD;
+  const gamma=motion.gamma||0,axial=mass*(G*Math.sin(gamma)+(motion.accel||0));
+  const normal=mass*(G*Math.cos(gamma)+(motion.normalAccel||0));
   const coefficients=(s,k,a)=>interpolate(s.alpha,s.mach,s[k],a,mach);
   const evaluate=(alpha,stab)=>{
     if(alpha<wb.alpha[0]||alpha>wb.alpha.at(-1)||Math.abs(stab)>15)throw Error('Équilibrage hors domaine α / stabilisateur.');
@@ -45,7 +47,7 @@ export function projectTrim(c,mass,mach,q,t,interpolate){
     const clh=coefficients(ht,'cl',ah),cdh=coefficients(ht,'cd',ah);
     const clhr=clh*Math.cos(eps)-cdh*Math.sin(eps),cdhr=cdh*Math.cos(eps)+clh*Math.sin(eps);
     const cl=clw+ht.Sref/wb.Sref*clhr,cd=cdw+ht.Sref/wb.Sref*cdhr;
-    const lift=q*wb.Sref*cl,drag=q*wb.Sref*cd,thrust=drag/Math.cos(ar+phi);
+    const lift=q*wb.Sref*cl,drag=q*wb.Sref*cd,thrust=(drag+axial)/Math.cos(ar+phi);
     const wbZ=q*wb.Sref*(clw*Math.cos(ar)+cdw*Math.sin(ar));
     const htZ=q*ht.Sref*(clhr*Math.cos(ar)+cdhr*Math.sin(ar));
     const htX=q*ht.Sref*(cdhr*Math.cos(ar)-clhr*Math.sin(ar));
@@ -53,7 +55,7 @@ export function projectTrim(c,mass,mach,q,t,interpolate){
       +(ht.Zcg-wb.Zcg)*htX-(ht.Xcg-wb.Xcg-c.cgOffset)*htZ
       +thrust/2*((.5+1.6)*Math.cos(phi)+(1.7+6+2*c.cgOffset)*Math.sin(phi));
     return {alpha,stab,cl,cd,lift,drag,thrust,moment,
-      f:(lift+thrust*Math.sin(ar+phi)-weight)/weight,g:moment/(q*wb.Sref*wb.Cref)};
+      f:(lift+thrust*Math.sin(ar+phi)-normal)/weight,g:moment/(q*wb.Sref*wb.Cref)};
   };
   let alpha=Math.max(-1,Math.min(12,(weight/(q*wb.Sref)-.02)/.095)),stab=-3,p;
   for(let iteration=0;iteration<25;iteration++){
@@ -78,9 +80,9 @@ export function referenceIndex(axis,values,x){
   const u=Math.log(x/axis[i])/Math.log(axis[i+1]/axis[i]);
   return Math.exp(Math.log(values[i])*(1-u)+Math.log(values[i+1])*u);
 }
-export function projectFlight(c,mass,h,mach,t,atmosphere,interpolate){
-  const a=atmosphere(h,c.disa),tas=mach*a.a,gs=tas+c.wind,q=.5*a.rho*tas*tas;
-  const trim=projectTrim(c,mass,mach,q,t,interpolate),curve=engineCurve(t,mach),engine=t.engine;
+export function projectFlight(c,mass,h,mach,t,atmosphere,interpolate,motion={}){
+  const a=atmosphere(h,c.disa),tas=mach*a.a,gs=motion.gs??tas+c.wind,q=.5*a.rho*tas*tas;
+  const trim=projectTrim(c,mass,mach,q,t,interpolate,motion),curve=engineCurve(t,mach),engine=t.engine;
   const fn=n=>horner(curve.fn,n)*engine.thrustRefN;
   const target=trim.thrust/(4*a.delta),lo=c.n1Min,hi=c.n1Max;
   const min=fn(lo),max=fn(hi);
@@ -93,7 +95,7 @@ export function projectFlight(c,mass,h,mach,t,atmosphere,interpolate){
   // Monotonicity is established algebraically/numerically in source validation tests.
   if(target<Math.max(0,min)||target>max)return {h,mach,mass,...a,tas,gs,q,cl:trim.cl,cd:trim.cd,thrust:trim.thrust,available:4*max*a.delta,
     flow:0,tsfc:0,sr:0,thrustMargin:1-trim.thrust/(4*max*a.delta),clMargin:c.clMax-trim.cl,
-    alpha:trim.alpha,stab:trim.stab,trimForceResidual:trim.f,trimMomentResidual:trim.g,
+    alpha:trim.alpha,stab:trim.stab,drag:trim.drag,axialThrust:trim.thrust*Math.cos((trim.alpha+2)*RAD),trimForceResidual:trim.f,trimMomentResidual:trim.g,
     feasible:false,reasons:['Poussée hors domaine N1 corrigé du projet.']};
   let l=lo,r=hi;
   for(let i=0;i<26;i++){const n=(l+r)/2;if(fn(n)<target)l=n;else r=n;}
@@ -116,6 +118,6 @@ export function projectFlight(c,mass,h,mach,t,atmosphere,interpolate){
   }
   return {h,mach,mass,...a,tas,gs,q,cl:trim.cl,cd:trim.cd,thrust:trim.thrust,available,
     flow,tsfc:flow/trim.thrust,sr:gs/flow/1000,thrustMargin:1-trim.thrust/available,clMargin:c.clMax-trim.cl,
-    alpha:trim.alpha,stab:trim.stab,n1,n1c,trimForceResidual:trim.f,trimMomentResidual:trim.g,trimIterations:trim.iterations,ei,
+    alpha:trim.alpha,stab:trim.stab,drag:trim.drag,axialThrust:trim.thrust*Math.cos((trim.alpha+2)*RAD),n1,n1c,trimForceResidual:trim.f,trimMomentResidual:trim.g,trimIterations:trim.iterations,ei,
     feasible:!reasons.length,reasons};
 }

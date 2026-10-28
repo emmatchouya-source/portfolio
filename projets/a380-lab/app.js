@@ -1,7 +1,7 @@
-import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck} from './model.js';
-import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js';
-import {TrajectoryPlayer} from './scene3d.js?v=1.1.2';
-import {SCENARIO_LABELS,identifyScenario,scenarioConfig} from './scenarios.js';
+import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck,upgradeConfig} from './model.js?v=1.2.0';
+import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js?v=1.2.0';
+import {TrajectoryPlayer} from './scene3d.js?v=1.2.0';
+import {SCENARIO_LABELS,identifyScenario,scenarioConfig} from './scenarios.js?v=1.2.0';
 const $=id=>document.getElementById(id),form=$('studyForm');
 const trajectory=new TrajectoryPlayer();
 $('flightExample').onclick=()=>loadScenario('verification');
@@ -20,6 +20,7 @@ function readConfig(){return validateConfig(rawConfig(),tables);}
 function syncScenario(){
   const id=identifyScenario(rawConfig());$('studyScenario').value=id;
   $('scenarioHint').textContent=id==='verification'?'Cas de vérification numérique : 300 t, 8 000 m, Mach 0,60. Trajectoire calculable avec le modèle du projet.':id==='report'?(isProject(tables)?'Cas original du rapport : rejeté par le modèle reconstruit avec les bornes moteur actuelles. Un diagnostic détaille ce rejet.':'Paramètres du rapport appliqués au modèle actif.'):'Configuration personnalisée : relancez l’analyse après vos modifications.';
+  if(id==='climbs')$('scenarioHint').textContent='Vérification numérique : 300 t, deux montées de 600 m, limite 1,27 m/s (250 ft/min). Cas calculable du modèle reconstruit, sans validation sur vol réel.';
 }
 function setConfig(c){for(const k of Object.keys(DEFAULT))form.elements[k].value=c[k];syncScenario();}
 function loadScenario(id){if(worker)return;setConfig(scenarioConfig(id,tables?.area));modelState();markDirty();run();}
@@ -65,7 +66,7 @@ function run(){
   worker?.terminate();busy(true);$('progress').value=0;started=performance.now();
   status('Exploration du domaine…');
   const current={config:structuredClone(config),tables:tables?structuredClone(tables):null,scenario:identifyScenario(config)};
-  try{worker=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});}catch(e){busy(false);status('Impossible de démarrer le calcul.',true);showError(e);return;}
+  try{worker=new Worker(new URL('./worker.js?v=1.2.0',import.meta.url),{type:'module'});}catch(e){busy(false);status('Impossible de démarrer le calcul.',true);showError(e);return;}
   worker.onmessage=({data})=>{
     if(data.type==='progress'){$('progress').value=data.value;status(`${data.phase} · ${data.value} %`);return;}
     if(data.type==='error'){worker.terminate();worker=null;busy(false);status('Calcul interrompu : '+data.message,true);showError(Error(data.message));return;}
@@ -126,7 +127,7 @@ function render(){
   diagnostics.querySelector('h3').textContent=isProject(snapshot.tables)?'Équilibrage & émissions':'Ce qui déplace le résultat';
   diagnostics.querySelector('.subtle').textContent=isProject(snapshot.tables)?'Modèle OpenVSP et propulsion corrigée, à profil recommandé.':'Variation indépendante de ±10 %, à profil recommandé fixé.';
   diagnostics.querySelector(':scope > .hint').textContent=isProject(snapshot.tables)?'Émissions de combustion estimées par modèle. Aucun effet non-CO₂ climatique ni cycle de vie.':'Cette plage représente des scénarios déterministes. Elle ne constitue pas un intervalle de confiance.';
-  $('comparison').innerHTML=`<table class="comparison-table"><thead><tr><th>Profil</th><th>Mach / altitude initiale</th><th>Carburant</th><th>Durée</th><th>CO₂</th><th>${c.objective==='time'?'Objectif durée':'Objectif équivalent'}</th><th>Marge réserve</th></tr></thead><tbody>${tableResultRow('Référence',baseline)}${tableResultRow('Recommandé',best,true)}</tbody></table><p class="hint">Objectif ${c.objective==='econ'?`carburant + ${f(c.ci)} kg/min × durée`:c.objective==='time'?'durée en kilosecondes':'carburant'}. ${best?.profile.steps?'Le coût énergétique des montées instantanées est omis.':''}</p>`;
+  $('comparison').innerHTML=`<table class="comparison-table"><thead><tr><th>Profil</th><th>Mach / altitude initiale</th><th>Carburant</th><th>Durée</th><th>CO₂</th><th>${c.objective==='time'?'Objectif durée':'Objectif équivalent'}</th><th>Marge réserve</th></tr></thead><tbody>${tableResultRow('Référence',baseline)}${tableResultRow('Recommandé',best,true)}</tbody></table><p class="hint">Objectif ${c.objective==='econ'?`carburant + ${f(c.ci)} kg/min × durée`:c.objective==='time'?'durée en kilosecondes':'carburant'}. Les transitions de montée sont incluses dans la durée et le carburant. Gains conditionnels aux données du modèle.</p>`;
   $('paretoChart').innerHTML=paretoChart(result.pareto,best,baseline);
   const sample=result.pareto.filter((_,i,a)=>i===0||i===a.length-1||i===Math.floor(a.length/2));
   $('paretoTable').innerHTML=sample.length?`<table class="pareto-table"><thead><tr><th>Mach</th><th>Altitude / montées</th><th>Carburant</th><th>Durée</th></tr></thead><tbody>${sample.map(r=>`<tr><td>${f(r.profile.mach,3)}</td><td>${f(r.profile.altitude)} m / ${r.profile.steps}</td><td>${f(r.burn/1000,2)} t</td><td>${duration(r.seconds)}</td></tr>`).join('')}</tbody></table>`:'';
@@ -157,13 +158,13 @@ function setupHeat(){
 function download(name,content,type){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
 $('exportStudy').onclick=()=>{
   if(!result)return;
-  download('a380-etude.json',JSON.stringify({schema:'a380-study/v1',version:VERSION,createdAt,modelStatus:modelStatus(snapshot.tables),scope:'Cruise only. Instantaneous climbs. Not operational flight planning.',...snapshot,result},null,2),'application/json');
+  download('a380-etude.json',JSON.stringify({schema:'a380-study/v1',version:VERSION,createdAt,modelStatus:modelStatus(snapshot.tables),qualification:{flightValidated:false,engineDomainValidated:false,scope:'Cruise and finite step climbs only',criticalOpenItems:['Original trim/CG conventions','Trent thrust/fuel operating domain','Independent aircraft flight or manufacturer reference cases','Buffet and certified operating envelope']},scope:'Cruise with finite C2 climbs, force/energy balance, thrust-limited feasibility. Not validated for operational flight planning.',...snapshot,result},null,2),'application/json');
 };
 $('exportCSV').onclick=()=>{
   if(!result?.best){showError(Error('Aucune trajectoire admissible à exporter.'));return;}
-  const columns=['profile','distance_km','time_s','altitude_m','mach','mass_kg','fuel_burn_kg','tas_m_s','groundspeed_m_s','CL','CD','thrust_total_N','available_total_N','fuel_flow_total_kg_s','tsfc_kg_N_s','thrust_margin_ratio','alpha_deg','stabilizer_deg','N1_corrected_percent','N1_percent','force_residual_normalized','moment_residual_normalized','model_status','model_version','study_utc'];
+  const columns=['profile','distance_km','time_s','altitude_m','mach','mass_kg','fuel_burn_kg','tas_m_s','groundspeed_m_s','CL','CD','thrust_total_N','available_total_N','fuel_flow_total_kg_s','tsfc_kg_N_s','thrust_margin_ratio','alpha_deg','stabilizer_deg','N1_corrected_percent','N1_percent','force_residual_normalized','moment_residual_normalized','model_status','model_version','study_utc','phase','vertical_speed_m_s','flight_path_deg','load_factor','axial_energy_residual_W'];
   const lines=[columns.join(',')];
-  for(const [name,r] of [['recommended',result.best],['baseline',result.baseline]])if(r.feasible)for(const p of r.rows)lines.push([name,p.x,p.seconds,p.h,p.mach,p.mass,p.burn,p.tas,p.gs,p.cl,p.cd,p.thrust,p.available,p.flow,p.tsfc,p.thrustMargin,p.alpha??'',p.stab??'',p.n1c??'',p.n1??'',p.trimForceResidual??'',p.trimMomentResidual??'',modelStatus(snapshot.tables),VERSION,createdAt].map(v=>typeof v==='number'?v.toPrecision(12):v).join(','));
+  for(const [name,r] of [['recommended',result.best],['baseline',result.baseline]])if(r.feasible)for(const p of r.rows)lines.push([name,p.x,p.seconds,p.h,p.mach,p.mass,p.burn,p.tas,p.gs,p.cl,p.cd,p.thrust,p.available,p.flow,p.tsfc,p.thrustMargin,p.alpha??'',p.stab??'',p.n1c??'',p.n1??'',p.trimForceResidual??'',p.trimMomentResidual??'',modelStatus(snapshot.tables),VERSION,createdAt,p.phase,p.roc,p.gamma*180/Math.PI,p.loadFactor,p.energyResidualW].map(v=>typeof v==='number'?v.toPrecision(12):v).join(','));
   download('a380-trajectoires.csv',lines.join('\r\n'),'text/csv;charset=utf-8');
 };
 $('printReport').onclick=()=>{
@@ -187,13 +188,13 @@ $('importData').onchange=async e=>{
     const data=JSON.parse(await file.text());let nextTables,nextConfig;
     if(data.schema==='a380-study/v1'){
       if(!data.config)throw Error('Configuration absente de l’étude.');
-      nextConfig=Object.fromEntries(Object.keys(DEFAULT).map(k=>[k,data.config[k]]));
+      const migrated=upgradeConfig(data.config);nextConfig=Object.fromEntries(Object.keys(DEFAULT).map(k=>[k,migrated[k]]));
       nextTables=data.tables?validateTables(data.tables):null;validateConfig(nextConfig,nextTables);
     }else{
       nextTables=validateTables(data);nextConfig=readConfig();nextConfig.area=nextTables.area;nextConfig.disa=0;validateConfig(nextConfig,nextTables);
     }
     tables=nextTables;setConfig(nextConfig);modelState();markDirty();
-    $('dataStatus').textContent=tables?`Tables chargées : ${tables.name}. Source : ${tables.source}. Relancez l’analyse.`:'Étude chargée. Les résultats seront recalculés à partir de ses paramètres.';
+    $('dataStatus').textContent=tables?`Tables chargées : ${tables.name}. Source : ${tables.source}. Relancez l’analyse avec les montées de durée finie.`:'Étude chargée. Les résultats seront recalculés avec le modèle de montées de durée finie 1.2.';
   }catch(error){showError(error);}finally{e.target.value='';}
 };
 // A fresh visit always opens the documented reference. Stored work is offered explicitly.
@@ -201,12 +202,12 @@ try{
   const saved=JSON.parse(localStorage.getItem('a380-last-study')||'null');
   if(saved){
     const restore=document.createElement('button');restore.id='restoreStudy';restore.type='button';restore.className='text-button';restore.textContent='Restaurer ma dernière étude locale';
-    restore.onclick=()=>{try{const t=saved.tables?validateTables(saved.tables):null,c=Object.fromEntries(Object.keys(DEFAULT).map(k=>[k,saved.config[k]]));validateConfig(c,t);tables=t;setConfig(c);modelState();run();}catch(e){showError(e);}};
+    restore.onclick=()=>{try{const t=saved.tables?validateTables(saved.tables):null,migrated=upgradeConfig(saved.config),c=Object.fromEntries(Object.keys(DEFAULT).map(k=>[k,migrated[k]]));validateConfig(c,t);tables=t;setConfig(c);modelState();run();}catch(e){showError(e);}};
     document.querySelector('.run-actions').append(restore);
   }
 }catch{/* Corrupt or unavailable local storage must not block startup. */}
 const params=new URLSearchParams(location.search),requested=params.get('scenario');
-const initialScenario=['verification','report'].includes(requested)?requested:params.get('model')==='parametric'?'report':'verification';
+const initialScenario=['verification','climbs','report'].includes(requested)?requested:params.get('model')==='parametric'?'report':'verification';
 setConfig(scenarioConfig(initialScenario));modelState();
 $('validation').innerHTML=selfCheck().map(x=>`<div class="check"><strong>${x.pass?'PASS':'ÉCHEC'}</strong>${esc(x.name)}</div>`).join('');
 if(params.get('view')==='3d')activateTab('trajectory');

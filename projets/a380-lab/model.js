@@ -1,6 +1,7 @@
-import {projectFlight,validateProject} from './project-model.js';
+import {projectFlight,validateProject} from './project-model.js?v=1.2.0';
+import {verticalPlan,verticalAt,pathMotion} from './vertical-profile.js?v=1.2.0';
 // SI throughout: m, s, kg, N, K. No aircraft operational data are implied.
-export const VERSION = '1.1.2';
+export const VERSION = '1.2.0';
 export const G = 9.80665, R = 287.05287, GAMMA = 1.4;
 export const DEFAULT = Object.freeze({
   distance:4569, mass:500000, fuel:120000, reserve:15000, wind:0, disa:0,
@@ -9,6 +10,7 @@ export const DEFAULT = Object.freeze({
   ceiling:13100, maxSteps:2, maxMinutes:0, clMax:1.0, thrustLimit:.95,
   ci:160, objective:'fuel', area:859, cd0:.016, k:.042,
   waveMach:.78, waveK:20, tsfc:15.5, thrustSL:352900,cgOffset:0,n1Min:50,n1Max:110,
+  climbRate:2.54,climbStart1:35,climbStart2:70,optimizeClimbs:1,
 });
 export const LIMITS = {
   distance:[100,15000], mass:[300000,575000], fuel:[1000,250000], reserve:[0,100000],
@@ -18,12 +20,18 @@ export const LIMITS = {
   maxSteps:[0,2], maxMinutes:[0,1500], clMax:[.3,1.5], thrustLimit:[.5,1], ci:[0,1000],
   area:[700,950], cd0:[.008,.04], k:[.02,.09], waveMach:[.65,.87],
   waveK:[0,100], tsfc:[8,30], thrustSL:[250000,450000],cgOffset:[-3,3],n1Min:[40,80],n1Max:[90,110],
+  climbRate:[.5,10],climbStart1:[5,90],climbStart2:[10,95],optimizeClimbs:[0,1],
 };
+export function upgradeConfig(c){
+  const out={...c};for(const k of ['climbRate','climbStart1','climbStart2','optimizeClimbs'])if(!Object.hasOwn(out,k))out[k]=DEFAULT[k];return out;
+}
 export function validateConfig(c, tables=null) {
+  c=upgradeConfig(c);
   for (const [key,[lo,hi]] of Object.entries(LIMITS)) {
     if (!Number.isFinite(c[key]) || c[key]<lo || c[key]>hi) throw Error(`${key} : valeur attendue entre ${lo} et ${hi}.`);
   }
-  for (const k of ['steps','maxSteps']) if (!Number.isInteger(c[k])) throw Error('Nombre de paliers entier requis.');
+  for (const k of ['steps','maxSteps','optimizeClimbs']) if (!Number.isInteger(c[k])) throw Error('Nombre de paliers et choix d’optimisation entiers requis.');
+  if(c.steps===2&&c.climbStart2<=c.climbStart1)throw Error('La seconde montée doit commencer après la première.');
   if (!['fuel','time','econ'].includes(c.objective)) throw Error('Objectif inconnu.');
   if(c.fuel>=c.mass || c.reserve>=c.fuel) throw Error('Carburant < masse initiale et réserve < carburant requis.');
   if(c.minMach>=c.maxMach || c.minAltitude>c.maxAltitude || c.maxAltitude>c.ceiling) throw Error('Bornes de recherche incohérentes.');
@@ -67,10 +75,10 @@ export function validateTables(t) {
   matrix(t.maxThrust,t.mach.length,t.altitude.length,'poussée totale',10000,2000000);
   return t;
 }
-export function flightPoint(c,mass,h,mach,tables=null) {
-  if(tables?.schema==='a380-project/v1')return projectFlight(c,mass,h,mach,tables,atmosphere,interpolate);
-  const a=atmosphere(h,c.disa), tas=mach*a.a, gs=tas+c.wind;
-  const q=.5*a.rho*tas*tas, cl=mass*G/(q*c.area);
+export function flightPoint(c,mass,h,mach,tables=null,motion={}) {
+  if(tables?.schema==='a380-project/v1')return {...projectFlight(c,mass,h,mach,tables,atmosphere,interpolate,motion),...motion};
+  const a=atmosphere(h,c.disa), tas=mach*a.a, gs=motion.gs??tas+c.wind,gamma=motion.gamma||0;
+  const q=.5*a.rho*tas*tas, cl=mass*(G*Math.cos(gamma)+(motion.normalAccel||0))/(q*c.area);
   let cd,tsfc,available;
   if(tables) {
     cd=interpolate(tables.mach,tables.cl,tables.cd,mach,cl);
@@ -81,63 +89,86 @@ export function flightPoint(c,mass,h,mach,tables=null) {
     tsfc=c.tsfc*1e-6*Math.sqrt(a.T/216.65)*(1+.6*(mach-.75)+2*Math.pow(mach-.75,2));
     available=4*c.thrustSL*Math.pow(a.delta,.7)*(1-.25*mach);
   }
-  const thrust=q*c.area*cd, flow=thrust*tsfc;
+  const drag=q*c.area*cd,thrust=drag+mass*(G*Math.sin(gamma)+(motion.accel||0)), flow=thrust*tsfc;
   const reasons=[];
   if(gs<=30) reasons.push('Vitesse sol ≤ 30 m/s');
   if(cl>c.clMax) reasons.push('Limite de CL dépassée');
   if(thrust>available*c.thrustLimit) reasons.push('Marge de poussée insuffisante');
   if(h>c.ceiling) reasons.push('Plafond de l’étude dépassé');
-  return {h,mach,mass,...a,tas,gs,q,cl,cd,thrust,available,tsfc,flow,
+  if(thrust<=0||flow<=0)reasons.push('Poussée ou débit non positif dans le domaine de vol.');
+  return {h,mach,mass,...a,tas,gs,q,cl,cd,drag,axialThrust:thrust,thrust,available,tsfc,flow,...motion,
     sr:gs/flow/1000, thrustMargin:1-thrust/available, clMargin:c.clMax-cl,
     feasible:!reasons.length,reasons};
 }
 export function score(result,c) {
   return c.objective==='time'?result.seconds:c.objective==='econ'?result.burn+c.ci*result.seconds/60:result.burn;
 }
-// RK4 on dm/dx=-WF/VGS. Steps are instant, at equal ground-distance fractions.
-// Every RK stage is checked. These are sampled constraints, not a continuous proof.
+// RK4 for mass AND time on horizontal ground distance. C2 finite climbs are flown
+// using tangential/normal force balance; every RK stage is checked.
 export function simulate(c,profile={mach:c.mach,altitude:c.altitude,steps:c.steps},tables=null,dxKm=10,trace=true) {
+  if(!Number.isFinite(dxKm)||dxKm<=0)return {feasible:false,reasons:['Pas d’intégration strictement positif requis.'],profile};
+  c=upgradeConfig(c);
+  if(![c.distance,c.mass,c.fuel,c.reserve,c.wind,c.disa,c.stepHeight,c.climbRate,profile.altitude,profile.mach].every(Number.isFinite)||c.distance<=0||c.mass<=0||c.climbRate<=0)
+    return {feasible:false,reasons:['Paramètres de mission non finis ou non physiques.'],profile};
   let mass=c.mass, seconds=0,x=0, minThrustMargin=1,minClMargin=Infinity;
   let maxCL=0,maxThrust=0;
   const emissions={co:0,nox:0,hc:0};
   const rows=[], reasons=new Set();
-  const end=c.distance*1000, chunk=end/(profile.steps+1), dry=c.mass-c.fuel;
-  const state=(m,h)=>{
-    const p=flightPoint(c,m,h,profile.mach,tables);
+  const minClimbIntervals=Math.max(32,Math.ceil(160/dxKm));
+  const end=c.distance*1000,dry=c.mass-c.fuel;
+  let plan,climbs,temperatureGradient,maxRoc=0,maxEnergyResidual=0,workJ=0,potentialJ=0,kineticJ=0;
+  const state=(m,position)=>{
+    const path={...verticalAt(plan,position),temperatureGradient},motion=pathMotion(c,profile.mach,path,atmosphere);
+    const p=flightPoint(c,m,path.h,profile.mach,tables,motion);
+    if(['h','tas','gs','q','cl','cd','thrust','available','flow','roc','gamma'].some(k=>!Number.isFinite(p[k])))throw Error('État de vol non fini : vérifier les données du modèle.');
+    p.positionKm=position/1000;
     for(const r of p.reasons) reasons.add(r);
     if(m<=0) reasons.add('Masse non physique');
     minThrustMargin=Math.min(minThrustMargin,p.thrustMargin); minClMargin=Math.min(minClMargin,p.clMargin);
     maxCL=Math.max(maxCL,p.cl);maxThrust=Math.max(maxThrust,p.thrust);
+    maxRoc=Math.max(maxRoc,p.roc);
+    p.energyResidualW=(p.axialThrust-p.drag)*p.tas-m*(G*p.roc+p.tas*p.accel);
+    maxEnergyResidual=Math.max(maxEnergyResidual,Math.abs(p.energyResidualW)/(m*G*p.tas));
     return p;
   };
   try {
-    for(let leg=0;leg<=profile.steps;leg++) {
-      const h=profile.altitude+leg*c.stepHeight, boundary=leg===profile.steps?end:(leg+1)*chunk;
-      const first=state(mass,h);
-      if(trace) rows.push({x:x/1000,seconds,burn:c.mass-mass,...first});
+    if(!Number.isInteger(profile.steps)||profile.steps<0||profile.steps>2)throw Error('Nombre de montées invalide.');
+    plan=verticalPlan(c,profile,atmosphere);climbs=plan.climbs.map(e=>({...e}));
+    const push=p=>{if(trace)rows.push({x:x/1000,seconds,burn:c.mass-mass,...p});};
+    push(state(mass,0));
+    for(let segment=1;segment<plan.breaks.length;segment++) {
+      const boundary=plan.breaks[segment],mid=(x+boundary)/2;
+      temperatureGradient=verticalAt(plan,mid).h<11000?-.0065:0;
+      const climb=climbs.find(e=>mid>=e.start&&mid<e.end);
+      if(climb&&x===climb.start){climb.startSeconds=seconds;climb.startMass=mass;}
       while(x<boundary-1e-6) {
-        const dx=Math.min(dxKm*1000,boundary-x),p1=state(mass,h);
+        // Resolve every climb with >= 32 intervals, even in the coarse optimizer.
+        const dx=Math.min(dxKm*1000,boundary-x,climb?climb.length/minClimbIntervals:Infinity),p1=state(mass,x);
         if(!p1.feasible) return {feasible:false,reasons:[...reasons],profile,lastPoint:p1};
-        const k1=-p1.flow/p1.gs,p2=state(mass+dx*k1/2,h),k2=-p2.flow/p2.gs;
-        const p3=state(mass+dx*k2/2,h),k3=-p3.flow/p3.gs;
-        const p4=state(mass+dx*k3,h),k4=-p4.flow/p4.gs;
+        const k1=-p1.flow/p1.gs,p2=state(mass+dx*k1/2,x+dx/2),k2=-p2.flow/p2.gs;
+        const p3=state(mass+dx*k2/2,x+dx/2),k3=-p3.flow/p3.gs;
+        const p4=state(mass+dx*k3,x+dx),k4=-p4.flow/p4.gs;
+        if(reasons.size)return {feasible:false,reasons:[...reasons],profile,lastPoint:[p1,p2,p3,p4].find(p=>!p.feasible)};
+        const stages=[p1,p2,p3,p4],integral=fn=>dx/6*stages.reduce((s,p,i)=>s+[1,2,2,1][i]*fn(p),0);
         for(const key of Object.keys(emissions)){
-          const stages=[p1,p2,p3,p4];
           if(emissions[key]===null||stages.some(p=>p.ei?.[key]==null))emissions[key]=null;
-          else emissions[key]+=dx/6*stages.reduce((s,p,i)=>s+[1,2,2,1][i]*p.ei[key]*p.flow/p.gs,0);
+          else emissions[key]+=integral(p=>p.ei[key]*p.flow/p.gs);
         }
-        mass+=dx*(k1+2*k2+2*k3+k4)/6; seconds+=dx/p1.gs; x+=dx;
-        if(reasons.size) return {feasible:false,reasons:[...reasons],profile};
+        workJ+=integral(p=>(p.axialThrust-p.drag)*p.tas/p.gs);
+        potentialJ+=integral(p=>p.mass*G*p.roc/p.gs);kineticJ+=integral(p=>p.mass*p.tas*p.accel/p.gs);
+        mass+=dx*(k1+2*k2+2*k3+k4)/6; seconds+=integral(p=>1/p.gs); x=Math.min(boundary,x+dx);
         if(mass<dry+c.reserve-1e-6) return {feasible:false,reasons:['Réserve carburant entamée'],profile};
-        const last=state(mass,h);
-        if(trace) rows.push({x:x/1000,seconds,burn:c.mass-mass,...last});
+        const last=state(mass,x);if(!last.feasible)return {feasible:false,reasons:[...reasons],profile,lastPoint:last};push(last);
       }
+      if(climb&&Math.abs(x-climb.end)<1e-5){climb.endSeconds=seconds;climb.duration=seconds-climb.startSeconds;climb.burn=climb.startMass-mass;climb.endMass=mass;}
     }
     if(c.maxMinutes && seconds/60>c.maxMinutes+1e-9) reasons.add('Durée maximale dépassée');
     const burn=c.mass-mass;
     const result={feasible:!reasons.size,reasons:[...reasons],profile,burn,seconds,finalMass:mass,
       remainingFuel:mass-dry,reserveMargin:mass-dry-c.reserve,co2:3.16*burn,
-      minThrustMargin,minClMargin,maxCL,maxThrust,rows,emissions};
+      minThrustMargin,minClMargin,maxCL,maxThrust,rows,emissions,climbs,vertical:plan,maxRoc,
+      energy:{workJ,potentialJ,kineticJ,residualJ:workJ-potentialJ-kineticJ,maxNormalizedResidual:maxEnergyResidual},
+      integration:{method:'RK4/mass-time-energy',stepKm:dxKm,minClimbIntervals}};
     result.score=score(result,c);
     return result;
   } catch(e) { return {feasible:false,reasons:[e.message],profile}; }

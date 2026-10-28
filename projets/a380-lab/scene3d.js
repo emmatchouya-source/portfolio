@@ -1,5 +1,5 @@
-import {VERSION} from './model.js';
-import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,dot,cross} from './trajectory.js';
+import {VERSION} from './model.js?v=1.2.0';
+import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,dot,cross} from './trajectory.js?v=1.2.0';
 const $=id=>document.getElementById(id),RAD=Math.PI/180;
 const f=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
 const clock=s=>{const t=Math.round(s);return [Math.floor(t/3600),Math.floor(t/60)%60,t%60].map(v=>String(v).padStart(2,'0')).join(':');};
@@ -73,17 +73,26 @@ export class TrajectoryPlayer {
     this.distance=Math.max(1,...all.map(t=>t.distance));this.height=Math.max(10000,...all.flatMap(t=>t.rows.map(p=>p.h)));
     $('flightExaggeration').value=String(clamp(Math.round(this.distance*1000/this.height/4),1,400));
     $('flightExample').hidden=Boolean(this.active)||!$('verificationCase');
-    this.referenceFailure=result.baseline?.reasons?.join(' ; ')||'Contraintes du modèle non respectées';
+    this.referenceFailure=(result.baseline?.reasons?.join(' ; ')||'Contraintes du modèle non respectées').replace(/[.\s]+$/,'');
+    const failed=result.baseline?.lastPoint;
+    if(failed)this.referenceFailure+=` (à ${f(failed.h)} m, ${f(failed.positionKm,1)} km : ${f(failed.thrust/1000,1)} kN requis, ${f(failed.available*snapshot.config.thrustLimit/1000,1)} kN autorisés par la marge d’étude)`;
     this.profileDetails();this.preset('orbit');this.sync();this.invalidate();
   }
   profileDetails(){
     const active=this.active,c=this.snapshot.config,configured=this.tracks.baseline===active;
     const name=configured?'Profil configuré (référence)':'Profil optimisé (recommandé)';
     $('flightProfileNote').textContent=active?`${name} : ${active.events.length} montée(s), de ${f(active.rows[0].h)} à ${f(active.rows.at(-1).h)} m. `+(configured?'Les montées suivent les paramètres appliqués.':this.tracks.baseline?`Vous avez configuré ${c.steps} montée(s) dans la référence ; l’optimisation choisit son propre nombre de montées, dans la limite de ${c.maxSteps}.`:`Le profil configuré est non admissible : ${this.referenceFailure}. Seul le profil optimisé est disponible.`):`Profil configuré non admissible : ${this.referenceFailure}.`;
+    const table=$('flightClimbAudit');table.replaceChildren();
+    if(active?.events.length){
+      const heading=document.createElement('p');heading.className='hint';heading.textContent='Montées : distance, durée et carburant effectivement intégrés (carburant total sur la transition).';table.append(heading);
+      const el=document.createElement('table');el.innerHTML='<thead><tr><th>Montée</th><th>Altitudes (m)</th><th>Départ / fin (km)</th><th>Durée</th><th>Carburant (kg)</th></tr></thead><tbody></tbody>';
+      active.events.forEach((e,i)=>{const tr=el.tBodies[0].insertRow();[i+1,`${f(e.from)} → ${f(e.to)}`,`${f(e.x,1)} / ${f(e.endX,1)}`,clock(e.duration),f(e.burn,1)].forEach(text=>{tr.insertCell().textContent=text;});});table.append(el);
+    }
     const container=$('flightStages');container.replaceChildren();
     if(active)for(const [i,p] of [active.rows[0],...active.events.map(e=>active.rows[e.index])].entries()){
       const button=document.createElement('button');button.className='compact';button.textContent=`Palier ${i+1} · ${f(p.h)} m`;
       button.onclick=()=>this.seek(p.seconds,true);container.append(button);
+      if(i<active.events.length){const event=active.events[i],climb=document.createElement('button');climb.className='compact';climb.textContent=`Montée ${i+1} · milieu`;climb.onclick=()=>this.seek((event.seconds+(event.endSeconds??event.seconds))/2,true);container.append(climb);}
     }
   }
   setStale(value){this.stale=value;this.sync();}
@@ -96,7 +105,7 @@ export class TrajectoryPlayer {
     if(this.time>=this.active.seconds)this.time=0;
     this.playing=true;this.lastFrame=0;this.sync();this.invalidate();
   }
-  seek(time,pause=false){if(pause)this.pause();this.time=clamp(time,0,this.active?.seconds||0);this.lastFrame=0;this.sync();this.invalidate();}
+  seek(time,pause=false){if(pause)this.pause();const end=this.active?.seconds||0;this.time=clamp(time,0,end);if(end-this.time<1e-6)this.time=end;this.lastFrame=0;this.sync();this.invalidate();}
   preset(view){this.view=view;$('flightCamera').value=view;this.pan=[0,0];this.zoom=1;this.yaw=-1.1;this.elevation=.48;
     if(view==='top'){this.yaw=-Math.PI/2;this.elevation=1.53;}
     if(view==='side'){this.yaw=-Math.PI/2;this.elevation=.045;}
@@ -123,10 +132,10 @@ export class TrajectoryPlayer {
     put('flightState',this.stale?'Paramètres modifiés · lecture de la dernière étude calculée':!has?'Aucune trajectoire admissible':this.playing?'Lecture en cours':this.time>=active.seconds?'Trajectoire terminée':'Lecture en pause');
     $('flightState').classList.toggle('stale',this.stale);
     $('flightPending').hidden=!this.stale;
-    const values={Distance:point?.x,Altitude:point?.h,Mach:point?.mach,TAS:point?point.tas*3.6:null,Mass:point?point.mass/1000:null,Fuel:point?point.burn/1000:null,Alpha:point?.alpha,Stab:point?.stab};
-    for(const [key,value] of Object.entries(values))put('flight'+key,value==null?'—':f(value,['Mach','Alpha','Stab'].includes(key)?3:['Mass','Fuel'].includes(key)?2:0));
-    put('flightStage',has?`Palier ${point.leg+1} / ${active.events.length+1} · écart latéral 0 m`:'Calculer un profil admissible pour lancer la lecture.');
-    $('flightAttitudeNote').textContent=point?.alpha==null?'Attitude non calculée dans ce mode : avion présenté horizontalement.':'Attitude affichée : incidence équilibrée du modèle ; roulis et cap constants.';
+    const values={Distance:point?.x,Altitude:point?.h,Mach:point?.mach,TAS:point?point.tas*3.6:null,Mass:point?point.mass/1000:null,Fuel:point?point.burn/1000:null,Alpha:point?.alpha,Stab:point?.stab,ROC:point?.roc,Gamma:point?point.gamma*180/Math.PI:null,Thrust:point?point.thrust/1000:null,Flow:point?.flow};
+    for(const [key,value] of Object.entries(values))put('flight'+key,value==null?'—':f(value,['Mach','Alpha','Stab'].includes(key)?3:['Mass','Fuel','ROC','Gamma','Flow','Thrust'].includes(key)?2:0));
+    put('flightStage',has?`${point.phase==='climb'?'Montée vers le palier '+(point.leg+2):'Palier '+(point.leg+1)} / ${active.events.length+1} · écart latéral 0 m`:'Calculer un profil admissible pour lancer la lecture.');
+    $('flightAttitudeNote').textContent=point?.alpha==null?'Assiette affichée : pente de vol ; incidence non calculée dans ce mode.':'Assiette affichée : pente de vol + incidence équilibrée ; roulis et cap constants.';
     $('flightModel').textContent=this.snapshot?(this.model.startsWith('project')?'Projet MGA803 · modèle reconstruit':this.model.startsWith('parametric')?'Modèle paramétrique · démonstration':'Tables de croisière importées'):'En attente de calcul';
     $('flightCompare').disabled=!this.tracks.recommended||!this.tracks.baseline;
   }
@@ -171,16 +180,18 @@ export class TrajectoryPlayer {
         const selected=track===this.active;
         line(track.rows.map(world),selected?'#78adab':'#7f94aa',selected?1.7:1.2,selected?[]:[5,5]);
         for(const event of track.events){
-          const a=world({x:event.x,h:event.from}),b=world({x:event.x,h:event.to});line([a,b],selected?'#f1bb6a':'#8394aa',2,[3,4]);
+          const a=world({x:event.x,h:event.from}),b=world({x:event.endX??event.x,h:event.to});
+          const segment=event.finite?track.rows.filter(p=>p.seconds>=event.seconds&&p.seconds<=event.endSeconds).map(world):[a,b];
+          line(segment,selected?'#f1bb6a':'#8394aa',2);
           const eventScreen=project(b),aircraftScreen=project(world(point));
-          if(selected&&this.view!=='follow'&&eventScreen&&aircraftScreen&&Math.hypot(eventScreen[0]-aircraftScreen[0],eventScreen[1]-aircraftScreen[1])>140)label(b,'Δh '+f(event.to-event.from)+' m · Δt 0 s','#f1bb6a');
+          if(selected&&this.view!=='follow'&&eventScreen&&aircraftScreen&&Math.hypot(eventScreen[0]-aircraftScreen[0],eventScreen[1]-aircraftScreen[1])>140)label(b,'Δh '+f(event.to-event.from)+' m · '+clock(event.duration||0),'#f1bb6a');
         }
       }
       const trail=this.active.rows.filter(p=>p.seconds<=this.time).map(world);trail.push(world(point));line(trail,TEAL,3);
       const pos=world(point),ground=[pos[0],0,0];line([ground,pos],'#74c6b266',1,[4,5]);
       const groundScreen=project(ground);if(groundScreen){c.fillStyle='#00000035';c.beginPath();c.ellipse(groundScreen[0],groundScreen[1],16,5,0,0,2*Math.PI);c.fill();}
       if(this.view!=='follow'){label(world(this.active.rows[0]),'DÉBUT',TEAL);label(world(this.active.rows.at(-1)),'FIN',TEAL,'right');}
-      const pitch=(point.alpha||0)*RAD,cp=Math.cos(pitch),sp=Math.sin(pitch);
+      const pitch=(point.alpha||0)*RAD+(point.gamma||0),cp=Math.cos(pitch),sp=Math.sin(pitch);
       const transform=v=>[pos[0]+v[0]*cp-v[2]*sp,pos[1]+v[1],pos[2]+v[0]*sp+v[2]*cp];
       const faces=MESH.map(face=>{const points=face.points.map(transform);return {...face,points,depth:points.reduce((sum,p)=>sum+(project(p)?.[2]||0),0)/points.length};}).sort((a,b)=>b.depth-a.depth);
       for(const face of faces){const [a,b,d]=face.points,normal=cross(b.map((v,i)=>v-a[i]),d.map((v,i)=>v-a[i]));polygon(face.points,shaded(face.color,normal),'#25465655');}
@@ -209,7 +220,7 @@ export class TrajectoryPlayer {
     const point=sampleTrajectory(this.active,this.time);ctx.fillStyle='#e3eef4';ctx.font='16px Consolas, monospace';
     ctx.fillText(`A380 Cruise Lab ${VERSION} | ${$('flightModel').textContent}`,20,this.canvas.height+28);
     ctx.fillText(`${this.active?.label||'Aucune trajectoire'} | ${clock(this.time)} | ${f(point?.x)} km | ${f(point?.h)} m | ${$('flightScale').textContent}`,20,this.canvas.height+55);
-    ctx.fillText('Croisière longitudinale ; montées instantanées ; modèle non validé en vol.',20,this.canvas.height+82);
+    ctx.fillText('Croisière longitudinale ; montées de durée finie ; modèle non validé en vol.',20,this.canvas.height+82);
     canvas.toBlob(blob=>{if(blob)save('a380-trajectoire-3d.png',blob,'image/png');},'image/png');
   }
 }

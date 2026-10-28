@@ -1,5 +1,24 @@
 # Vérification de la version 1.0.0
 
+## Version 1.2.0 — montées physiques de durée finie
+
+Les entrées 1.0/1.1 ci-dessous sont un historique. La version 1.2 remplace leur hypothèse de montées instantanées ; leurs résultats à plusieurs paliers ne sont plus des valeurs de référence du moteur actuel.
+
+- 79 contrôles : raccords C², continuité temporelle/spatiale, masse, puissance, taux vertical, convergence, rejets des contraintes et valeurs non finies.
+- Six missions comparées à une référence indépendante Python/SciPy : Hermite quintique, angle sous vent par Brent, intégration DOP853. Tolérances : 0,01 kg et 0,01 s.
+- 17 équilibres HYBR et inversions moteur indépendants pendant les montées source.
+- Le cas source 500 t reste rejeté. La correction n’augmente pas artificiellement la poussée disponible pour le rendre faisable.
+- Équations, hypothèses et protocole : [FINITE_CLIMBS.md](FINITE_CLIMBS.md).
+
+```text
+python -X utf8 tests/test_a380_finite_climbs.py
+python -X utf8 tests/test_a380_lab.py
+python -X utf8 tests/test_a380_steps.py
+python -X utf8 tests/test_a380_trajectory.py
+```
+
+Ces contrôles établissent une cohérence numérique et fonctionnelle. Ils ne remplacent pas une validation des performances avion sur données indépendantes.
+
 ## Correction 1.1.2 — profil configuré dans la vue 3D
 
 La vue 3D sélectionne le profil configuré admissible avant le profil optimisé. Les équations et l’optimiseur restent inchangés. Un test sépare volontairement deux montées configurées de zéro montée autorisée à l’optimiseur : télémétrie 8 000 / 8 600 / 9 200 m, changements à l’instant exact des transitions, rendu du canvas, export CSV et sélection indépendante des deux profils. Il vérifie aussi le recalcul depuis la vue 3D, la mise en page mobile et le remplacement explicite d’une référence rejetée par une trajectoire optimisée admissible.

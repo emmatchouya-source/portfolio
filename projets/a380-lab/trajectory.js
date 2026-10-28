@@ -1,13 +1,15 @@
 // Playback samples the computed cruise trajectory; it never integrates new dynamics.
+import {verticalAt} from './vertical-profile.js?v=1.2.0';
 export function prepareTrajectory(result,label){
   if(!result?.feasible||!Array.isArray(result.rows)||result.rows.length<2)return null;
   const rows=result.rows;
   if(rows.some((p,i)=>['seconds','x','h','mass','burn','mach','tas','gs','flow'].some(k=>!Number.isFinite(p[k]))||
     (i&&(p.seconds<rows[i-1].seconds||p.x<rows[i-1].x))))return null;
-  const events=[];
+  const events=(result.climbs||[]).map(e=>({seconds:e.startSeconds,endSeconds:e.endSeconds,x:e.start/1000,endX:e.end/1000,from:e.from,to:e.to,
+    index:rows.findIndex(p=>p.seconds>=e.endSeconds),finite:true,duration:e.duration,burn:e.burn}));
   for(let i=1;i<rows.length;i++)if(rows[i].seconds===rows[i-1].seconds&&rows[i].h!==rows[i-1].h)
     events.push({seconds:rows[i].seconds,x:rows[i].x,from:rows[i-1].h,to:rows[i].h,index:i});
-  return {label,rows,events,seconds:rows.at(-1).seconds,distance:rows.at(-1).x};
+  return {label,rows,events,vertical:result.vertical,seconds:rows.at(-1).seconds,distance:rows.at(-1).x};
 }
 export function sampleTrajectory(track,seconds){
   if(!track||!Number.isFinite(seconds))return null;
@@ -17,15 +19,16 @@ export function sampleTrajectory(track,seconds){
   while(lo<hi){const mid=(lo+hi)>>>1;if(rows[mid].seconds<=t)lo=mid+1;else hi=mid;}
   const index=Math.max(0,lo-1),a=rows[index],b=rows[Math.min(index+1,rows.length-1)];
   const u=b.seconds>a.seconds?(t-a.seconds)/(b.seconds-a.seconds):0,p={...a,seconds:t};
-  for(const key of ['x','h','mass','burn','mach','tas','gs','flow','thrust','available','cl','cd','alpha','stab','n1','n1c'])
+  for(const key of ['x','h','mass','burn','mach','tas','gs','flow','thrust','available','cl','cd','alpha','stab','n1','n1c','gamma','roc','loadFactor'])
     if(Number.isFinite(a[key])&&Number.isFinite(b[key]))p[key]=a[key]+u*(b[key]-a[key]);
-  p.y=0;p.z=p.h;p.xMetres=p.x*1000;p.leg=track.events.filter(e=>e.seconds<=t).length;
+  if(track.vertical){const path=verticalAt(track.vertical,p.x*1000);p.h=path.h;p.phase=path.phase;}
+  p.y=0;p.z=p.h;p.xMetres=p.x*1000;p.leg=track.events.filter(e=>(e.endSeconds??e.seconds)<=t).length;
   return p;
 }
 export function playbackCSV(track,version,model){
-  const headers=['time_s','longitudinal_m','lateral_m','altitude_m','mach','tas_m_s','groundspeed_m_s','mass_kg','fuel_burn_kg','alpha_deg','stabilizer_deg','profile','model_status','version'];
+  const headers=['time_s','longitudinal_m','lateral_m','altitude_m','mach','tas_m_s','groundspeed_m_s','mass_kg','fuel_burn_kg','alpha_deg','stabilizer_deg','vertical_speed_m_s','flight_path_deg','phase','thrust_N','fuel_flow_kg_s','profile','model_status','version'];
   const quote=v=>'"'+String(v).replaceAll('"','""')+'"';
-  return [headers.join(','),...track.rows.map(p=>[p.seconds,p.x*1000,0,p.h,p.mach,p.tas,p.gs,p.mass,p.burn,p.alpha??'',p.stab??'',track.label,model,version]
+  return [headers.join(','),...track.rows.map(p=>[p.seconds,p.x*1000,0,p.h,p.mach,p.tas,p.gs,p.mass,p.burn,p.alpha??'',p.stab??'',p.roc??0,(p.gamma??0)*180/Math.PI,p.phase??'cruise',p.thrust??'',p.flow,track.label,model,version]
     .map(v=>typeof v==='number'?v.toPrecision(12):quote(v)).join(','))].join('\r\n');
 }
 export const clamp=(x,min,max)=>Math.max(min,Math.min(max,x));

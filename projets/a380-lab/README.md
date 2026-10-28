@@ -37,7 +37,9 @@ Le démarrage charge le **cas de vérification numérique à 300 t / 8 km**, afi
 
 Le lien `?scenario=report` charge explicitement le cas original ; `?scenario=verification` charge le cas de vérification. `?model=parametric` conserve l’exploration séparée du modèle synthétique à 500 t. Le bouton de réinitialisation restaure le scénario de démarrage et le modèle du projet. La dernière étude calculée peut être restaurée explicitement depuis le stockage local du navigateur ; elle ne remplace pas automatiquement le cas de démarrage. L’import JSON conserve les paramètres de l’étude importée, même si son profil est rejeté.
 
-## Trajectoire 3D — version 1.1
+`?scenario=climbs&view=3d` ouvre le cas de vérification avec deux montées de 600 m et une limite verticale de 1,27 m/s, pour examiner immédiatement les transitions physiques. Ce choix est également disponible dans « Cas d’étude ».
+
+## Trajectoire 3D — version 1.2
 
 L’onglet **Trajectoire 3D** anime un avion à quatre moteurs sur les points de la mission calculée. Le lien `?view=3d` ouvre directement cette vue. Lecture/pause, retour au début, curseur temporel et vitesses ×60 / ×300 / ×1 200 / ×3 600. Chaque position est accompagnée de la distance, altitude, Mach, TAS, masse, carburant et, en mode projet, incidence et stabilisateur équilibrés.
 
@@ -47,11 +49,11 @@ La caméra permet une vue d’ensemble, un suivi de l’avion, une vue de dessus
 
 La scène utilise une projection perspective de géométries 3D, rendue en Canvas, sans bibliothèque ou service externe. Elle représente le **repère d’étude longitudinal**, sans latitude/longitude, relief réel ou courbure terrestre. X = distance au sol en mètres, Y = 0 et Z = altitude du modèle. Le maillage de l’avion est illustratif et agrandi pour la lecture. L’exagération verticale de 1 à 400 est explicitement affichée et modifie seulement le rendu.
 
-La position et la télémétrie sont interpolées entre les points calculés, avec sélection du point **après le changement de palier** aux instants dupliqués. Les montées instantanées restent des sauts d’altitude ; aucune rampe ou énergie de montée supplémentaire n’est inventée. Les segments concernés sont indiqués en orange. Le pitch de l’avion reprend l’incidence du mode projet ; en mode réduit, où cette attitude n’est pas calculée, l’avion est présenté horizontalement. Ni virage, roulis, dynamique 6DOF, ni nouvelles forces ne sont calculés par cette lecture.
+La position et la télémétrie suivent les points de l’intégration physique. L’altitude est réévaluée sur la même trajectoire C² que celle du calcul, sans saut ni lissage décoratif. Les montées sont indiquées en orange. L’assiette affichée est la pente de vol + l’incidence équilibrée du mode projet ; le mode réduit affiche la pente seule. La télémétrie ajoute vitesse verticale, pente, poussée et débit. Le tableau des montées donne leurs distances, durées et carburants calculés. Les boutons « milieu » permettent d’examiner la transition. Ni virage, roulis ni dynamique 6DOF ne sont ajoutés par la vue.
 
 Une mission rejetée n’est pas animée. Le bouton du cas de vérification est également disponible dans la scène vide. Modifier les entrées marque la lecture comme correspondant à la dernière étude calculée ; il faut relancer l’analyse pour appliquer les changements. La caméra, le zoom et le curseur n’affectent jamais les résultats d’optimisation.
 
-Exports supplémentaires : capture PNG avec contexte du modèle et échelle, et CSV des coordonnées **physiques** (mètres), temps et télémétrie du profil choisi. Le CSV conserve les deux positions au même instant lors d’un changement de palier, indépendamment de l’exagération visuelle. Le dossier PDF d’étude conserve les graphiques scientifiques existants ; la vue interactive s’exporte séparément en PNG.
+Exports supplémentaires : capture PNG avec contexte du modèle et échelle, et CSV des coordonnées **physiques** (mètres), temps, phase de vol, vitesse verticale, pente, poussée et débit du profil choisi. Temps et distance croissent pendant les montées, indépendamment de l’exagération visuelle. Le JSON comporte la trajectoire C², le bilan d’énergie, les statistiques des montées et les réserves de qualification. Le dossier PDF d’étude conserve les graphiques scientifiques existants ; la vue interactive s’exporte séparément en PNG.
 
 ```text
 python -X utf8 tests/test_a380_trajectory.py
@@ -88,9 +90,9 @@ La surface publique de 845 m² donnée par [Airbus, Facts & Figures 2021](https:
 
 ### Mission et montées par paliers
 
-Intégration RK4 de `dm/dx = −WF/Vsol`, à Mach constant. Les segments sont scindés exactement aux transitions ; les phases RK4 restent dans le palier courant. Temps cumulé par `dt = dx/Vsol`, exact dans chaque palier sous les hypothèses de vent et température constants.
+Intégration RK4 de la masse **et du temps**, `dm/dx = −WF/Vsol`, `dt/dx = 1/Vsol`, à Mach constant. La vitesse sol horizontale est `V cos γ + vent`. Les segments sont scindés aux départs/fins des montées et au franchissement de 11 km. Au moins 32 intervalles par montée à 5 km et 64 à 2,5 km : le contrôle de convergence affine aussi les transitions courtes.
 
-0, 1 ou 2 montées de hauteur fixée, aux fractions de distance `1/(n+1)`, `2/(n+1)`. Elles sont **instantanées et sans coût énergétique**, comme dans le rapport. Il n’existe donc ni dynamique de montée, ni poussée excédentaire pendant la montée, ni garantie que la montée puisse être réalisée. Les gains liés aux montées sont idéalisés.
+0, 1 ou 2 montées de hauteur fixée. Leur profil est quintique C², avec pente et courbure nulles aux raccords. La vitesse verticale maximale détermine la longueur minimale de cette loi de transition. Le calcul résout les forces tangentielles et normales, la poussée requise, l’équilibrage du projet et le débit pendant toute la montée. Une montée hors capacité moteur, chevauchante ou inachevée est rejetée. Les départs sont configurables et peuvent être optimisés. Le cas numérique à 300 t utilise une limite de 1,27 m/s (250 ft/min), distincte de toute affirmation sur les capacités réelles de l’A380. Voir [FINITE_CLIMBS.md](FINITE_CLIMBS.md) pour les équations et vérifications.
 
 La masse hors carburant reste `masse initiale − carburant initial`. La réserve finale est une contrainte, pas une phase de vol de dégagement ou d’attente simulée.
 
@@ -106,11 +108,11 @@ Contraintes contrôlées aux étapes RK4, en entrée et sortie de palier : CL ma
 
 ## Optimisation et limites du solveur
 
-Variables : Mach constant, altitude initiale et nombre de montées. Hauteur des montées fixée, positions à distances égales. Aucune modification de géométrie ou moteur n’est optimisée.
+Variables : Mach constant, altitude initiale, nombre de montées et, si activé, position des départs. Hauteur des montées et limite de vitesse verticale fixées. La recherche de positions teste 10–90 % du trajet par pas de 10 %, puis affine à 2 % au meilleur Mach/altitude de chaque nombre de montées. C’est une recherche par coordonnées, sans garantie d’optimum conjoint global. Aucune modification de géométrie ou moteur n’est optimisée.
 
 Balayage complet de la grille initiale (`ΔM = 0,01`, `Δh = 250 m`, intégration 40 km). Les bornes supérieures sont incluses. Affinement autour du meilleur point de chaque nombre de montées (`ΔM = 0,001`, `Δh = 50 m`, intégration 10 km). Les 30 meilleurs candidats sont recalculés à 5 km avant classement final. La référence admissible est aussi conservée si elle est dans le domaine de recherche, pour éviter une recommandation moins bonne que la référence.
 
-La grille n’est pas une preuve d’optimalité globale continue, notamment pour des tables non convexes ou des îlots de faisabilité étroits. La carte Mach–altitude décrit le balayage initial sans montée, avec intégration 40 km. La frontière carburant–temps est un sous-ensemble non dominé des profils du balayage initial, vérifié à 5 km ; elle n’est pas une frontière de Pareto continue exacte.
+La grille n’est pas une preuve d’optimalité globale continue, notamment pour des tables non convexes ou des îlots de faisabilité étroits. La carte Mach–altitude décrit le balayage initial sans montée, avec intégration 40 km. La frontière carburant–temps est un sous-ensemble non dominé des profils explorés, incluant les positions testées, vérifié à 5 km ; elle n’est pas une frontière de Pareto continue exacte.
 
 La sensibilité applique ±10 % à CD0, k et TSFCref séparément, au profil recommandé fixé, sans réoptimisation et en conservant les contraintes. Un scénario violant une contrainte est marqué « Hors contrainte ». Ces scénarios ne sont pas des bornes statistiques ou probabilistes.
 

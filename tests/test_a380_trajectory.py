@@ -51,7 +51,7 @@ def main(base):
           const result=m.simulate({...m.DEFAULT,steps:2});const real=t.prepareTrajectory(result,'Reference');
           const point=t.sampleTrajectory(real,result.seconds);
           test('mission final state reproduced',point.x===result.rows.at(-1).x&&point.mass===result.finalMass&&point.burn===result.burn);
-          test('all real step transitions remain discontinuous',real.events.every(e=>t.sampleTrajectory(real,e.seconds).h===e.to&&t.sampleTrajectory(real,e.seconds-.001).h===e.from));
+          test('all real climbs have continuous intermediate heights',real.events.every(e=>e.endSeconds>e.seconds&&t.sampleTrajectory(real,(e.seconds+e.endSeconds)/2).h>e.from&&t.sampleTrajectory(real,(e.seconds+e.endSeconds)/2).h<e.to));
           return {checks};
         }""")
         print('Trajectory numerical checks:',len(checks['checks']),flush=True)
