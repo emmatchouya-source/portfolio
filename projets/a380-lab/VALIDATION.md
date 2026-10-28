@@ -1,5 +1,18 @@
 # Vérification de la version 1.0.0
 
+## Version 1.3.2 — continuité du sol et déplacement en suivi
+
+- Sol schématique prolongé jusqu’à l’horizon par intersection des rayons de la caméra avec le plan du sol : aucune dalle finie susceptible de disparaître pendant l’approche.
+- Découpage des segments et polygones au plan proche de la caméra puis aux limites de l’écran ; une piste ou une ligne partiellement visible reste affichée. Les coordonnées projetées extrêmes ne créent plus de bandes pleines dans le quadrillage.
+- Grille adaptative et repères kilométriques ancrés dans les coordonnées du trajet. Le changement d’origine du suivi déplace les repères sans les attacher à l’avion.
+- En caméra automatique, le cadrage suit la position calculée pendant toutes les phases ; la croisière automatique passe de ×3 600 à ×300 pour rendre son déroulement lisible. Distance et vitesse au sol apparaissent à côté de l’avion. Les accélérations manuelles restent disponibles.
+- Contrôles indépendants par lancer de rayons, écrans larges/étroits, inclinaisons et distances caméra, ancrage spatial, passage de la descente au freinage et lecture en croisière. Les équations physiques ne changent pas.
+
+```text
+python -X utf8 tests/test_a380_ground.py
+python -X utf8 tests/test_a380_full_mission.py
+```
+
 ## Version 1.3.1 — ombre dans la scène 3D
 
 - Remplacement de l’ellipse en pixels par la projection de la silhouette du maillage sur le sol local, avec la même direction lumineuse que l’avion.

@@ -1,8 +1,9 @@
-import {VERSION} from './model.js?v=1.3.1';
-import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,dot,cross} from './trajectory.js?v=1.3.1';
-import {PHASE_LABELS} from './airport-config.js?v=1.3.1';
-import {phaseBudget} from './airport-report.js?v=1.3.1';
-import {SUN_DIRECTION,drawGroundShadow} from './shadow.js?v=1.3.1';
+import {VERSION} from './model.js?v=1.3.2';
+import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,dot,cross} from './trajectory.js?v=1.3.2';
+import {PHASE_LABELS} from './airport-config.js?v=1.3.2';
+import {phaseBudget} from './airport-report.js?v=1.3.2';
+import {SUN_DIRECTION,drawGroundShadow} from './shadow.js?v=1.3.2';
+import {clipSegment,clipPolygon,clipScreenSegment,clipScreenPolygon,groundScreenPolygon,groundGrid} from './scene-ground.js?v=1.3.2';
 const $=id=>document.getElementById(id),RAD=Math.PI/180;
 const f=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
 const clock=s=>{const t=Math.round(s);return [Math.floor(t/3600),Math.floor(t/60)%60,t%60].map(v=>String(v).padStart(2,'0')).join(':');};
@@ -164,7 +165,7 @@ export class TrajectoryPlayer {
     if(this.playing){
       const dt=this.lastFrame?clamp((timestamp-this.lastFrame)/1000,0,.2):0;this.lastFrame=timestamp;
       const automatic=$('flightSpeed').value==='auto',phase=sampleTrajectory(this.active,this.time)?.phase;
-      const rate=automatic?({'takeoff-roll':2,rotation:1,'initial-climb':5,'departure-climb':120,cruise:3600,climb:120,descent:120,approach:10,flare:1,'landing-roll':2}[phase]??300):Number($('flightSpeed').value);
+      const rate=automatic?({'takeoff-roll':2,rotation:1,'initial-climb':5,'departure-climb':120,cruise:300,climb:120,descent:120,approach:10,flare:1,'landing-roll':2}[phase]??300):Number($('flightSpeed').value);
       const boundary=automatic?this.active.phases?.find(p=>p.endSeconds>this.time+1e-7)?.endSeconds:undefined;
       this.time=Math.min(this.active.seconds,boundary??Infinity,this.time+dt*rate);
       if(this.time>=this.active.seconds)this.playing=false;
@@ -181,26 +182,29 @@ export class TrajectoryPlayer {
     const groundAltitude=local?(view==='arrival'?this.snapshot.config.arrElevation:view==='departure'?this.snapshot.config.depElevation:['approach','flare','landing-roll'].includes(point?.phase)?this.snapshot.config.arrElevation:['takeoff-roll','rotation','initial-climb'].includes(point?.phase)?this.snapshot.config.depElevation:0):0;
     const scale=240/(local?20000:((this.distance||4569)*1000)),exaggeration=Number($('flightExaggeration').value);
     const world=p=>[(p.x*1000-origin)*scale,0,(p.h-groundAltitude)*scale*exaggeration];
-    const focus=view==='follow'&&point?world(point):local?[view==='arrival'?12:35,0,6]:[120,0,(this.height||13000)*scale*exaggeration*.45];
+    const focus=(view==='follow'||this.view==='auto')&&point?world(point):local?[view==='arrival'?12:35,0,6]:[120,0,(this.height||13000)*scale*exaggeration*.45];
     focus[0]+=this.pan[0];focus[2]+=this.pan[1];
     const verticalExtent=(this.height||13000)*scale*exaggeration;
     const radius=(local?110:view==='follow'?65:Math.max(260,240*h/w*1.8,verticalExtent*1.85))/this.zoom;
     const eye=focus.map((v,i)=>v+[radius*Math.cos(this.elevation)*Math.cos(this.yaw),radius*Math.cos(this.elevation)*Math.sin(this.yaw),radius*Math.sin(this.elevation)][i]);
+    eye[2]=Math.max(1,eye[2]);
     const camera=perspectiveCamera(eye,focus,w,h),project=camera.project;
     const line=(points,color,width=1,dash=[])=>{
-      c.beginPath();let open=false;for(const p of points){const a=project(p);if(!a){open=false;continue;}if(open)c.lineTo(a[0],a[1]);else{c.moveTo(a[0],a[1]);open=true;}}
+      c.beginPath();for(let i=1;i<points.length;i++){const segment=clipSegment(points[i-1],points[i],camera);if(!segment.length)continue;const projected=segment.map(project);if(projected.some(p=>!p))continue;const clipped=clipScreenSegment(...projected,w,h);if(clipped.length){c.moveTo(...clipped[0]);c.lineTo(...clipped[1]);}}
       c.strokeStyle=color;c.lineWidth=width;c.setLineDash(dash);c.stroke();c.setLineDash([]);
     };
-    const polygon=(points,fill,stroke)=>{const a=points.map(project);if(a.some(p=>!p))return;c.beginPath();a.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=.45;c.stroke();}};
+    const polygon=(points,fill,stroke)=>{const projected=clipPolygon(points,camera).map(project);if(projected.some(p=>!p))return;const a=clipScreenPolygon(projected,w,h);if(a.length<3)return;c.beginPath();a.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.closePath();c.fillStyle=fill;c.fill();if(stroke){c.strokeStyle=stroke;c.lineWidth=.45;c.stroke();}};
     const label=(p,text,color='#94b1c2',align='left')=>{const a=project(p);if(!a||a[0]<10||a[0]>w-12||a[1]<70||a[1]>h-65||(a[0]>w-90&&a[1]>h-240))return;c.fillStyle=color;c.font='11px Consolas, monospace';c.textAlign=align;c.fillText(text,a[0]+5,a[1]-7);c.textAlign='left';};
     const pos=point?world(point):null;
     const pitch=point?((point.visualPitch??point.alpha??0)*RAD+(point.gamma||0)):0,cp=Math.cos(pitch),sp=Math.sin(pitch),meshScale=local?0.25:1;
     const transform=v=>[pos[0]+meshScale*(v[0]*cp-v[2]*sp),pos[1]+meshScale*v[1],pos[2]+meshScale*(v[0]*sp+v[2]*cp)];
     const faces=point?MESH.map(face=>{const points=face.points.map(transform);return {...face,points,depth:points.reduce((sum,p)=>sum+(project(p)?.[2]||0),0)/points.length};}):[];
     const sky=c.createLinearGradient(0,0,0,h);sky.addColorStop(0,'#102337');sky.addColorStop(.6,'#173549');sky.addColorStop(1,'#102b39');c.fillStyle=sky;c.fillRect(0,0,w,h);
-    polygon([[-60,-90,0],[300,-90,0],[300,90,0],[-60,90,0]],'#16313b');
-    for(let x=-40;x<=280;x+=20)line([[x,-90,0],[x,90,0]],x%60===0?'#365361':'#24424e');
-    for(let y=-80;y<=80;y+=20)line([[-40,y,0],[280,y,0]],y===0?'#4c727d':'#24424e',1);
+    const ground=groundScreenPolygon(camera,w,h),groundPaint=c.createLinearGradient(0,0,0,h);
+    groundPaint.addColorStop(0,'#173549');groundPaint.addColorStop(1,'#16313b');
+    if(ground.length){c.beginPath();ground.forEach((p,i)=>i?c.lineTo(...p):c.moveTo(...p));c.closePath();c.fillStyle=groundPaint;c.fill();}
+    const grid=groundGrid({origin,scale,focus,eye,radius});
+    for(const segment of grid.segments)line(segment.points,segment.axis?'#4c727d':'#294955',1);
     if(airport){
       const runway=(start,length,elevation,name)=>{
         const a=world({x:start/1000,h:elevation}),b=world({x:(start+length)/1000,h:elevation}),half=Math.max(.2,30*scale);
@@ -215,10 +219,7 @@ export class TrajectoryPlayer {
       const elevation=airport?(['approach','flare','landing-roll'].includes(point.phase)?this.snapshot.config.arrElevation:['takeoff-roll','rotation','initial-climb'].includes(point.phase)?this.snapshot.config.depElevation:0):0;
       drawGroundShadow(c,this.shadowMask,faces,{center:pos,groundZ:world({x:point.x,h:elevation})[2]+.04,heightMetres:point.h-elevation,worldScale:scale},project,w,h,dpr);
     }
-    if(this.view!=='follow'){
-      for(let i=0;i<=4;i++){const x=i*60;label([x,-30,0],f((origin+x/scale)/1000)+' km');}
-      label([0,-42,0],'DISTANCE LONGITUDINALE','#a1bac8');
-    }
+    for(const marker of grid.labels)label(marker.point,f(marker.metres/1000,grid.spacing<1000?1:0)+' km');
     if(this.active){
       const tracks=$('flightCompare').checked?Object.values(this.tracks).filter(Boolean):[this.active];
       for(const track of tracks){
@@ -237,7 +238,11 @@ export class TrajectoryPlayer {
       if(this.view!=='follow'){label(world(this.active.rows[0]),'DÉBUT',TEAL);label(world(this.active.rows.at(-1)),'FIN',TEAL,'right');}
       faces.sort((a,b)=>b.depth-a.depth);
       for(const face of faces){const [a,b,d]=face.points,normal=cross(b.map((v,i)=>v-a[i]),d.map((v,i)=>v-a[i]));polygon(face.points,shaded(face.color,normal),'#25465655');}
-      const p=project(pos);if(p){c.strokeStyle='#6ae0bf70';c.beginPath();c.arc(p[0],p[1],this.view==='follow'?65:22,0,Math.PI*2);c.stroke();c.fillStyle='#b7e9de';c.font='11px Consolas, monospace';c.fillText('A380 · '+f(point.h)+' m',clamp(p[0]+(this.view==='follow'?-40:28),12,w-130),p[1]-(this.view==='follow'?82:26));}
+      const p=project(pos);if(p){
+        c.strokeStyle='#6ae0bf70';c.beginPath();c.arc(p[0],p[1],this.view==='follow'?65:22,0,Math.PI*2);c.stroke();c.fillStyle='#b7e9de';c.font='11px Consolas, monospace';
+        const x=clamp(p[0]+(this.view==='follow'?-40:28),12,w-185),y=p[1]-(this.view==='follow'?82:26);
+        c.fillText('A380 · '+f(point.h)+' m',x,y);c.fillText(f(point.x,1)+' km · '+f(point.gs*3.6)+' km/h sol',x,y+14);
+      }
       const z=(this.height||13000)*scale*exaggeration;
       if(this.view!=='follow'&&!local){
         line([[0,22,0],[0,22,z]],'#698f9e',1,[3,5]);

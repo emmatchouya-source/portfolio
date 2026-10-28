@@ -1,5 +1,5 @@
 // Playback samples the computed cruise trajectory; it never integrates new dynamics.
-import {verticalAt} from './vertical-profile.js?v=1.3.1';
+import {verticalAt} from './vertical-profile.js?v=1.3.2';
 export function prepareTrajectory(result,label){
   if(!result?.feasible||!Array.isArray(result.rows)||result.rows.length<2)return null;
   const rows=result.rows;
@@ -40,5 +40,5 @@ const unit=a=>{const n=Math.hypot(...a);return a.map(v=>v/n);};
 export function perspectiveCamera(eye,target,width,height){
   const forward=unit(sub(target,eye)),right=unit(cross(forward,[0,0,1])),up=cross(right,forward);
   const lens=height/(2*Math.tan(.63/2));
-  return {forward,right,up,project:p=>{const d=sub(p,eye),depth=dot(d,forward);return depth>.5?[width/2+lens*dot(d,right)/depth,height*.53-lens*dot(d,up)/depth,depth]:null;}};
+  return {eye,forward,right,up,lens,near:.5,project:p=>{const d=sub(p,eye),depth=dot(d,forward);return depth>.5?[width/2+lens*dot(d,right)/depth,height*.53-lens*dot(d,up)/depth,depth]:null;}};
 }
