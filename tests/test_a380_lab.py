@@ -180,7 +180,7 @@ def main(base_url=None):
         mp.get_by_role('tab', name='Synthèse').click()
         mp.screenshot(path=str(ARTIFACTS / 'mobile.png'), full_page=True)
         # Infeasible scenario must clear recommendation and retain clear diagnostics.
-        page.locator('summary').click()
+        page.locator('#studyForm summary').click()
         page.locator('[name=clMax]').fill('.3')
         page.locator('#run').click()
         page.wait_for_function("!document.querySelector('#run').disabled", timeout=120000)

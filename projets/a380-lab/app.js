@@ -1,8 +1,16 @@
-import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck,upgradeConfig} from './model.js?v=1.2.0';
-import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js?v=1.2.0';
-import {TrajectoryPlayer} from './scene3d.js?v=1.2.0';
-import {SCENARIO_LABELS,identifyScenario,scenarioConfig} from './scenarios.js?v=1.2.0';
+import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck,upgradeConfig} from './model.js?v=1.3.0';
+import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js?v=1.3.0';
+import {TrajectoryPlayer} from './scene3d.js?v=1.3.0';
+import {SCENARIO_LABELS,identifyScenario,scenarioConfig} from './scenarios.js?v=1.3.0';
+import {AIRPORT_FIELDS,AIRPORT_LIMITS,PHASE_LABELS} from './airport-config.js?v=1.3.0';
+import {airportReport} from './airport-report.js?v=1.3.0';
 const $=id=>document.getElementById(id),form=$('studyForm');
+for(const [key,title,unit,group] of AIRPORT_FIELDS){
+  const label=document.createElement('label');label.className=group==='quick'?'field':'stack';label.append(document.createTextNode(group==='quick'?title:`${title} (${unit})`));
+  const input=document.createElement('input');input.type='number';input.name=key;input.min=AIRPORT_LIMITS[key][0];input.max=AIRPORT_LIMITS[key][1];input.step='any';input.required=true;input.value=DEFAULT[key];
+  if(group==='quick'){const span=document.createElement('span'),i=document.createElement('i');i.textContent=unit;span.append(input,i);label.append(span);$('airportQuickFields').append(label);}
+  else{input.setAttribute('form','studyForm');label.append(input);$('airport-'+group).append(label);}
+}
 const trajectory=new TrajectoryPlayer();
 $('flightExample').onclick=()=>loadScenario('verification');
 $('recoverScenario').onclick=()=>loadScenario('verification');
@@ -21,6 +29,7 @@ function syncScenario(){
   const id=identifyScenario(rawConfig());$('studyScenario').value=id;
   $('scenarioHint').textContent=id==='verification'?'Cas de vérification numérique : 300 t, 8 000 m, Mach 0,60. Trajectoire calculable avec le modèle du projet.':id==='report'?(isProject(tables)?'Cas original du rapport : rejeté par le modèle reconstruit avec les bornes moteur actuelles. Un diagnostic détaille ce rejet.':'Paramètres du rapport appliqués au modèle actif.'):'Configuration personnalisée : relancez l’analyse après vos modifications.';
   if(id==='climbs')$('scenarioHint').textContent='Vérification numérique : 300 t, deux montées de 600 m, limite 1,27 m/s (250 ft/min). Cas calculable du modèle reconstruit, sans validation sur vol réel.';
+  if(id==='full')$('scenarioHint').textContent='Vol complet de vérification à 300 t : roulage, envol, montée, croisière, descente, approche, arrondi et arrêt. Phases basse vitesse paramétriques, non validées A380.';
 }
 function setConfig(c){for(const k of Object.keys(DEFAULT))form.elements[k].value=c[k];syncScenario();}
 function loadScenario(id){if(worker)return;setConfig(scenarioConfig(id,tables?.area));modelState();markDirty();run();}
@@ -36,6 +45,7 @@ document.querySelectorAll('[data-tab]').forEach(b=>{
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>activateTab(b.dataset.go,true));
 function markDirty(){
   syncScenario();
+  airportState();
   trajectory.setStale(true);
   $('dirty').textContent='Paramètres modifiés : relancez l’analyse pour les appliquer.';
   if(result)status('Paramètres modifiés · les résultats affichés correspondent à la dernière étude calculée.');
@@ -50,6 +60,15 @@ function modelState(){
   $('modelTag').textContent=isProject(tables)?'Projet MGA803':imported?'Tables importées':'Paramétrique';
   $('modelNotice').innerHTML=isProject(tables)?'<b>Modèle reconstruit à partir des fichiers du projet MGA803.</b> 490 cas OpenVSP et coefficients moteur fournis. Équilibrage calculé, sans validation en vol ; limites de régime corrigé définies pour l’étude.':imported?`<b>Tables de croisière importées : ${esc(tables.name)}.</b> Provenance déclarée par l’utilisateur, sans validation automatique de la fidélité physique. Interpolation limitée au domaine fourni.`:'<b>Modèle paramétrique de démonstration.</b> Polaire et propulsion synthétiques pour comparer les hypothèses. Pour utiliser les fichiers fournis, activez le modèle du projet dans « Modèle & données ».';
   syncScenario();
+  airportState();
+}
+function airportState(){
+  const full=Number(form.elements.missionMode.value)===1;
+  $('airportQuick').hidden=!full;$('airportDataPanel').hidden=!full;
+  for(const [key] of AIRPORT_FIELDS)form.elements[key].disabled=!full||$('run').disabled;
+  $('missionScope').textContent=full?'Distance entre seuils de départ et d’arrivée. Masse et carburant au début du roulage. Le calcul se poursuit jusqu’à l’arrêt après atterrissage. Positif : vent de dos.':'Positif : vent de dos. Distance, masse initiale et durée couvrent uniquement la croisière.';
+  form.elements.distance.closest('label').firstChild.textContent=full?'Distance entre seuils ':'Distance au sol ';
+  for(const key of ['climbStart1','climbStart2'])form.elements[key].parentElement.querySelector('i').textContent=full?'% crois.':'% trajet';
 }
 function busy(on){
   if(on)trajectory.pause();
@@ -62,11 +81,11 @@ function busy(on){
   if(!on)modelState();
 }
 function run(){
-  let config;try{if(!form.reportValidity())return;config=readConfig();}catch(e){showError(e);return;}
+  let config;try{const invalid=[...form.elements].find(el=>el.willValidate&&!el.validity.valid),panel=invalid?.closest('[role=tabpanel]');if(panel?.hidden)activateTab(panel.id,true);if(!form.reportValidity())return;config=readConfig();}catch(e){showError(e);return;}
   worker?.terminate();busy(true);$('progress').value=0;started=performance.now();
   status('Exploration du domaine…');
   const current={config:structuredClone(config),tables:tables?structuredClone(tables):null,scenario:identifyScenario(config)};
-  try{worker=new Worker(new URL('./worker.js?v=1.2.0',import.meta.url),{type:'module'});}catch(e){busy(false);status('Impossible de démarrer le calcul.',true);showError(e);return;}
+  try{worker=new Worker(new URL('./worker.js?v=1.3.0',import.meta.url),{type:'module'});}catch(e){busy(false);status('Impossible de démarrer le calcul.',true);showError(e);return;}
   worker.onmessage=({data})=>{
     if(data.type==='progress'){$('progress').value=data.value;status(`${data.phase} · ${data.value} %`);return;}
     if(data.type==='error'){worker.terminate();worker=null;busy(false);status('Calcul interrompu : '+data.message,true);showError(Error(data.message));return;}
@@ -99,8 +118,11 @@ function tableResultRow(label,r,selected=false){
 }
 function render(){
   const {best,baseline,speeds}=result,c=snapshot.config;
+  const sourcePoint=best?.rows.find(p=>Number.isFinite(p.alpha)),emissions=best?.cruiseEmissions??best?.emissions;
+  $('airportSummary').hidden=!c.missionMode;
+  $('airportSummary').innerHTML=c.missionMode?airportReport(best??(baseline.feasible?baseline:null),c):'';
   const gain=best&&baseline.feasible?(baseline.burn-best.burn)/baseline.burn*100:null;
-  $('kpis').innerHTML=`<article><span>CARBURANT</span><strong>${best?f(best.burn/1000,2):'—'}<small>t</small></strong><p>Profil recommandé</p></article><article><span>DURÉE DE CROISIÈRE</span><strong>${best?duration(best.seconds):'—'}</strong><p>Pour ${f(c.distance)} km au sol</p></article><article><span>CO₂ DIRECT</span><strong>${best?f(best.co2/1000,1):'—'}<small>t</small></strong><p>Combustion du carburant uniquement</p></article><article class="gain"><span>ÉCART À LA RÉFÉRENCE</span><strong>${gain===null?'—':(gain<0?'+':'−')+f(Math.abs(gain),1)}<small>%</small></strong><p>${gain===null?'Référence non admissible':'Consommation de carburant'}</p></article>`;
+  $('kpis').innerHTML=`<article><span>CARBURANT</span><strong>${best?f(best.burn/1000,2):'—'}<small>t</small></strong><p>Profil recommandé</p></article><article><span>${c.missionMode?'DURÉE DU VOL COMPLET':'DURÉE DE CROISIÈRE'}</span><strong>${best?duration(best.seconds):'—'}</strong><p>Pour ${f(c.distance)} km au sol</p></article><article><span>CO₂ DIRECT</span><strong>${best?f(best.co2/1000,1):'—'}<small>t</small></strong><p>Combustion du carburant uniquement</p></article><article class="gain"><span>ÉCART À LA RÉFÉRENCE</span><strong>${gain===null?'—':(gain<0?'+':'−')+f(Math.abs(gain),1)}<small>%</small></strong><p>${gain===null?'Référence non admissible':'Consommation de carburant'}</p></article>`;
   $('profileTag').textContent=best?{fuel:'Objectif carburant',time:'Objectif durée',econ:'Objectif coût équivalent'}[c.objective]:'Aucun profil admissible';
   $('recommendation').innerHTML=best?`<div><small>MACH CONSTANT</small><strong>${f(best.profile.mach,3)}</strong></div><div><small>ALTITUDE INITIALE</small><strong>${f(best.profile.altitude)} <small>m</small></strong></div><div><small>MONTÉES</small><strong>${best.profile.steps} <small>× ${f(c.stepHeight)} m</small></strong></div>`:'<div><p class="infeasible">Modifiez le domaine ou les contraintes, puis relancez le calcul.</p>'+(isProject(snapshot.tables)?'<p class="hint">Le scénario dépasse les limites retenues. Consultez le diagnostic ou chargez le cas de vérification.</p><button id="verificationCase" class="compact">Charger le cas de vérification 300 t</button>':'')+'</div>';
   if($('verificationCase'))$('verificationCase').onclick=()=>loadScenario('verification');
@@ -108,7 +130,7 @@ function render(){
   if(!best){
     const point=baseline.lastPoint,mainReason=Object.entries(result.failures).sort((a,b)=>b[1]-a[1])[0]?.[0]||baseline.reasons?.[0]||'Contraintes du domaine choisi';
     $('feasibilityTitle').textContent=mainReason.includes('N1')?'La poussée requise dépasse le domaine moteur retenu.':'Aucun profil ne respecte les contraintes actuelles.';
-    $('feasibilityDetail').textContent=point&&isProject(snapshot.tables)&&point.thrust>point.available?`À ${f(c.mass/1000)} t, ${f(c.altitude)} m et Mach ${f(c.mach,2)}, il faut ${f(point.thrust/1000,1)} kN ; le modèle fournit ${f(point.available/1000,1)} kN au régime corrigé maximal d’étude de ${f(c.n1Max)} %. Ce résultat porte sur le modèle reconstruit et ses bornes.`:`Motif principal : ${mainReason}. Vérifiez les limites de masse, carburant, altitude, durée et poussée avant de relancer.`;
+    $('feasibilityDetail').textContent=point&&isProject(snapshot.tables)&&point.thrust>point.available?`À ${f(point.mass/1000)} t, ${f(point.h)} m et Mach ${f(point.mach,2)}, il faut ${f(point.thrust/1000,1)} kN ; le modèle fournit ${f(point.available/1000,1)} kN au régime corrigé maximal d’étude de ${f(c.n1Max)} %. Ce résultat porte sur le modèle reconstruit et ses bornes.`:`Motif principal : ${mainReason}. Vérifiez les limites de masse, carburant, altitude, durée et poussée avant de relancer.`;
     $('recoverScenario').hidden=Boolean(snapshot.tables)&&!isProject(snapshot.tables);
   }
   $('searchBoundary')?.remove();
@@ -118,9 +140,9 @@ function render(){
     if(bounds.length){const note=document.createElement('p');note.id='searchBoundary';note.className='hint';note.textContent='Solution sur une borne du domaine : '+bounds.join(', ')+'. Il ne s’agit pas d’un optimum intérieur identifié. L’extension du domaine exige une vérification de la validité du modèle.';$('recommendation').after(note);}
   }
   for(const id of ['profileChart','speedChart','paretoChart','heatChart','comparison','sensitivity'])$(id).classList.remove('empty');
-  $('profileChart').innerHTML=profileChart(best,baseline,c.distance);
-  $('constraints').innerHTML=best?`<div><strong>${f(best.minThrustMargin*100,1)} %</strong><span>marge min. de poussée<br>requise : ${f((1-c.thrustLimit)*100)} %</span></div><div><strong>${f(best.maxCL,3)} / ${f(c.clMax,2)}</strong><span>CL maximal observé / limite</span></div><div><strong>+${f(best.reserveMargin/1000,2)} t</strong><span>au-delà de la réserve finale</span></div>`:'';
-  if(!best&&baseline.lastPoint){const p=baseline.lastPoint;$('constraints').innerHTML=`<div><strong>${f(p.thrust/1000,1)} kN</strong><span>poussée totale requise<br>au début de la référence</span></div><div><strong>${f(p.available/1000,1)} kN</strong><span>capacité du modèle au N1c maximal</span></div><div><strong>${f(p.alpha,2)}° / ${f(p.stab,2)}°</strong><span>incidence / stabilisateur équilibrés</span></div>`;}
+  $('profileChart').innerHTML=profileChart(best,baseline,Math.max(c.distance,best?.rows.at(-1)?.x??0,baseline?.rows?.at(-1)?.x??0));
+  $('constraints').innerHTML=best?`<div><strong>${f(best.minThrustMargin*100,1)} %</strong><span>marge min. de poussée<br>requise : ${f((1-c.thrustLimit)*100)} %</span></div><div><strong>${f(best.cruiseMaxCL??best.maxCL,3)} / ${f(c.clMax,2)}</strong><span>CL maximal de croisière / limite</span></div><div><strong>+${f(best.reserveMargin/1000,2)} t</strong><span>au-delà de la réserve finale</span></div>`:'';
+  if(!best&&baseline.lastPoint){const p=baseline.lastPoint;$('constraints').innerHTML=`<div><strong>${f(p.thrust/1000,1)} kN</strong><span>poussée totale requise<br>au point de rejet</span></div><div><strong>${f(p.available/1000,1)} kN</strong><span>capacité du modèle au N1c maximal</span></div><div><strong>${f(p.alpha,2)}° / ${f(p.stab,2)}°</strong><span>incidence / stabilisateur équilibrés</span></div>`;}
   $('speedChart').innerHTML=speedChart(speeds,c);
   $('speedValues').innerHTML=['mrc','lrc','econ'].map(k=>`<div class="${k}"><span>${k.toUpperCase()}</span><b>${speeds[k]?f(speeds[k].mach,3):'—'}</b></div>`).join('');
   const diagnostics=document.querySelector('.lower-grid .panel:last-child');
@@ -131,7 +153,7 @@ function render(){
   $('paretoChart').innerHTML=paretoChart(result.pareto,best,baseline);
   const sample=result.pareto.filter((_,i,a)=>i===0||i===a.length-1||i===Math.floor(a.length/2));
   $('paretoTable').innerHTML=sample.length?`<table class="pareto-table"><thead><tr><th>Mach</th><th>Altitude / montées</th><th>Carburant</th><th>Durée</th></tr></thead><tbody>${sample.map(r=>`<tr><td>${f(r.profile.mach,3)}</td><td>${f(r.profile.altitude)} m / ${r.profile.steps}</td><td>${f(r.burn/1000,2)} t</td><td>${duration(r.seconds)}</td></tr>`).join('')}</tbody></table>`:'';
-  $('sensitivity').innerHTML=isProject(snapshot.tables)&&best?`<div class="sensitivity-row"><label>Équilibrage au départ du profil recommandé</label><div class="formula">α = ${f(best.rows[0].alpha,3)}° · δstab = ${f(best.rows[0].stab,3)}°<br>N1 corrigé = ${f(best.rows[0].n1c,2)} %<br>N1 = ${f(best.rows[0].n1,2)} %<br>Résidu force : ${best.rows[0].trimForceResidual.toExponential(2)}<br>Résidu moment : ${best.rows[0].trimMomentResidual.toExponential(2)}</div></div><h4>Émissions de croisière — BFF simplifié</h4><div class="formula">NOx : ${best.emissions.nox===null?'hors domaine':f(best.emissions.nox,2)+' kg'}<br>CO : ${best.emissions.co===null?'hors domaine':f(best.emissions.co,2)+' kg'}<br>HC : ${best.emissions.hc===null?'non calculable sur toute la mission':f(best.emissions.hc,2)+' kg'}</div><p class="hint">OACI UID 18RR082. Interpolation log–log sans extrapolation. Un indice HC nul dans la source interdit l’interpolation logarithmique du segment concerné.</p>`:snapshot.tables?'<p class="subtle">Sensibilité paramétrique indisponible en mode tables. Importez des jeux de données distincts pour comparer leurs hypothèses.</p>':!best?'<p class="subtle">Un profil admissible est nécessaire.</p>':result.sensitivity.map(s=>`<div class="sensitivity-row"><label>${s.label}</label><div class="sensitivity-track"><span>${s.low===null?'Hors contrainte':f(s.low/1000,2)+' t'}</span><span class="bar"></span><span>${s.high===null?'Hors contrainte':f(s.high/1000,2)+' t'}</span></div><p class="hint">−10 % / +10 % sur ${esc(s.key)} · référence ${f(best.burn/1000,2)} t</p></div>`).join('');
+  $('sensitivity').innerHTML=isProject(snapshot.tables)&&best?`<div class="sensitivity-row"><label>Équilibrage au départ de la croisière recommandée</label><div class="formula">α = ${f(sourcePoint.alpha,3)}° · δstab = ${f(sourcePoint.stab,3)}°<br>N1 corrigé = ${f(sourcePoint.n1c,2)} %<br>N1 = ${f(sourcePoint.n1,2)} %<br>Résidu force : ${sourcePoint.trimForceResidual.toExponential(2)}<br>Résidu moment : ${sourcePoint.trimMomentResidual.toExponential(2)}</div></div><h4>Émissions de croisière seule — BFF simplifié</h4><div class="formula">NOx : ${emissions.nox===null?'hors domaine':f(emissions.nox,2)+' kg'}<br>CO : ${emissions.co===null?'hors domaine':f(emissions.co,2)+' kg'}<br>HC : ${emissions.hc===null?'non calculable sur toute la mission':f(emissions.hc,2)+' kg'}</div><p class="hint">OACI UID 18RR082. Interpolation log–log sans extrapolation. Un indice HC nul dans la source interdit l’interpolation logarithmique du segment concerné.</p>`:snapshot.tables?'<p class="subtle">Sensibilité paramétrique indisponible en mode tables. Importez des jeux de données distincts pour comparer leurs hypothèses.</p>':!best?'<p class="subtle">Un profil admissible est nécessaire.</p>':result.sensitivity.map(s=>`<div class="sensitivity-row"><label>${s.label}</label><div class="sensitivity-track"><span>${s.low===null?'Hors contrainte':f(s.low/1000,2)+' t'}</span><span class="bar"></span><span>${s.high===null?'Hors contrainte':f(s.high/1000,2)+' t'}</span></div><p class="hint">−10 % / +10 % sur ${esc(s.key)} · référence ${f(best.burn/1000,2)} t</p></div>`).join('');
   $('heatChart').innerHTML=heatChart(result.heat,c);setupHeat();
   $('failureSummary').innerHTML=`<h4>Motifs d’exclusion lors du balayage initial</h4><div class="failure-list">${Object.entries(result.failures).map(([reason,n])=>`<span>${esc(reason)} : ${f(n)}</span>`).join('')||'<span>Aucune exclusion</span>'}</div><p class="hint">Un profil peut contribuer à plusieurs motifs. Les points hors domaine ne sont pas extrapolés.</p>`;
   const conv=result.convergence;
@@ -158,7 +180,7 @@ function setupHeat(){
 function download(name,content,type){const url=URL.createObjectURL(new Blob([content],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
 $('exportStudy').onclick=()=>{
   if(!result)return;
-  download('a380-etude.json',JSON.stringify({schema:'a380-study/v1',version:VERSION,createdAt,modelStatus:modelStatus(snapshot.tables),qualification:{flightValidated:false,engineDomainValidated:false,scope:'Cruise and finite step climbs only',criticalOpenItems:['Original trim/CG conventions','Trent thrust/fuel operating domain','Independent aircraft flight or manufacturer reference cases','Buffet and certified operating envelope']},scope:'Cruise with finite C2 climbs, force/energy balance, thrust-limited feasibility. Not validated for operational flight planning.',...snapshot,result},null,2),'application/json');
+  download('a380-etude.json',JSON.stringify({schema:'a380-study/v1',version:VERSION,createdAt,modelStatus:modelStatus(snapshot.tables),qualification:{flightValidated:false,engineDomainValidated:false,scope:snapshot.config.missionMode?'Full mission with unvalidated low-speed model':'Cruise and finite step climbs only',airportModelStatus:snapshot.config.missionMode?'parametric-low-speed/unvalidated':null,criticalOpenItems:['Original trim/CG conventions','Trent thrust/fuel operating domain','Independent aircraft flight or manufacturer reference cases','Buffet and certified operating envelope']},scope:snapshot.config.missionMode?'Full flight: takeoff, climb, cruise, descent, approach, flare and braking. Low-speed model is parametric and not A380 AFM validated.':'Cruise with finite C2 climbs. Not validated for operational flight planning.',...snapshot,result},null,2),'application/json');
 };
 $('exportCSV').onclick=()=>{
   if(!result?.best){showError(Error('Aucune trajectoire admissible à exporter.'));return;}
@@ -184,7 +206,7 @@ $('template').onclick=()=>{
 $('importData').onchange=async e=>{
   const file=e.target.files[0];if(!file)return;
   try{
-    if(file.size>10*1024*1024)throw Error('Fichier limité à 10 Mo.');
+    if(file.size>50*1024*1024)throw Error('Fichier limité à 50 Mo.');
     const data=JSON.parse(await file.text());let nextTables,nextConfig;
     if(data.schema==='a380-study/v1'){
       if(!data.config)throw Error('Configuration absente de l’étude.');
@@ -207,7 +229,7 @@ try{
   }
 }catch{/* Corrupt or unavailable local storage must not block startup. */}
 const params=new URLSearchParams(location.search),requested=params.get('scenario');
-const initialScenario=['verification','climbs','report'].includes(requested)?requested:params.get('model')==='parametric'?'report':'verification';
+const initialScenario=['verification','climbs','full','report'].includes(requested)?requested:params.get('model')==='parametric'?'report':'verification';
 setConfig(scenarioConfig(initialScenario));modelState();
 $('validation').innerHTML=selfCheck().map(x=>`<div class="check"><strong>${x.pass?'PASS':'ÉCHEC'}</strong>${esc(x.name)}</div>`).join('');
 if(params.get('view')==='3d')activateTab('trajectory');

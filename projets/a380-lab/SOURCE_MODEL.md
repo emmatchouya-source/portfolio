@@ -1,5 +1,7 @@
 # Modèle reconstruit à partir des fichiers MGA803
 
+Le mode vol complet ajouté en 1.3 utilise ces données pour la croisière uniquement. Les phases de décollage, montée initiale, descente, approche et freinage emploient le modèle paramétrique distinct décrit dans [TAKEOFF_LANDING.md](TAKEOFF_LANDING.md) ; elles ne sont pas identifiées dans les fichiers OpenVSP/Trent de ce projet.
+
 Depuis la version 1.2, les montées utilisent des forces tangentielles et normales avec pente, accélération et courbure de trajectoire. Les équations d’équilibrage ci-dessous décrivent le cas de croisière horizontale ; leur extension est documentée dans [FINITE_CLIMBS.md](FINITE_CLIMBS.md). Les données et conventions de propulsion/centrage sont inchangées.
 
 Le répertoire `Outils/` contient les références ajoutées par le propriétaire du portfolio. Il est ignoré par Git : ni les documents complets, ni le FCOM, ni les archives du cours ne sont republiés. Seul le jeu numérique dérivé `data/project.json` est distribué avec le code.

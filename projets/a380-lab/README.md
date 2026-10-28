@@ -1,6 +1,8 @@
 # A380 Cruise Lab
 
-Application statique d’analyse et d’optimisation de la **croisière uniquement**, intégrée au portfolio d’Emmanuel Tchouya. Aucun compte, serveur de calcul ou transfert de fichier importé. Les calculs tournent dans un Web Worker ; annuler interrompt le travail.
+Application statique d’analyse et d’optimisation de la **croisière ou d’un vol complet**, intégrée au portfolio d’Emmanuel Tchouya. Aucun compte, serveur de calcul ou transfert de fichier importé. Les calculs tournent dans un Web Worker ; annuler interrompt le travail.
+
+Depuis la version 1.3, « Vol complet » ajoute roulage, rotation, montée initiale, descente, approche, arrondi et freinage à l’arrêt. Ces phases utilisent un **modèle basse vitesse paramétrique distinct**, avec hypothèses éditables, sans extrapoler les tables de croisière. Elles sont incluses dans le temps et le carburant optimisés. Voir [TAKEOFF_LANDING.md](TAKEOFF_LANDING.md) pour les équations et les limites de qualification.
 
 ## Statut scientifique
 
@@ -9,6 +11,8 @@ Source principale : Lina Seghilani, Emmanuel Tchouya Tangwa et Cyril Traineau, *
 Le rapport décrit une chaîne OpenVSP, équilibrage longitudinal, modèle moteur Trent 970B-84, émissions BFF et intégration de trajectoire. Ses **fichiers complémentaires ont été ajoutés pendant le développement** : archives OpenVSP/MATLAB, coefficients de propulsion, classeur OACI et références. Le modèle du projet est maintenant intégré avec des conventions explicites. Il ne prétend pas reproduire exactement les figures du rapport ni prédire les performances réelles d’un A380 sans validation.
 
 Trois modes :
+
+Ces trois modèles concernent la croisière. En vol complet, le modèle basse vitesse des autres phases reste explicitement paramétrique et non validé A380.
 
 - **Projet MGA803**, mode initial : 180 cas WB + 310 cas empennage, équilibrage longitudinal de l’incidence, du stabilisateur et de la poussée ; propulsion corrigée et émissions BFF simplifiées. Les 490 cas ont été comparés aux dernières itérations des fichiers `.history`. Voir [SOURCE_MODEL.md](SOURCE_MODEL.md) pour les équations, les hypothèses d’assemblage et les anomalies de faisabilité.
 
@@ -38,6 +42,8 @@ Le démarrage charge le **cas de vérification numérique à 300 t / 8 km**, afi
 Le lien `?scenario=report` charge explicitement le cas original ; `?scenario=verification` charge le cas de vérification. `?model=parametric` conserve l’exploration séparée du modèle synthétique à 500 t. Le bouton de réinitialisation restaure le scénario de démarrage et le modèle du projet. La dernière étude calculée peut être restaurée explicitement depuis le stockage local du navigateur ; elle ne remplace pas automatiquement le cas de démarrage. L’import JSON conserve les paramètres de l’étude importée, même si son profil est rejeté.
 
 `?scenario=climbs&view=3d` ouvre le cas de vérification avec deux montées de 600 m et une limite verticale de 1,27 m/s, pour examiner immédiatement les transitions physiques. Ce choix est également disponible dans « Cas d’étude ».
+
+`?scenario=full&view=3d` ouvre le cas de vol complet de vérification à 300 t. Le sélecteur « Périmètre du calcul » permet aussi de changer de mode. En vol complet, la masse/carburant sont ceux au début du roulage et la distance relie les seuils d’aéroport. La croisière utilise la masse restante et la distance utile, puis la mission se poursuit jusqu’à l’arrêt après le seuil d’arrivée. Les réglages de pistes/procédures apparaissent dans le panneau de configuration ; polaires, freinage et propulsion basse vitesse sont dans « Modèle & données ».
 
 ## Trajectoire 3D — version 1.2
 

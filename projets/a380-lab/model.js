@@ -1,7 +1,9 @@
-import {projectFlight,validateProject} from './project-model.js?v=1.2.0';
-import {verticalPlan,verticalAt,pathMotion} from './vertical-profile.js?v=1.2.0';
+import {projectFlight,validateProject} from './project-model.js?v=1.3.0';
+import {verticalPlan,verticalAt,pathMotion} from './vertical-profile.js?v=1.3.0';
+import {AIRPORT_DEFAULTS,AIRPORT_LIMITS,validateAirportConfig} from './airport-config.js?v=1.3.0';
+import {simulateFullMission} from './mission.js?v=1.3.0';
 // SI throughout: m, s, kg, N, K. No aircraft operational data are implied.
-export const VERSION = '1.2.0';
+export const VERSION = '1.3.0';
 export const G = 9.80665, R = 287.05287, GAMMA = 1.4;
 export const DEFAULT = Object.freeze({
   distance:4569, mass:500000, fuel:120000, reserve:15000, wind:0, disa:0,
@@ -11,6 +13,7 @@ export const DEFAULT = Object.freeze({
   ci:160, objective:'fuel', area:859, cd0:.016, k:.042,
   waveMach:.78, waveK:20, tsfc:15.5, thrustSL:352900,cgOffset:0,n1Min:50,n1Max:110,
   climbRate:2.54,climbStart1:35,climbStart2:70,optimizeClimbs:1,
+  ...AIRPORT_DEFAULTS,
 });
 export const LIMITS = {
   distance:[100,15000], mass:[300000,575000], fuel:[1000,250000], reserve:[0,100000],
@@ -21,13 +24,16 @@ export const LIMITS = {
   area:[700,950], cd0:[.008,.04], k:[.02,.09], waveMach:[.65,.87],
   waveK:[0,100], tsfc:[8,30], thrustSL:[250000,450000],cgOffset:[-3,3],n1Min:[40,80],n1Max:[90,110],
   climbRate:[.5,10],climbStart1:[5,90],climbStart2:[10,95],optimizeClimbs:[0,1],
+  ...AIRPORT_LIMITS,
 };
 export function upgradeConfig(c){
-  const out={...c};for(const k of ['climbRate','climbStart1','climbStart2','optimizeClimbs'])if(!Object.hasOwn(out,k))out[k]=DEFAULT[k];return out;
+  const out={...c};for(const k of ['climbRate','climbStart1','climbStart2','optimizeClimbs',...Object.keys(AIRPORT_DEFAULTS)])if(!Object.hasOwn(out,k))out[k]=DEFAULT[k];return out;
 }
 export function validateConfig(c, tables=null) {
   c=upgradeConfig(c);
+  validateAirportConfig(c);
   for (const [key,[lo,hi]] of Object.entries(LIMITS)) {
+    if(!c.missionMode&&Object.hasOwn(AIRPORT_LIMITS,key))continue;
     if (!Number.isFinite(c[key]) || c[key]<lo || c[key]>hi) throw Error(`${key} : valeur attendue entre ${lo} et ${hi}.`);
   }
   for (const k of ['steps','maxSteps','optimizeClimbs']) if (!Number.isInteger(c[k])) throw Error('Nombre de paliers et choix d’optimisation entiers requis.');
@@ -108,6 +114,7 @@ export function score(result,c) {
 export function simulate(c,profile={mach:c.mach,altitude:c.altitude,steps:c.steps},tables=null,dxKm=10,trace=true) {
   if(!Number.isFinite(dxKm)||dxKm<=0)return {feasible:false,reasons:['Pas d’intégration strictement positif requis.'],profile};
   c=upgradeConfig(c);
+  if(c.missionMode)return simulateFullMission(c,profile,tables,dxKm,trace,{atmosphere,simulateCruise:simulate,score});
   if(![c.distance,c.mass,c.fuel,c.reserve,c.wind,c.disa,c.stepHeight,c.climbRate,profile.altitude,profile.mach].every(Number.isFinite)||c.distance<=0||c.mass<=0||c.climbRate<=0)
     return {feasible:false,reasons:['Paramètres de mission non finis ou non physiques.'],profile};
   let mass=c.mass, seconds=0,x=0, minThrustMargin=1,minClMargin=Infinity;

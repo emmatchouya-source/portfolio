@@ -1,5 +1,7 @@
-import {VERSION} from './model.js?v=1.2.0';
-import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,dot,cross} from './trajectory.js?v=1.2.0';
+import {VERSION} from './model.js?v=1.3.0';
+import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,dot,cross} from './trajectory.js?v=1.3.0';
+import {PHASE_LABELS} from './airport-config.js?v=1.3.0';
+import {phaseBudget} from './airport-report.js?v=1.3.0';
 const $=id=>document.getElementById(id),RAD=Math.PI/180;
 const f=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
 const clock=s=>{const t=Math.round(s);return [Math.floor(t/3600),Math.floor(t/60)%60,t%60].map(v=>String(v).padStart(2,'0')).join(':');};
@@ -70,18 +72,23 @@ export class TrajectoryPlayer {
     for(const option of $('flightProfile').options)option.disabled=!this.tracks[option.value];
     $('flightProfile').value=this.tracks.baseline?'baseline':'recommended';
     const all=Object.values(this.tracks).filter(Boolean);
+    for(const option of $('flightCamera').options)if(['auto','departure','arrival'].includes(option.value))option.disabled=!this.active?.airport;
+    $('flightSpeed').value=this.active?.airport?'auto':'300';
     this.distance=Math.max(1,...all.map(t=>t.distance));this.height=Math.max(10000,...all.flatMap(t=>t.rows.map(p=>p.h)));
     $('flightExaggeration').value=String(clamp(Math.round(this.distance*1000/this.height/4),1,400));
     $('flightExample').hidden=Boolean(this.active)||!$('verificationCase');
     this.referenceFailure=(result.baseline?.reasons?.join(' ; ')||'Contraintes du modèle non respectées').replace(/[.\s]+$/,'');
     const failed=result.baseline?.lastPoint;
     if(failed)this.referenceFailure+=` (à ${f(failed.h)} m, ${f(failed.positionKm,1)} km : ${f(failed.thrust/1000,1)} kN requis, ${f(failed.available*snapshot.config.thrustLimit/1000,1)} kN autorisés par la marge d’étude)`;
-    this.profileDetails();this.preset('orbit');this.sync();this.invalidate();
+    this.profileDetails();this.preset(this.active?.airport?'auto':'orbit');this.sync();this.invalidate();
   }
   profileDetails(){
     const active=this.active,c=this.snapshot.config,configured=this.tracks.baseline===active;
     const name=configured?'Profil configuré (référence)':'Profil optimisé (recommandé)';
     $('flightProfileNote').textContent=active?`${name} : ${active.events.length} montée(s), de ${f(active.rows[0].h)} à ${f(active.rows.at(-1).h)} m. `+(configured?'Les montées suivent les paramètres appliqués.':this.tracks.baseline?`Vous avez configuré ${c.steps} montée(s) dans la référence ; l’optimisation choisit son propre nombre de montées, dans la limite de ${c.maxSteps}.`:`Le profil configuré est non admissible : ${this.referenceFailure}. Seul le profil optimisé est disponible.`):`Profil configuré non admissible : ${this.referenceFailure}.`;
+    if(active?.airport)$('flightProfileNote').textContent=`${name} : vol complet, du roulage à l’arrêt. ${active.events.length} montée(s) de croisière. Phases basse vitesse paramétriques non validées A380 ; les distances de piste ne sont pas des distances réglementaires.`;
+    $('flightPhaseAudit').innerHTML=active?.phases?'<h4>Durée et carburant par phase du profil suivi</h4>'+phaseBudget(active.phases):'';
+    $('flightPhaseAudit').hidden=!active?.phases;
     const table=$('flightClimbAudit');table.replaceChildren();
     if(active?.events.length){
       const heading=document.createElement('p');heading.className='hint';heading.textContent='Montées : distance, durée et carburant effectivement intégrés (carburant total sur la transition).';table.append(heading);
@@ -89,7 +96,11 @@ export class TrajectoryPlayer {
       active.events.forEach((e,i)=>{const tr=el.tBodies[0].insertRow();[i+1,`${f(e.from)} → ${f(e.to)}`,`${f(e.x,1)} / ${f(e.endX,1)}`,clock(e.duration),f(e.burn,1)].forEach(text=>{tr.insertCell().textContent=text;});});table.append(el);
     }
     const container=$('flightStages');container.replaceChildren();
-    if(active)for(const [i,p] of [active.rows[0],...active.events.map(e=>active.rows[e.index])].entries()){
+    if(active?.airport){
+      const camera=phase=>['takeoff-roll','rotation','initial-climb'].includes(phase)?'departure':['approach','flare','landing-roll'].includes(phase)?'arrival':phase==='cruise'?'orbit':'follow';
+      for(const phase of active.phases){const button=document.createElement('button');button.className='compact';button.textContent=PHASE_LABELS[phase.phase]??phase.phase;button.onclick=()=>{this.preset(camera(phase.phase));this.seek(phase.startSeconds,true);};container.append(button);}
+      const stop=document.createElement('button');stop.className='compact';stop.textContent='Arrêt final';stop.onclick=()=>{this.preset('arrival');this.seek(active.seconds,true);};container.append(stop);
+    }else if(active)for(const [i,p] of [active.rows[0],...active.events.map(e=>active.rows[e.index])].entries()){
       const button=document.createElement('button');button.className='compact';button.textContent=`Palier ${i+1} · ${f(p.h)} m`;
       button.onclick=()=>this.seek(p.seconds,true);container.append(button);
       if(i<active.events.length){const event=active.events[i],climb=document.createElement('button');climb.className='compact';climb.textContent=`Montée ${i+1} · milieu`;climb.onclick=()=>this.seek((event.seconds+(event.endSeconds??event.seconds))/2,true);container.append(climb);}
@@ -106,11 +117,15 @@ export class TrajectoryPlayer {
     this.playing=true;this.lastFrame=0;this.sync();this.invalidate();
   }
   seek(time,pause=false){if(pause)this.pause();const end=this.active?.seconds||0;this.time=clamp(time,0,end);if(end-this.time<1e-6)this.time=end;this.lastFrame=0;this.sync();this.invalidate();}
-  preset(view){this.view=view;$('flightCamera').value=view;this.pan=[0,0];this.zoom=1;this.yaw=-1.1;this.elevation=.48;
+  preset(view){
+    const wasLocal=['auto','departure','arrival'].includes(this.view)||(this.view==='follow'&&this.active?.airport),local=['auto','departure','arrival'].includes(view)||(view==='follow'&&this.active?.airport);
+    if(local&&!wasLocal){this.savedExaggeration=$('flightExaggeration').value;$('flightExaggeration').value='1';}
+    if(!local&&wasLocal&&this.savedExaggeration)$('flightExaggeration').value=this.savedExaggeration;
+    this.view=view;$('flightCamera').value=view;this.pan=[0,0];this.zoom=1;this.yaw=-1.1;this.elevation=.48;
     if(view==='top'){this.yaw=-Math.PI/2;this.elevation=1.53;}
     if(view==='side'){this.yaw=-Math.PI/2;this.elevation=.045;}
     if(view==='follow'){this.yaw=-2.35;this.elevation=.3;}
-    this.invalidate();
+    this.sync();this.invalidate();
   }
   cameraControl(action){
     if(action==='reset'){this.preset(this.view);return;}
@@ -134,9 +149,11 @@ export class TrajectoryPlayer {
     $('flightPending').hidden=!this.stale;
     const values={Distance:point?.x,Altitude:point?.h,Mach:point?.mach,TAS:point?point.tas*3.6:null,Mass:point?point.mass/1000:null,Fuel:point?point.burn/1000:null,Alpha:point?.alpha,Stab:point?.stab,ROC:point?.roc,Gamma:point?point.gamma*180/Math.PI:null,Thrust:point?point.thrust/1000:null,Flow:point?.flow};
     for(const [key,value] of Object.entries(values))put('flight'+key,value==null?'—':f(value,['Mach','Alpha','Stab'].includes(key)?3:['Mass','Fuel','ROC','Gamma','Flow','Thrust'].includes(key)?2:0));
-    put('flightStage',has?`${point.phase==='climb'?'Montée vers le palier '+(point.leg+2):'Palier '+(point.leg+1)} / ${active.events.length+1} · écart latéral 0 m`:'Calculer un profil admissible pour lancer la lecture.');
+    put('flightStage',has?active.airport?`${PHASE_LABELS[point.phase]??point.phase} · écart latéral 0 m`:`${point.phase==='climb'?'Montée vers le palier '+(point.leg+2):'Palier '+(point.leg+1)} / ${active.events.length+1} · écart latéral 0 m`:'Calculer un profil admissible pour lancer la lecture.');
     $('flightAttitudeNote').textContent=point?.alpha==null?'Assiette affichée : pente de vol ; incidence non calculée dans ce mode.':'Assiette affichée : pente de vol + incidence équilibrée ; roulis et cap constants.';
+    if(point?.model==='airport-parametric')$('flightAttitudeNote').textContent='Basse vitesse : rotation et arrondi illustratifs ; l’incidence et l’équilibre des moments ne sont pas identifiés. La position, la vitesse, les forces et le carburant proviennent du calcul.';
     $('flightModel').textContent=this.snapshot?(this.model.startsWith('project')?'Projet MGA803 · modèle reconstruit':this.model.startsWith('parametric')?'Modèle paramétrique · démonstration':'Tables de croisière importées'):'En attente de calcul';
+    if(active?.airport)$('flightModel').textContent+=' + basses vitesses paramétriques';
     $('flightCompare').disabled=!this.tracks.recommended||!this.tracks.baseline;
   }
   invalidate(){if(!this.frame&&this.visible)this.frame=requestAnimationFrame(t=>this.draw(t));}
@@ -144,7 +161,10 @@ export class TrajectoryPlayer {
     this.frame=0;if(!this.visible)return;
     if(this.playing){
       const dt=this.lastFrame?clamp((timestamp-this.lastFrame)/1000,0,.2):0;this.lastFrame=timestamp;
-      this.time=Math.min(this.active.seconds,this.time+dt*Number($('flightSpeed').value));
+      const automatic=$('flightSpeed').value==='auto',phase=sampleTrajectory(this.active,this.time)?.phase;
+      const rate=automatic?({'takeoff-roll':2,rotation:1,'initial-climb':5,'departure-climb':120,cruise:3600,climb:120,descent:120,approach:10,flare:1,'landing-roll':2}[phase]??300):Number($('flightSpeed').value);
+      const boundary=automatic?this.active.phases?.find(p=>p.endSeconds>this.time+1e-7)?.endSeconds:undefined;
+      this.time=Math.min(this.active.seconds,boundary??Infinity,this.time+dt*rate);
       if(this.time>=this.active.seconds)this.playing=false;
       this.sync();
     }
@@ -152,12 +172,17 @@ export class TrajectoryPlayer {
     const dpr=Math.min(devicePixelRatio||1,2),c=this.ctx;
     if(this.canvas.width!==Math.round(w*dpr)||this.canvas.height!==Math.round(h*dpr)){this.canvas.width=Math.round(w*dpr);this.canvas.height=Math.round(h*dpr);}
     c.setTransform(dpr,0,0,dpr,0,0);
-    const scale=240/((this.distance||4569)*1000),exaggeration=Number($('flightExaggeration').value);
-    const world=p=>[p.x*1000*scale,0,p.h*scale*exaggeration],point=sampleTrajectory(this.active,this.time);
-    const focus=this.view==='follow'&&point?world(point):[120,0,(this.height||13000)*scale*exaggeration*.45];
+    const point=sampleTrajectory(this.active,this.time),airport=this.active?.airport;
+    const view=this.view==='auto'?(['takeoff-roll','rotation','initial-climb'].includes(point?.phase)?'departure':['approach','flare','landing-roll'].includes(point?.phase)?'arrival':'follow'):this.view;
+    const local=Boolean(airport)&&(['departure','arrival','follow'].includes(view));
+    const origin=local?(view==='arrival'?this.snapshot.config.distance*1000:view==='follow'?(point?.x||0)*1000-6000:0):0;
+    const groundAltitude=local?(view==='arrival'?this.snapshot.config.arrElevation:view==='departure'?this.snapshot.config.depElevation:['approach','flare','landing-roll'].includes(point?.phase)?this.snapshot.config.arrElevation:['takeoff-roll','rotation','initial-climb'].includes(point?.phase)?this.snapshot.config.depElevation:0):0;
+    const scale=240/(local?20000:((this.distance||4569)*1000)),exaggeration=Number($('flightExaggeration').value);
+    const world=p=>[(p.x*1000-origin)*scale,0,(p.h-groundAltitude)*scale*exaggeration];
+    const focus=view==='follow'&&point?world(point):local?[view==='arrival'?12:35,0,6]:[120,0,(this.height||13000)*scale*exaggeration*.45];
     focus[0]+=this.pan[0];focus[2]+=this.pan[1];
     const verticalExtent=(this.height||13000)*scale*exaggeration;
-    const radius=(this.view==='follow'?65:Math.max(260,240*h/w*1.8,verticalExtent*1.85))/this.zoom;
+    const radius=(local?110:view==='follow'?65:Math.max(260,240*h/w*1.8,verticalExtent*1.85))/this.zoom;
     const eye=focus.map((v,i)=>v+[radius*Math.cos(this.elevation)*Math.cos(this.yaw),radius*Math.cos(this.elevation)*Math.sin(this.yaw),radius*Math.sin(this.elevation)][i]);
     const camera=perspectiveCamera(eye,focus,w,h),project=camera.project;
     const line=(points,color,width=1,dash=[])=>{
@@ -170,34 +195,44 @@ export class TrajectoryPlayer {
     polygon([[-60,-90,0],[300,-90,0],[300,90,0],[-60,90,0]],'#16313b');
     for(let x=-40;x<=280;x+=20)line([[x,-90,0],[x,90,0]],x%60===0?'#365361':'#24424e');
     for(let y=-80;y<=80;y+=20)line([[-40,y,0],[280,y,0]],y===0?'#4c727d':'#24424e',1);
+    if(airport){
+      const runway=(start,length,elevation,name)=>{
+        const a=world({x:start/1000,h:elevation}),b=world({x:(start+length)/1000,h:elevation}),half=Math.max(.2,30*scale);
+        polygon([[a[0],-half,a[2]+.03],[b[0],-half,b[2]+.03],[b[0],half,b[2]+.03],[a[0],half,a[2]+.03]],'#263c48','#9bb2bb');
+        for(let x=0;x<length;x+=250){const d=world({x:(start+x)/1000,h:elevation}),e=world({x:(start+Math.min(length,x+100))/1000,h:elevation});line([d,e],'#dbe8e8',1.3);}
+        label(a,name,'#d6e8e1');
+      };
+      runway(0,this.snapshot.config.tora,this.snapshot.config.depElevation,'DÉPART');
+      runway(this.snapshot.config.distance*1000,this.snapshot.config.lda,this.snapshot.config.arrElevation,'ARRIVÉE');
+    }
     if(this.view!=='follow'){
-      for(let i=0;i<=4;i++){const x=i*60;label([x,-30,0],f((this.distance||4569)*i/4)+' km');}
+      for(let i=0;i<=4;i++){const x=i*60;label([x,-30,0],f((origin+x/scale)/1000)+' km');}
       label([0,-42,0],'DISTANCE LONGITUDINALE','#a1bac8');
     }
     if(this.active){
       const tracks=$('flightCompare').checked?Object.values(this.tracks).filter(Boolean):[this.active];
       for(const track of tracks){
         const selected=track===this.active;
-        line(track.rows.map(world),selected?'#78adab':'#7f94aa',selected?1.7:1.2,selected?[]:[5,5]);
+        line(track.renderRows.map(world),selected?'#78adab':'#7f94aa',selected?1.7:1.2,selected?[]:[5,5]);
         for(const event of track.events){
           const a=world({x:event.x,h:event.from}),b=world({x:event.endX??event.x,h:event.to});
-          const segment=event.finite?track.rows.filter(p=>p.seconds>=event.seconds&&p.seconds<=event.endSeconds).map(world):[a,b];
+          const segment=event.finite?track.renderRows.filter(p=>p.seconds>=event.seconds&&p.seconds<=event.endSeconds).map(world):[a,b];
           line(segment,selected?'#f1bb6a':'#8394aa',2);
           const eventScreen=project(b),aircraftScreen=project(world(point));
           if(selected&&this.view!=='follow'&&eventScreen&&aircraftScreen&&Math.hypot(eventScreen[0]-aircraftScreen[0],eventScreen[1]-aircraftScreen[1])>140)label(b,'Δh '+f(event.to-event.from)+' m · '+clock(event.duration||0),'#f1bb6a');
         }
       }
-      const trail=this.active.rows.filter(p=>p.seconds<=this.time).map(world);trail.push(world(point));line(trail,TEAL,3);
+      const trail=this.active.renderRows.filter(p=>p.seconds<=this.time).map(world);trail.push(world(point));line(trail,TEAL,3);
       const pos=world(point),ground=[pos[0],0,0];line([ground,pos],'#74c6b266',1,[4,5]);
       const groundScreen=project(ground);if(groundScreen){c.fillStyle='#00000035';c.beginPath();c.ellipse(groundScreen[0],groundScreen[1],16,5,0,0,2*Math.PI);c.fill();}
       if(this.view!=='follow'){label(world(this.active.rows[0]),'DÉBUT',TEAL);label(world(this.active.rows.at(-1)),'FIN',TEAL,'right');}
-      const pitch=(point.alpha||0)*RAD+(point.gamma||0),cp=Math.cos(pitch),sp=Math.sin(pitch);
-      const transform=v=>[pos[0]+v[0]*cp-v[2]*sp,pos[1]+v[1],pos[2]+v[0]*sp+v[2]*cp];
+      const pitch=(point.visualPitch??point.alpha??0)*RAD+(point.gamma||0),cp=Math.cos(pitch),sp=Math.sin(pitch),meshScale=local?0.25:1;
+      const transform=v=>[pos[0]+meshScale*(v[0]*cp-v[2]*sp),pos[1]+meshScale*v[1],pos[2]+meshScale*(v[0]*sp+v[2]*cp)];
       const faces=MESH.map(face=>{const points=face.points.map(transform);return {...face,points,depth:points.reduce((sum,p)=>sum+(project(p)?.[2]||0),0)/points.length};}).sort((a,b)=>b.depth-a.depth);
       for(const face of faces){const [a,b,d]=face.points,normal=cross(b.map((v,i)=>v-a[i]),d.map((v,i)=>v-a[i]));polygon(face.points,shaded(face.color,normal),'#25465655');}
       const p=project(pos);if(p){c.strokeStyle='#6ae0bf70';c.beginPath();c.arc(p[0],p[1],this.view==='follow'?65:22,0,Math.PI*2);c.stroke();c.fillStyle='#b7e9de';c.font='11px Consolas, monospace';c.fillText('A380 · '+f(point.h)+' m',clamp(p[0]+(this.view==='follow'?-40:28),12,w-130),p[1]-(this.view==='follow'?82:26));}
       const z=(this.height||13000)*scale*exaggeration;
-      if(this.view!=='follow'){
+      if(this.view!=='follow'&&!local){
         line([[0,22,0],[0,22,z]],'#698f9e',1,[3,5]);
         const bottom=project([0,22,0]),top=project([0,22,z]);
         if(bottom&&top&&Math.hypot(top[0]-bottom[0],top[1]-bottom[1])>90)for(let i=0;i<=3;i++)label([0,22,z*i/3],f((this.height||13000)*i/3)+' m');

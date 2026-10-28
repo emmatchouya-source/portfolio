@@ -1,4 +1,4 @@
-import {simulate,speedStudy,score,selfCheck,validateConfig} from './model.js?v=1.2.0';
+import {simulate,speedStudy,score,selfCheck,validateConfig} from './model.js?v=1.3.0';
 const axis=(lo,hi,step)=>{const a=[];for(let x=lo;x<hi-1e-8;x+=step)a.push(+x.toFixed(6));a.push(hi);return a;};
 function paretoOf(list) {
   const sorted=list.filter(r=>r.feasible).sort((a,b)=>a.seconds-b.seconds||a.burn-b.burn);
@@ -9,6 +9,7 @@ export function optimize(c,tables=null,onProgress=()=>{}) {
   c=validateConfig(c,tables);
   const machs=axis(c.minMach,c.maxMach,.01),heights=axis(c.minAltitude,c.maxAltitude,250);
   const results=[],heat=[],failures={}, baseline=simulate(c,undefined,tables,5);
+  const speeds=()=>speedStudy(baseline.cruiseConfig??c,tables);
   const candidates=[];
   for(let n=0;n<=c.maxSteps;n++)for(const h of heights)if(h+n*c.stepHeight<=c.ceiling)for(const m of machs)candidates.push({mach:m,altitude:h,steps:n});
   // Keep any feasible reference profile in the candidate set: never report a worse recommendation.
@@ -19,7 +20,7 @@ export function optimize(c,tables=null,onProgress=()=>{}) {
     if(!profile.steps&&heights.includes(profile.altitude)&&machs.includes(profile.mach)) heat.push({mach:profile.mach,altitude:profile.altitude,burn:r.burn??null,reasons:r.reasons});
     if(i%100===0) onProgress({phase:'Exploration du domaine',value:Math.round(i/candidates.length*70)});
   });
-  if(!results.length) return {baseline,best:null,heat,failures,count:candidates.length,feasibleCount:0,speeds:speedStudy(c,tables),checks:selfCheck(),pareto:[]};
+  if(!results.length) return {baseline,best:null,heat,failures,count:candidates.length,feasibleCount:0,speeds:speeds(),checks:selfCheck(),pareto:[]};
   results.sort((a,b)=>score(a,c)-score(b,c));
   const refined=[];
   // Refine around the best coarse result for EACH number of steps.
@@ -73,14 +74,20 @@ export function optimize(c,tables=null,onProgress=()=>{}) {
   const checks=selfCheck();
   if(best){
     checks.push({name:'Montées : bilan puissance/énergie normalisé < 10⁻⁷',pass:best.energy.maxNormalizedResidual<1e-7});
-    checks.push({name:'Montées : vitesse verticale sous la limite configurée',pass:best.maxRoc<=c.climbRate*(1+1e-8)});
+    checks.push({name:'Montées de croisière : vitesse verticale sous la limite configurée',pass:(best.cruiseMaxRoc??best.maxRoc)<=c.climbRate*(1+1e-8)});
+    if(best.airport){
+      checks.push({name:'Décollage : roulage et hauteur de contrôle dans TORA/TODA d’étude',pass:best.airport.toraMarginM>=0&&best.airport.todaMarginM>=0});
+      checks.push({name:'Atterrissage : arrêt dans la LDA d’étude',pass:best.airport.ldaMarginM>=0});
+      checks.push({name:'Vol complet : fermeture au seuil < 0,1 m',pass:Math.abs(best.airport.thresholdClosureM)<.1});
+    }
   }
   if(tables?.schema==='a380-project/v1'&&best){
-    checks.push({name:'Projet : résidus force / moment < 10⁻⁸ sur la trajectoire',pass:best.rows.every(p=>Math.abs(p.trimForceResidual)<1e-8&&Math.abs(p.trimMomentResidual)<1e-8)});
-    checks.push({name:'Projet : régime corrigé dans le domaine retenu',pass:best.rows.every(p=>p.n1c>=c.n1Min&&p.n1c<=c.n1Max&&Math.abs(p.n1-p.n1c*Math.sqrt(p.theta))<1e-8)});
+    const sourceRows=best.rows.filter(p=>!best.fullMission||p.model==='project-cruise');
+    checks.push({name:'Projet : résidus force / moment < 10⁻⁸ sur les états de croisière',pass:sourceRows.length>0&&sourceRows.every(p=>Math.abs(p.trimForceResidual)<1e-8&&Math.abs(p.trimMomentResidual)<1e-8)});
+    checks.push({name:'Projet : régime corrigé dans le domaine retenu en croisière',pass:sourceRows.length>0&&sourceRows.every(p=>p.n1c>=c.n1Min&&p.n1c<=c.n1Max&&Math.abs(p.n1-p.n1c*Math.sqrt(p.theta))<1e-8)});
   }
   return {baseline,best,heat,failures,count:candidates.length+refined.length+timingTried,feasibleCount:results.length+refined.length+timing.length,
-    speeds:speedStudy(c,tables),checks,pareto,sensitivity,
+    speeds:speeds(),checks,pareto,sensitivity,
     convergence:convergence?.feasible?{coarseKm:5,fineKm:2.5,deltaKg:Math.abs(best.burn-convergence.burn),relative:Math.abs(best.burn-convergence.burn)/convergence.burn,deltaSeconds:Math.abs(best.seconds-convergence.seconds),baselineDeltaKg:baselineFine?.feasible?Math.abs(baseline.burn-baselineFine.burn):null,climbIntervals:[32,64]}:null,
     search:{coarseMach:.01,coarseAltitude:250,fineMach:.001,fineAltitude:50,integrator:'RK4/mass-time-energy',finalStepKm:5,stepTransitions:'finite-C2/force-and-energy-balance',timing:c.optimizeClimbs?'coordinate search: 10% then 2%, best Mach/altitude per climb count':'configured',globalGuarantee:false}};
 }

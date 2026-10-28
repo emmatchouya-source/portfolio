@@ -1,5 +1,5 @@
 // Playback samples the computed cruise trajectory; it never integrates new dynamics.
-import {verticalAt} from './vertical-profile.js?v=1.2.0';
+import {verticalAt} from './vertical-profile.js?v=1.3.0';
 export function prepareTrajectory(result,label){
   if(!result?.feasible||!Array.isArray(result.rows)||result.rows.length<2)return null;
   const rows=result.rows;
@@ -9,7 +9,8 @@ export function prepareTrajectory(result,label){
     index:rows.findIndex(p=>p.seconds>=e.endSeconds),finite:true,duration:e.duration,burn:e.burn}));
   for(let i=1;i<rows.length;i++)if(rows[i].seconds===rows[i-1].seconds&&rows[i].h!==rows[i-1].h)
     events.push({seconds:rows[i].seconds,x:rows[i].x,from:rows[i-1].h,to:rows[i].h,index:i});
-  return {label,rows,events,vertical:result.vertical,seconds:rows.at(-1).seconds,distance:rows.at(-1).x};
+  const stride=Math.max(1,Math.floor(rows.length/1600)),renderRows=rows.filter((p,i)=>i%stride===0||i===rows.length-1||(i&&p.phase!==rows[i-1].phase));
+  return {label,rows,renderRows,events,vertical:result.vertical,airport:result.airport,phases:result.phases,waypoints:result.waypoints,seconds:rows.at(-1).seconds,distance:rows.at(-1).x};
 }
 export function sampleTrajectory(track,seconds){
   if(!track||!Number.isFinite(seconds))return null;
@@ -19,7 +20,7 @@ export function sampleTrajectory(track,seconds){
   while(lo<hi){const mid=(lo+hi)>>>1;if(rows[mid].seconds<=t)lo=mid+1;else hi=mid;}
   const index=Math.max(0,lo-1),a=rows[index],b=rows[Math.min(index+1,rows.length-1)];
   const u=b.seconds>a.seconds?(t-a.seconds)/(b.seconds-a.seconds):0,p={...a,seconds:t};
-  for(const key of ['x','h','mass','burn','mach','tas','gs','flow','thrust','available','cl','cd','alpha','stab','n1','n1c','gamma','roc','loadFactor'])
+  for(const key of ['x','h','mass','burn','mach','tas','gs','flow','thrust','available','cl','cd','alpha','stab','n1','n1c','gamma','roc','loadFactor','visualPitch','acceleration','brakeForce','normal'])
     if(Number.isFinite(a[key])&&Number.isFinite(b[key]))p[key]=a[key]+u*(b[key]-a[key]);
   if(track.vertical){const path=verticalAt(track.vertical,p.x*1000);p.h=path.h;p.phase=path.phase;}
   p.y=0;p.z=p.h;p.xMetres=p.x*1000;p.leg=track.events.filter(e=>(e.endSeconds??e.seconds)<=t).length;

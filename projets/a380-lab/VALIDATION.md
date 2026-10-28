@@ -1,5 +1,22 @@
 # Vérification de la version 1.0.0
 
+## Version 1.3.0 — décollage et atterrissage
+
+- Mode vol complet avec neuf phases : accélération, rotation, montée après envol, montée initiale, croisière, descente, approche, arrondi, freinage.
+- 33 contrôles physiques : bilans de masse/carburant/temps, raccords, fermeture au seuil, effet du vent, altitude/température, friction, limites de piste, réserves, masse et énergie des freins.
+- Comparaison indépendante SciPy DOP853 du roulage/rotation/envol et du freinage : écart de distance < 0,03 m aux cas contrôlés ; événements détectés indépendamment.
+- Convergence 5 km / 2,5 km avec réduction simultanée des pas au sol/en vol : écarts < 0,1 kg et 0,05 s sur le cas de vérification.
+- Essais navigateur : phases/caméras, vitesse automatique qui conserve l’arrondi, budgets, CSV/JSON, réimport d’une étude de vol complet et affichage à 390 px.
+- Les 40 contrôles de croisière et les deux intégrations indépendantes restent applicables ; les hypothèses aéroportuaires ne changent pas le mode croisière.
+
+```text
+python -X utf8 tests/test_a380_full_mission.py
+python -X utf8 tests/test_a380_lab.py
+python -X utf8 tests/test_a380_finite_climbs.py
+```
+
+Les données basse vitesse sont paramétriques et non validées A380. Les marges TORA/TODA/LDA ne constituent pas une validation AFM ou réglementaire. Voir [TAKEOFF_LANDING.md](TAKEOFF_LANDING.md).
+
 ## Version 1.2.0 — montées physiques de durée finie
 
 Les entrées 1.0/1.1 ci-dessous sont un historique. La version 1.2 remplace leur hypothèse de montées instantanées ; leurs résultats à plusieurs paliers ne sont plus des valeurs de référence du moteur actuel.
