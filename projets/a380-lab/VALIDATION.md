@@ -1,5 +1,12 @@
 # Vérification de la version 1.0.0
 
+## Version 1.3.3 — pentes et profil fidèle
+
+- Échelles identiques au chargement et après changement de caméra ; suppression du rétablissement implicite de l’amplification verticale de la vue globale.
+- Profil local orthographique qui conserve les angles au sol, amplification optionnelle avec avertissement visible et affichage distinct des pentes air/sol.
+- Pente finale au sol conservée en présence de vent longitudinal ; le taux vertical et l’angle air s’adaptent au vent. Cas sans vent inchangé.
+- Exemples publics, formules et protocole : [FLIGHT_VISUALIZATION.md](FLIGHT_VISUALIZATION.md).
+
 ## Version 1.3.2 — continuité du sol et déplacement en suivi
 
 - Sol schématique prolongé jusqu’à l’horizon par intersection des rayons de la caméra avec le plan du sol : aucune dalle finie susceptible de disparaître pendant l’approche.

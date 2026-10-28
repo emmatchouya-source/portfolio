@@ -1,9 +1,9 @@
-import {VERSION} from './model.js?v=1.3.2';
-import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,dot,cross} from './trajectory.js?v=1.3.2';
-import {PHASE_LABELS} from './airport-config.js?v=1.3.2';
-import {phaseBudget} from './airport-report.js?v=1.3.2';
-import {SUN_DIRECTION,drawGroundShadow} from './shadow.js?v=1.3.2';
-import {clipSegment,clipPolygon,clipScreenSegment,clipScreenPolygon,groundScreenPolygon,groundGrid} from './scene-ground.js?v=1.3.2';
+import {VERSION} from './model.js?v=1.3.3';
+import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,profileCamera,dot,cross} from './trajectory.js?v=1.3.3';
+import {PHASE_LABELS} from './airport-config.js?v=1.3.3';
+import {phaseBudget} from './airport-report.js?v=1.3.3';
+import {SUN_DIRECTION,drawGroundShadow} from './shadow.js?v=1.3.3';
+import {clipSegment,clipPolygon,clipScreenSegment,clipScreenPolygon,groundScreenPolygon,groundGrid} from './scene-ground.js?v=1.3.3';
 const $=id=>document.getElementById(id),RAD=Math.PI/180;
 const f=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
 const clock=s=>{const t=Math.round(s);return [Math.floor(t/3600),Math.floor(t/60)%60,t%60].map(v=>String(v).padStart(2,'0')).join(':');};
@@ -43,6 +43,8 @@ export class TrajectoryPlayer {
     $('flightCamera').onchange=e=>this.preset(e.target.value);
     $('flightCompare').onchange=()=>this.invalidate();
     $('flightExaggeration').oninput=()=>{this.sync();this.invalidate();};
+    $('flightTrueScale').onclick=()=>{this.preset('profile');};
+    $('flightAmplify').onclick=()=>{if(this.view==='profile')this.preset('side');$('flightExaggeration').value=String(clamp(Math.round(this.distance*1000/this.height/4),2,400));this.sync();this.invalidate();};
     $('flightResetCamera').onclick=()=>this.preset(this.view);
     document.querySelectorAll('[data-flight-control]').forEach(b=>b.onclick=()=>this.cameraControl(b.dataset.flightControl));
     $('flightImage').onclick=()=>this.image();$('flightCSV').onclick=()=>{if(this.active)save('a380-trajectoire-3d.csv',playbackCSV(this.active,VERSION,this.model),'text/csv;charset=utf-8');};
@@ -51,7 +53,7 @@ export class TrajectoryPlayer {
       if(action){e.preventDefault();this.cameraControl(action);}else if(e.code==='Space'){e.preventDefault();this.toggle();}
     });
     this.canvas.addEventListener('contextmenu',e=>e.preventDefault());
-    this.canvas.addEventListener('pointerdown',e=>{this.points.set(e.pointerId,[e.clientX,e.clientY]);this.canvas.setPointerCapture(e.pointerId);this.dragPan=e.shiftKey||e.button===2;});
+    this.canvas.addEventListener('pointerdown',e=>{this.points.set(e.pointerId,[e.clientX,e.clientY]);this.canvas.setPointerCapture(e.pointerId);this.dragPan=this.view==='profile'||e.shiftKey||e.button===2;});
     this.canvas.addEventListener('pointermove',e=>{
       const old=this.points.get(e.pointerId);if(!old)return;
       const others=[...this.points.entries()].filter(([id])=>id!==e.pointerId);
@@ -78,7 +80,7 @@ export class TrajectoryPlayer {
     for(const option of $('flightCamera').options)if(['auto','departure','arrival'].includes(option.value))option.disabled=!this.active?.airport;
     $('flightSpeed').value=this.active?.airport?'auto':'300';
     this.distance=Math.max(1,...all.map(t=>t.distance));this.height=Math.max(10000,...all.flatMap(t=>t.rows.map(p=>p.h)));
-    $('flightExaggeration').value=String(clamp(Math.round(this.distance*1000/this.height/4),1,400));
+    $('flightExaggeration').value='1';
     $('flightExample').hidden=Boolean(this.active)||!$('verificationCase');
     this.referenceFailure=(result.baseline?.reasons?.join(' ; ')||'Contraintes du modèle non respectées').replace(/[.\s]+$/,'');
     const failed=result.baseline?.lastPoint;
@@ -121,17 +123,21 @@ export class TrajectoryPlayer {
   }
   seek(time,pause=false){if(pause)this.pause();const end=this.active?.seconds||0;this.time=clamp(time,0,end);if(end-this.time<1e-6)this.time=end;this.lastFrame=0;this.sync();this.invalidate();}
   preset(view){
-    const wasLocal=['auto','departure','arrival'].includes(this.view)||(this.view==='follow'&&this.active?.airport),local=['auto','departure','arrival'].includes(view)||(view==='follow'&&this.active?.airport);
-    if(local&&!wasLocal){this.savedExaggeration=$('flightExaggeration').value;$('flightExaggeration').value='1';}
-    if(!local&&wasLocal&&this.savedExaggeration)$('flightExaggeration').value=this.savedExaggeration;
+    if(view!==this.view||view==='profile')$('flightExaggeration').value='1';
     this.view=view;$('flightCamera').value=view;this.pan=[0,0];this.zoom=1;this.yaw=-1.1;this.elevation=.48;
     if(view==='top'){this.yaw=-Math.PI/2;this.elevation=1.53;}
     if(view==='side'){this.yaw=-Math.PI/2;this.elevation=.045;}
+    if(view==='profile'){this.yaw=-Math.PI/2;this.elevation=0;}
     if(view==='follow'){this.yaw=-2.35;this.elevation=.3;}
     this.sync();this.invalidate();
   }
   cameraControl(action){
     if(action==='reset'){this.preset(this.view);return;}
+    if(this.view==='profile'&&['left','right','up','down'].includes(action)){
+      if(action==='left')this.pan[0]-=5/this.zoom;if(action==='right')this.pan[0]+=5/this.zoom;
+      if(action==='up')this.pan[1]+=3/this.zoom;if(action==='down')this.pan[1]-=3/this.zoom;
+      this.invalidate();return;
+    }
     if(action==='in')this.zoom=clamp(this.zoom*1.25,.5,8);if(action==='out')this.zoom=clamp(this.zoom/1.25,.5,8);
     if(action==='left')this.yaw+=.15;if(action==='right')this.yaw-=.15;
     if(action==='up')this.elevation=clamp(this.elevation+.1,.035,1.54);if(action==='down')this.elevation=clamp(this.elevation-.1,.035,1.54);
@@ -144,7 +150,13 @@ export class TrajectoryPlayer {
     $('flightTimeline').max=String(active?.seconds||1);$('flightTimeline').value=String(this.time);
     $('flightTimeline').setAttribute('aria-valuetext',has?`${clock(this.time)} sur ${clock(active.seconds)}, altitude ${f(point.h)} mètres`:'Aucune trajectoire admissible');
     $('flightTime').textContent=has?`${clock(this.time)} / ${clock(active.seconds)}`:'— / —';
-    $('flightScale').textContent=`Altitude ×${$('flightExaggeration').value} · avion agrandi`;
+    const factor=Number($('flightExaggeration').value),groundAngle=point&&point.gs>1?Math.atan2(point.roc||0,point.gs)/RAD:null;
+    $('flightScale').textContent=`Altitude ×${factor} · ${this.view==='profile'?'profil fidèle':factor>1?'angles amplifiés':'échelles identiques'} · avion agrandi`;
+    $('flightScale').classList.toggle('stale',factor>1);
+    $('flightScaleWarning').hidden=factor===1;
+    $('flightScaleWarning').textContent=`Altitude amplifiée ×${factor} : les angles dessinés sont déformés. Utilisez « Profil local fidèle » pour juger les pentes.`;
+    $('flightExaggeration').disabled=this.view==='profile';
+    $('flightSlopeNote').textContent=groundAngle===null?'Pente au sol : — (avion arrêté).':`Pente au sol calculée : ${f(groundAngle,2)}° (${f(Math.tan(groundAngle*RAD)*100,2)} %) · pente air γ : ${f((point.gamma||0)/RAD,2)}°. ${this.view==='profile'?'Projection de profil sans perspective, mêmes échelles horizontale et verticale.':'La perspective peut modifier l’angle apparent ; le profil local fidèle conserve les pentes.'}`;
     $('flightScaleValue').textContent='×'+$('flightExaggeration').value;
     $('flightEmpty').hidden=has;
     put('flightState',this.stale?'Paramètres modifiés · lecture de la dernière étude calculée':!has?'Aucune trajectoire admissible':this.playing?'Lecture en cours':this.time>=active.seconds?'Trajectoire terminée':'Lecture en pause');
@@ -177,18 +189,18 @@ export class TrajectoryPlayer {
     c.setTransform(dpr,0,0,dpr,0,0);
     const point=sampleTrajectory(this.active,this.time),airport=this.active?.airport;
     const view=this.view==='auto'?(['takeoff-roll','rotation','initial-climb'].includes(point?.phase)?'departure':['approach','flare','landing-roll'].includes(point?.phase)?'arrival':'follow'):this.view;
-    const local=Boolean(airport)&&(['departure','arrival','follow'].includes(view));
-    const origin=local?(view==='arrival'?this.snapshot.config.distance*1000:view==='follow'?(point?.x||0)*1000-6000:0):0;
+    const local=view==='profile'||Boolean(airport)&&(['departure','arrival','follow'].includes(view));
+    const origin=local?(view==='arrival'?this.snapshot.config.distance*1000:['follow','profile'].includes(view)?(point?.x||0)*1000-6000:0):0;
     const groundAltitude=local?(view==='arrival'?this.snapshot.config.arrElevation:view==='departure'?this.snapshot.config.depElevation:['approach','flare','landing-roll'].includes(point?.phase)?this.snapshot.config.arrElevation:['takeoff-roll','rotation','initial-climb'].includes(point?.phase)?this.snapshot.config.depElevation:0):0;
     const scale=240/(local?20000:((this.distance||4569)*1000)),exaggeration=Number($('flightExaggeration').value);
     const world=p=>[(p.x*1000-origin)*scale,0,(p.h-groundAltitude)*scale*exaggeration];
-    const focus=(view==='follow'||this.view==='auto')&&point?world(point):local?[view==='arrival'?12:35,0,6]:[120,0,(this.height||13000)*scale*exaggeration*.45];
+    const focus=(['follow','profile'].includes(view)||this.view==='auto')&&point?world(point):local?[view==='arrival'?12:35,0,6]:[120,0,(this.height||13000)*scale*exaggeration*.45];
     focus[0]+=this.pan[0];focus[2]+=this.pan[1];
     const verticalExtent=(this.height||13000)*scale*exaggeration;
     const radius=(local?110:view==='follow'?65:Math.max(260,240*h/w*1.8,verticalExtent*1.85))/this.zoom;
     const eye=focus.map((v,i)=>v+[radius*Math.cos(this.elevation)*Math.cos(this.yaw),radius*Math.cos(this.elevation)*Math.sin(this.yaw),radius*Math.sin(this.elevation)][i]);
     eye[2]=Math.max(1,eye[2]);
-    const camera=perspectiveCamera(eye,focus,w,h),project=camera.project;
+    const camera=view==='profile'?profileCamera(focus,w,h,120/this.zoom):perspectiveCamera(eye,focus,w,h),project=camera.project;
     const line=(points,color,width=1,dash=[])=>{
       c.beginPath();for(let i=1;i<points.length;i++){const segment=clipSegment(points[i-1],points[i],camera);if(!segment.length)continue;const projected=segment.map(project);if(projected.some(p=>!p))continue;const clipped=clipScreenSegment(...projected,w,h);if(clipped.length){c.moveTo(...clipped[0]);c.lineTo(...clipped[1]);}}
       c.strokeStyle=color;c.lineWidth=width;c.setLineDash(dash);c.stroke();c.setLineDash([]);

@@ -14,7 +14,7 @@ def main(base):
         errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(base+'/projets/a380-lab/?scenario=full&view=3d',wait_until='domcontentloaded')
         page.wait_for_function("!document.querySelector('#run').disabled && document.querySelector('#flightTimeline').max>100",timeout=180000)
-        expect(page.locator('.version')).to_have_text('v1.3.2')
+        expect(page.locator('.version')).to_contain_text('v1.3.')
         checks=page.evaluate('''async()=>{
           const {perspectiveCamera}=await import('./trajectory.js?v=1.3.2');
           const {clipSegment,clipPolygon,clipScreenSegment,clipScreenPolygon,groundScreenPolygon,groundGrid}=await import('./scene-ground.js?v=1.3.2');

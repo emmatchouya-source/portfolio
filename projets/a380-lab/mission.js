@@ -1,4 +1,4 @@
-import {validateAirportConfig} from './airport-config.js?v=1.3.2';
+import {validateAirportConfig} from './airport-config.js?v=1.3.3';
 const G=9.80665,RAD=Math.PI/180,RHO0=1.225;
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{const u=clamp(x);return u*u*u*(10+u*(-15+6*u));};
@@ -90,7 +90,12 @@ function createPlan(c,profile,liftoffTAS,atmosphere,liftoffPitch=8){
   const h0=c.depElevation,h1=profile.altitude,finalH=h1+profile.steps*c.stepHeight;
   if(h1<=h0+500||finalH<=c.arrElevation+800)throw Error('Altitude de croisière trop basse par rapport aux aéroports.');
   const vc=profile.mach*atmosphere(h1,c.disa).a,ve=profile.mach*atmosphere(finalH,c.disa).a;
-  const vap=c.approachEAS*Math.sqrt(RHO0/atmosphere(c.arrElevation,c.disa).rho),sink=-vap*Math.sin(c.approachAngle*RAD);
+  const vap=c.approachEAS*Math.sqrt(RHO0/atmosphere(c.arrElevation,c.disa).rho),angle=c.approachAngle*RAD;
+  // The approach setting is a ground-referenced glidepath. Wind changes the
+  // required air-path angle and vertical speed, not the runway approach slope.
+  const windRatio=c.wind*Math.sin(angle)/vap;
+  if(Math.abs(windRatio)>=1)throw Error('Approche : vent incompatible avec la pente au sol.');
+  const sink=vap*Math.sin(-angle-Math.asin(windRatio));
   if(-sink>c.descentRoc)throw Error('Le taux de descente maximal est inférieur au taux requis en approche.');
   const transitionTime=240/c.departureRoc,vTransition=Math.min(vc,liftoffTAS*1.25);
   const transition={phase:'initial-climb',duration:transitionTime,height:boundaryCurve(h0,h0+120,0,c.departureRoc,transitionTime),speed:boundaryCurve(liftoffTAS,vTransition,0,0,transitionTime),visualPitchStart:liftoffPitch};

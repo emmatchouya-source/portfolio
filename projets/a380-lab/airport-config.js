@@ -23,7 +23,7 @@ export const AIRPORT_FIELDS=[
   ['depElevation','Altitude au départ','m','quick'],['arrElevation','Altitude à l’arrivée','m','quick'],
   ['tora','Piste de décollage (TORA)','m','quick'],['toda','Distance disponible (TODA)','m','quick'],['lda','Piste d’atterrissage (LDA)','m','quick'],
   ['departureRoc','Montée initiale : taux maximal','m/s','quick'],['descentRoc','Descente : taux maximal','m/s','quick'],
-  ['approachEAS','Vitesse d’approche équivalente','m/s','quick'],['approachAngle','Pente finale nominale','°','quick'],
+  ['approachEAS','Vitesse d’approche équivalente','m/s','quick'],['approachAngle','Pente finale au sol','°','quick'],
   ['rollingMu','Coefficient de roulement','—','ground'],['brakeMu','Coefficient de freinage','—','ground'],
   ['brakeDelay','Délai de freinage','s','ground'],['rotationTime','Durée de rotation','s','ground'],
   ['landingMassLimit','Limite de masse à l’atterrissage (0 : non renseignée)','kg','ground'],['brakeEnergyLimit','Limite d’énergie des freins (0 : non renseignée)','MJ','ground'],

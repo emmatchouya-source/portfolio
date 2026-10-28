@@ -45,7 +45,7 @@ Le lien `?scenario=report` charge explicitement le cas original ; `?scenario=ver
 
 `?scenario=full&view=3d` ouvre le cas de vol complet de vérification à 300 t. Le sélecteur « Périmètre du calcul » permet aussi de changer de mode. En vol complet, la masse/carburant sont ceux au début du roulage et la distance relie les seuils d’aéroport. La croisière utilise la masse restante et la distance utile, puis la mission se poursuit jusqu’à l’arrêt après le seuil d’arrivée. Les réglages de pistes/procédures apparaissent dans le panneau de configuration ; polaires, freinage et propulsion basse vitesse sont dans « Modèle & données ».
 
-## Trajectoire 3D — version 1.2
+## Trajectoire 3D — version 1.3.3
 
 L’onglet **Trajectoire 3D** anime un avion à quatre moteurs sur les points de la mission calculée. Le lien `?view=3d` ouvre directement cette vue. Lecture/pause, retour au début, curseur temporel et vitesses ×60 / ×300 / ×1 200 / ×3 600. Chaque position est accompagnée de la distance, altitude, Mach, TAS, masse, carburant et, en mode projet, incidence et stabilisateur équilibrés.
 
@@ -53,7 +53,7 @@ La vue suit par défaut le **profil configuré (référence)** pour reproduire l
 
 La caméra permet une vue d’ensemble, un suivi de l’avion, une vue de dessus et une vue de profil. Rotation à la souris ou au toucher, zoom à la molette ou par pincement, translation avec Maj + glisser, boutons et raccourcis clavier. L’autre profil peut être superposé pour comparaison. La lecture démarre uniquement sur demande et s’arrête lorsqu’on quitte la vue ou la page visible.
 
-La scène utilise une projection perspective de géométries 3D, rendue en Canvas, sans bibliothèque ou service externe. Elle représente le **repère d’étude longitudinal**, sans latitude/longitude, relief réel ou courbure terrestre. X = distance au sol en mètres, Y = 0 et Z = altitude du modèle. Le maillage de l’avion est illustratif et agrandi pour la lecture. L’exagération verticale de 1 à 400 est explicitement affichée et modifie seulement le rendu.
+La scène utilise une projection perspective de géométries 3D, rendue en Canvas, sans bibliothèque ou service externe. Elle représente le **repère d’étude longitudinal**, sans latitude/longitude, relief réel ou courbure terrestre. X = distance au sol en mètres, Y = 0 et Z = altitude du modèle. Le maillage de l’avion est illustratif et agrandi pour la lecture. Les axes ont la même échelle par défaut. Le **profil local fidèle**, orthographique, conserve les angles au sol. L’amplification verticale de 1 à 400 est optionnelle, signalée et modifie seulement le rendu. Voir [FLIGHT_VISUALIZATION.md](FLIGHT_VISUALIZATION.md) pour les exemples publics étudiés et les contrôles d’angles.
 
 La position et la télémétrie suivent les points de l’intégration physique. L’altitude est réévaluée sur la même trajectoire C² que celle du calcul, sans saut ni lissage décoratif. Les montées sont indiquées en orange. L’assiette affichée est la pente de vol + l’incidence équilibrée du mode projet ; le mode réduit affiche la pente seule. La télémétrie ajoute vitesse verticale, pente, poussée et débit. Le tableau des montées donne leurs distances, durées et carburants calculés. Les boutons « milieu » permettent d’examiner la transition. Ni virage, roulis ni dynamique 6DOF ne sont ajoutés par la vue.
 

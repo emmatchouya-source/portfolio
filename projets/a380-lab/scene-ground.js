@@ -44,6 +44,10 @@ export function clipScreenPolygon(points,width,height){
 }
 
 export function groundScreenPolygon(camera,width,height){
+  if(camera.orthographic){
+    const y=Math.max(0,camera.project([camera.eye[0],0,0])[1]);
+    return y>=height?[]:[[0,y],[width,y],[width,height],[0,height]];
+  }
   // Clip the screen by the infinite ground horizon, rather than projecting a finite slab.
   const rayZ=p=>camera.forward[2]+(p[0]-width/2)*camera.right[2]/camera.lens+(height*.53-p[1])*camera.up[2]/camera.lens;
   const corners=[[0,0],[width,0],[width,height],[0,height]],out=[];
