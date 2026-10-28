@@ -102,28 +102,37 @@
           <div class="thumb">
             <div class="stamp" role="img" aria-label="Confidentiel : outil interne Flying Whales"><span>Confidentiel</span><small>Flying Whales · usage interne</small></div>
             <svg viewBox="0 0 320 200" aria-hidden="true">
-              <rect x="40" y="36" width="100" height="128" rx="8" class="fp ln" stroke-width="1.5"/>
-              <rect x="180" y="36" width="100" height="128" rx="8" class="fp ln" stroke-width="1.5"/>
-              <g stroke-width="6" stroke-linecap="round">
-                <line x1="56" y1="60" x2="122" y2="60" class="ln"/><line x1="196" y1="60" x2="262" y2="60" class="ln"/>
-                <line x1="56" y1="80" x2="110" y2="80" class="ac2"/><line x1="196" y1="80" x2="250" y2="80" class="te"/>
-                <line x1="56" y1="100" x2="126" y2="100" class="ln"/><line x1="196" y1="100" x2="266" y2="100" class="ln"/>
-                <line x1="56" y1="120" x2="100" y2="120" class="ln"/><line x1="196" y1="120" x2="240" y2="120" class="te"/>
-                <line x1="56" y1="140" x2="118" y2="140" class="ac2"/><line x1="196" y1="140" x2="258" y2="140" class="ln"/>
+              <rect x="34" y="26" width="86" height="96" rx="7" class="fp ln" stroke-width="1.5"/>
+              <rect x="200" y="26" width="86" height="96" rx="7" class="fp ln" stroke-width="1.5"/>
+              <text x="44" y="20" class="tx">WAS</text><text x="210" y="20" class="tx">IS</text>
+              <g stroke-width="5" stroke-linecap="round">
+                <line x1="46" y1="44" x2="106" y2="44" class="ln"/><line x1="212" y1="44" x2="272" y2="44" class="ln"/>
+                <line x1="46" y1="60" x2="96" y2="60" class="ac2"/><line x1="212" y1="60" x2="262" y2="60" class="te"/>
+                <line x1="46" y1="76" x2="108" y2="76" class="ln"/><line x1="212" y1="76" x2="274" y2="76" class="ln"/>
+                <line x1="46" y1="92" x2="88" y2="92" class="ln"/><line x1="212" y1="92" x2="254" y2="92" class="te"/>
+                <line x1="46" y1="108" x2="102" y2="108" class="ac2"/><line x1="212" y1="108" x2="266" y2="108" class="ln"/>
               </g>
-              <circle cx="160" cy="100" r="16" class="fa"/>
-              <path d="M152 100 h16 m-6 -6 l6 6 l-6 6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="160" cy="74" r="15" class="fa"/>
+              <path d="M152 74h16m-6-6 6 6-6 6" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              <rect x="88" y="142" width="144" height="44" rx="6" class="fp ln" stroke-width="1.5"/>
+              <g class="ln" stroke-width="1"><path d="M88 156h144M88 171h144M136 142v44M184 142v44"/></g>
+              <rect x="190" y="146" width="38" height="7" rx="2" class="fte"/><rect x="190" y="160" width="38" height="7" rx="2" class="fa2"/><rect x="190" y="175" width="38" height="7" rx="2" class="fte"/>
+              <path d="M160 92v40m-5-6 5 6 5-6" fill="none" class="ac" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M236 164c34 0 40-20 40-34" fill="none" class="te" stroke-width="2" stroke-dasharray="4 4"/>
+              <path d="m270 136 6-7 6 7" fill="none" class="te" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <text x="40" y="168" class="tx">matrices</text><text x="252" y="186" class="tx">écriture 3DX</text>
             </svg>
           </div>
           <div class="body">
             <div class="top"><span class="ctx">Flying Whales · 2026</span><span class="metric">8 h → 5 min</span></div>
-            <h3>Comparateur de spécifications 3DEXPERIENCE</h3>
+            <h3>Comparateur et synchronisation de spécifications 3DEXPERIENCE</h3>
             <ul class="psr">
-              <li><b>Problème</b>Comparer deux révisions d'une spécification prenait une journée de travail, à la main.</li>
-              <li><b>Démarche</b>Outil web et bureau connecté à 3DEXPERIENCE qui liste les exigences ajoutées, supprimées ou modifiées.</li>
-              <li><b>Résultat</b>Moins de 5 minutes par comparaison ; déjà utilisé sur 1 260 exigences.</li>
+              <li><b>Problème</b>Comparer deux révisions d'une spécification, produire les matrices et reporter les relectures Word dans 3DEXPERIENCE se faisait à la main : une journée par comparaison.</li>
+              <li><b>Démarche</b>Application web et de bureau connectée aux API REST de 3DEXPERIENCE : différences mot à mot entre révisions ou exports Word, chapitres déplacés ou renommés, matrices de conformité, de vérification et de traçabilité générées aux modèles de l'entreprise.</li>
+              <li><b>Écriture</b>Mise à jour de 3DEXPERIENCE depuis un Word relu : fusion à trois versions, simulation avant écriture, contrôle des modifications concurrentes, retour arrière automatique et annulation journalisée.</li>
+              <li><b>Résultat</b>Moins de 5 minutes par comparaison ; déjà utilisé sur 1 260 exigences ; environ 11 000 lignes, testées hors ligne contre un 3DEXPERIENCE simulé.</li>
             </ul>
-            <div class="tags"><span class="tag">Python</span><span class="tag">API REST</span><span class="tag">PySide6</span><span class="tag">3DEXPERIENCE</span></div>
+            <div class="tags"><span class="tag">Python</span><span class="tag">Flask</span><span class="tag">API REST</span><span class="tag">Docker</span><span class="tag">PySide6</span><span class="tag">openpyxl</span><span class="tag">3DEXPERIENCE</span></div>
             <p class="conf-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span><b>Projet confidentiel.</b> Outil interne développé pendant mon stage chez Flying Whales : le code, les captures d'écran et les données ne sont pas publiés. Seuls le principe et les résultats sont présentés ici.</span></p>
           </div>
         </article>
