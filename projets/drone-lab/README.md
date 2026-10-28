@@ -132,10 +132,12 @@ L’intégration de translation est à accélération constante sur le pas ; la 
 | Accéléromètre de force spécifique | 240 Hz | 0,025 m/s² |
 | GNSS local position / vitesse | 10 Hz | 0,12 m / 0,04 m/s |
 | Altitude barométrique | 24 Hz | 0,06 m |
-| Magnétomètre vectoriel | 48 Hz | 0,006 relatif |
+| Magnétomètre vectoriel | 48 Hz | 0,006 relatif (champ unitaire) |
 | Télémètre sol | 24 Hz | 0,015 m, sous 12 m et inclinaison limitée |
 
 Les cadences 24 et 48 Hz sont des diviseurs du pas physique et non des cadences matérielles revendiquées. Les échantillons sont maintenus entre mises à jour. Bruit gaussien avec graine fixe ; biais gyro fixes multipliés par le niveau de bruit. Pas de délai de transport, quantification, défaut de calibration ni température dans cette version. Le GNSS est une mesure locale, pas une simulation des satellites.
+
+Le champ magnétique de référence est un ordre de grandeur pour Montréal : inclinaison 69° vers le bas et déclinaison 14° Ouest, soit `[−0,087 ; 0,348 ; −0,934]` en ENU. Seule sa composante horizontale (≈ 0,36 du champ) renseigne le cap : celui-ci est donc plus sensible au bruit et aux erreurs d'inclinaison estimée, surtout en virage soutenu. Ce n'est pas un modèle géomagnétique (WMM/IGRF) : pas de variation avec le lieu, l'altitude ou le temps, ni de perturbations locales.
 
 L’estimateur propage orientation et translation par l’IMU puis applique des corrections complémentaires de gravité, champ magnétique, GNSS, baromètre et télémètre. Il n’accède pas à l’état physique exact. Il ne fournit ni covariance ni estimation de biais ; accélération soutenue et perte de GNSS peuvent induire une dérive. Le mode « État physique exact » permet d’isoler l’effet des capteurs.
 

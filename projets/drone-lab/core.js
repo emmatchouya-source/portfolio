@@ -2,6 +2,12 @@ import {G,clamp,add,sub,scale,dot,norm,unit,cross,wrap,conj,mul,rotate,integrate
 import {frame,geometry,wrench} from './airframes.js';
 
 export const DT=1/240;
+// Champ magnétique terrestre de référence, unitaire, en ENU (ordre de grandeur pour Montréal) :
+// inclinaison 69° (vers le bas), déclinaison 14° Ouest. La composante horizontale ne vaut que
+// cos 69° ≈ 0,36 du champ : le cap magnétique est donc plus bruité qu'avec un champ horizontal.
+const MAG_INCLINATION=69*Math.PI/180, MAG_DECLINATION=-14*Math.PI/180;
+export const MAG_FIELD=Object.freeze([Math.cos(MAG_INCLINATION)*Math.sin(MAG_DECLINATION),Math.cos(MAG_INCLINATION)*Math.cos(MAG_DECLINATION),-Math.sin(MAG_INCLINATION)]);
+const MAG_HEADING=Math.atan2(MAG_FIELD[1],MAG_FIELD[0]);
 export const DEFAULTS=Object.freeze({
   airframe:'quad-x', hAspect:1.5, mass:1.5, arm:.23, thrust:9, inertia:[.022,.022,.040], motorTau:.045, yawRatio:.018,
   drag:.12, wind:1.5, gust:.6, windDirection:35, noise:1,
@@ -58,7 +64,7 @@ export class Controller {
 }
 
 export class Sensors {
-  constructor(c){this.c=c;this.rng=random(c.seed);this.gpsTime=-1;this.baroTime=-1;this.magTime=-1;this.rangeTime=-1;this.gpsAge=0;this.gpsAvailable=true;this.gps={p:[0,0,0],v:[0,0,0]};this.baro=0;this.range=0;this.mag=[1,0,.45];this.magYaw=0;this.accel=[0,0,G];this.gyro=[0,0,0];this.counts={gps:0,baro:0,mag:0,range:0};}
+  constructor(c){this.c=c;this.rng=random(c.seed);this.gpsTime=-1;this.baroTime=-1;this.magTime=-1;this.rangeTime=-1;this.gpsAge=0;this.gpsAvailable=true;this.gps={p:[0,0,0],v:[0,0,0]};this.baro=0;this.range=0;this.mag=[...MAG_FIELD];this.accel=[0,0,G];this.gyro=[0,0,0];this.counts={gps:0,baro:0,mag:0,range:0};}
   n(s){return this.rng()*s*this.c.noise;}
   sample(s,t,dropout) {
     this.gyro=s.w.map((v,i)=>v+this.n(.002)+[.0005,-.0003,.0004][i]*this.c.noise);
@@ -67,7 +73,7 @@ export class Sensors {
     if(!dropout&&t-this.gpsTime>=.1-1e-8){this.gps={p:s.p.map(v=>v+this.n(.12)),v:s.v.map(v=>v+this.n(.04))};this.gpsTime=t;this.counts.gps++;}
     this.gpsAge=t-this.gpsTime;
     if(t-this.baroTime>=.04-1e-8){this.baro=s.p[2]+this.n(.06);this.baroTime=t;this.counts.baro++;}
-    if(t-this.magTime>=.02-1e-8){this.mag=rotate(conj(s.q),[1,0,.45]).map(v=>v+this.n(.006));this.magTime=t;this.counts.mag++;}
+    if(t-this.magTime>=.02-1e-8){this.mag=rotate(conj(s.q),MAG_FIELD).map(v=>v+this.n(.006));this.magTime=t;this.counts.mag++;}
     if(t-this.rangeTime>=.04-1e-8){const z=rotate(s.q,[0,0,1])[2];this.range=s.p[2]<12&&z>.7?Math.max(0,s.p[2]/z+this.n(.015)):null;this.rangeTime=t;this.counts.range++;}
   }
 }
@@ -80,7 +86,7 @@ export class Estimator {
     if(Math.abs(norm(sensor.accel)-G)<.3)correction=scale(cross(unit(sensor.accel),rotate(conj(this.q),[0,0,1])),.12);
     this.w=[...sensor.gyro]; this.q=integrate(this.q,add(this.w,correction),dt);
     if(sensor.counts.mag!==this.last.mag){
-      const world=rotate(this.q,sensor.mag), err=-Math.atan2(world[1],world[0]);
+      const world=rotate(this.q,sensor.mag), err=wrap(MAG_HEADING-Math.atan2(world[1],world[0]));
       this.q=integrate(this.q,scale(rotate(conj(this.q),[0,0,1]),err*.5),.02);
     }
     const aw=sub(rotate(this.q,sensor.accel),[0,0,G]);
