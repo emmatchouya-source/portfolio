@@ -90,7 +90,7 @@ def main(url):
         assert abs(values['polynomials']['fn95']-.4063312749816)<1e-12
         assert abs(values['polynomials']['wf95']-.3532071094669761)<1e-12
         print('17 independent SciPy trim solutions + engine inversion: PASS',flush=True)
-        page.goto(url+'/projets/a380-lab/',wait_until='domcontentloaded')
+        page.goto(url+'/projets/a380-lab/?scenario=report',wait_until='domcontentloaded')
         page.wait_for_function("document.querySelector('#status').textContent.includes('profils explorés') || document.querySelector('#status').textContent.includes('Aucun profil')",timeout=300000)
         print('Project UI:',page.locator('#status').inner_text(),flush=True)
         assert page.locator('#modelTag').inner_text()=='Projet MGA803'

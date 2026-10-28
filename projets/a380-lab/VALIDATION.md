@@ -1,5 +1,18 @@
 # Vérification de la version 1.0.0
 
+## Correction 1.1.1 — démarrage et diagnostic de faisabilité
+
+Le démarrage utilise le cas de vérification numérique à 300 t, tandis que le cas du rapport à 500 t reste sélectionnable. Les équations, les données et les limites physiques du modèle sont inchangées.
+
+- Vérification des deux jeux de paramètres, de leur identification et du rejet maintenu du cas 500 t.
+- Essais Edge : démarrage calculable, lecture 3D, changement de scénario, diagnostic de poussée, récupération après modification d’une contrainte, import d’une étude rejetée et rechargement de la page.
+- Le diagnostic du cas original affiche 422,7 kN requis contre 218,1 kN disponibles dans le domaine moteur retenu. Le bouton de récupération rétablit le jeu complet des paramètres du cas de vérification.
+- Contrôle de la mise en page sur mobile à 390 px et absence d’erreurs JavaScript.
+
+```text
+python -X utf8 tests/test_a380_startup.py
+```
+
 ## Extension 1.1.0 — trajectoire 3D
 
 La version 1.1 ajoute uniquement une lecture spatiale et temporelle des points calculés. Les équations de performance, contraintes et données numériques restent celles de la version 1.0.

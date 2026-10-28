@@ -1,9 +1,11 @@
 import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck} from './model.js';
 import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js';
 import {TrajectoryPlayer} from './scene3d.js';
+import {SCENARIO_LABELS,identifyScenario,scenarioConfig} from './scenarios.js';
 const $=id=>document.getElementById(id),form=$('studyForm');
 const trajectory=new TrajectoryPlayer();
-$('flightExample').onclick=()=>$('verificationCase')?.click();
+$('flightExample').onclick=()=>loadScenario('verification');
+$('recoverScenario').onclick=()=>loadScenario('verification');
 const f=(v,d=0)=>Number(v).toLocaleString('fr-FR',{maximumFractionDigits:d,minimumFractionDigits:d});
 const duration=s=>{const minutes=Math.round(s/60);return `${Math.floor(minutes/60)} h ${String(minutes%60).padStart(2,'0')}`;};
 let tables=null,result=null,snapshot=null,worker=null,started=0,createdAt=null;
@@ -12,8 +14,15 @@ const modelLabel=t=>isProject(t)?'Projet MGA803 — OpenVSP + propulsion corrig�
 const modelStatus=t=>isProject(t)?'project-data/reconstructed-unvalidated':t?'user-supplied/unvalidated':'parametric-demonstration/unvalidated';
 function status(text,error=false){$('status').textContent=text;$('status').classList.toggle('error',error);}
 function showError(e){$('errorMessage').textContent=e.message||String(e);$('errorDialog').showModal();}
-function readConfig(){const c={};for(const k of Object.keys(DEFAULT))c[k]=k==='objective'?form.elements[k].value:Number(form.elements[k].value);return validateConfig(c,tables);}
-function setConfig(c){for(const k of Object.keys(DEFAULT))form.elements[k].value=c[k];}
+function rawConfig(){const c={};for(const k of Object.keys(DEFAULT))c[k]=k==='objective'?form.elements[k].value:Number(form.elements[k].value);return c;}
+function readConfig(){return validateConfig(rawConfig(),tables);}
+function syncScenario(){
+  const id=identifyScenario(rawConfig());$('studyScenario').value=id;
+  $('scenarioHint').textContent=id==='verification'?'Cas de vérification numérique : 300 t, 8 000 m, Mach 0,60. Trajectoire calculable avec le modèle du projet.':id==='report'?(isProject(tables)?'Cas original du rapport : rejeté par le modèle reconstruit avec les bornes moteur actuelles. Un diagnostic détaille ce rejet.':'Paramètres du rapport appliqués au modèle actif.'):'Configuration personnalisée : relancez l’analyse après vos modifications.';
+}
+function setConfig(c){for(const k of Object.keys(DEFAULT))form.elements[k].value=c[k];syncScenario();}
+function loadScenario(id){if(worker)return;setConfig(scenarioConfig(id,tables?.area));modelState();markDirty();run();}
+$('studyScenario').addEventListener('change',e=>loadScenario(e.target.value));
 function activateTab(name,focus=false){
   document.querySelectorAll('[data-tab]').forEach(b=>{const active=b.dataset.tab===name;b.setAttribute('aria-selected',active);b.tabIndex=active?0:-1;$(b.dataset.tab).hidden=!active;if(active&&focus)b.focus();});
   trajectory.setVisible(name==='trajectory');
@@ -24,11 +33,12 @@ document.querySelectorAll('[data-tab]').forEach(b=>{
 });
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>activateTab(b.dataset.go,true));
 function markDirty(){
+  syncScenario();
   trajectory.setStale(true);
   $('dirty').textContent='Paramètres modifiés : relancez l’analyse pour les appliquer.';
   if(result)status('Paramètres modifiés · les résultats affichés correspondent à la dernière étude calculée.');
 }
-form.addEventListener('input',markDirty);
+form.addEventListener('input',e=>{if(e.target.id!=='studyScenario')markDirty();});
 document.querySelectorAll('[form="studyForm"]').forEach(el=>el.addEventListener('input',markDirty));
 function modelState(){
   const imported=Boolean(tables);
@@ -37,12 +47,14 @@ function modelState(){
   for(const key of ['cgOffset','n1Min','n1Max'])form.elements[key].disabled=!isProject(tables);
   $('modelTag').textContent=isProject(tables)?'Projet MGA803':imported?'Tables importées':'Paramétrique';
   $('modelNotice').innerHTML=isProject(tables)?'<b>Modèle reconstruit à partir des fichiers du projet MGA803.</b> 490 cas OpenVSP et coefficients moteur fournis. Équilibrage calculé, sans validation en vol ; limites de régime corrigé définies pour l’étude.':imported?`<b>Tables de croisière importées : ${esc(tables.name)}.</b> Provenance déclarée par l’utilisateur, sans validation automatique de la fidélité physique. Interpolation limitée au domaine fourni.`:'<b>Modèle paramétrique de démonstration.</b> Polaire et propulsion synthétiques pour comparer les hypothèses. Pour utiliser les fichiers fournis, activez le modèle du projet dans « Modèle & données ».';
+  syncScenario();
 }
 function busy(on){
   if(on)trajectory.pause();
   $('run').disabled=on;$('cancel').hidden=!on;$('progress').hidden=!on;
   for(const el of form.elements)if(el.matches('input,select'))el.disabled=on;
   for(const id of ['reset','projectSource','parametric','importButton','importData','template'])$(id).disabled=on;
+  for(const id of ['recoverScenario','verificationCase','flightExample'])if($(id))$(id).disabled=on;
   if($('restoreStudy'))$('restoreStudy').disabled=on;
   for(const id of ['exportStudy','exportCSV','printReport'])$(id).disabled=on||!result;
   if(!on)modelState();
@@ -51,7 +63,7 @@ function run(){
   let config;try{if(!form.reportValidity())return;config=readConfig();}catch(e){showError(e);return;}
   worker?.terminate();busy(true);$('progress').value=0;started=performance.now();
   status('Exploration du domaine…');
-  const current={config:structuredClone(config),tables:tables?structuredClone(tables):null};
+  const current={config:structuredClone(config),tables:tables?structuredClone(tables):null,scenario:identifyScenario(config)};
   try{worker=new Worker(new URL('./worker.js',import.meta.url),{type:'module'});}catch(e){busy(false);status('Impossible de démarrer le calcul.',true);showError(e);return;}
   worker.onmessage=({data})=>{
     if(data.type==='progress'){$('progress').value=data.value;status(`${data.phase} · ${data.value} %`);return;}
@@ -59,7 +71,7 @@ function run(){
     if(data.type==='result'){
       worker.terminate();worker=null;result=data.result;snapshot=current;createdAt=new Date().toISOString();busy(false);render();
       $('dirty').textContent='Paramètres appliqués à l’étude affichée.';
-      status(result.best?`${f(result.count)} profils explorés · ${f(result.feasibleCount)} admissibles · ${f((performance.now()-started)/1000,1)} s · résultat discret, sans garantie d’optimum global.`:'Aucun profil admissible dans le domaine choisi. Consultez les contraintes ci-dessous.',!result.best);
+      status(result.best?`${SCENARIO_LABELS[current.scenario]} · ${f(result.count)} profils explorés · ${f(result.feasibleCount)} admissibles · ${f((performance.now()-started)/1000,1)} s · résultat discret, sans garantie d’optimum global.`:'Aucun profil admissible pour ces paramètres. Le diagnostic ci-dessous explique le blocage.',!result.best);
       try{localStorage.setItem('a380-last-study',JSON.stringify({config,tables}));}catch{/* Private mode / quota: calculation remains usable. */}
     }
   };
@@ -68,12 +80,14 @@ function run(){
 }
 form.addEventListener('submit',e=>{e.preventDefault();run();});
 $('cancel').onclick=()=>{worker?.terminate();worker=null;busy(false);status('Calcul annulé. Les éventuels résultats précédents sont conservés.');};
-async function useProject(start=false){
+async function useProject(start=false,id='verification'){
+  let c;try{c=start?scenarioConfig(id):readConfig();}catch(e){showError(e);return;}
+  busy(true);
   try{const response=await fetch(new URL('./data/project.json',import.meta.url));if(!response.ok)throw Error('Impossible de charger les données du projet.');const data=validateTables(await response.json());
-    const c=start?{...DEFAULT}:readConfig();c.area=data.area;tables=data;setConfig(c);modelState();markDirty();
+    c.area=data.area;tables=data;setConfig(c);modelState();markDirty();busy(false);
     $('dataStatus').textContent=`Modèle du projet chargé : WB 180 cas, empennage 310 cas ; moteur Trent 970B-84, OACI 18RR082. Les corrections et limites sont documentées.`;
     if(start)run();
-  }catch(e){if(start){tables=null;setConfig(DEFAULT);modelState();run();$('dataStatus').textContent='Chargement des données du projet impossible : modèle paramétrique de secours activé.';}else showError(e);}
+  }catch(e){busy(false);if(start){tables=null;setConfig(scenarioConfig(id));modelState();run();$('dataStatus').textContent='Chargement des données du projet impossible : modèle paramétrique de secours activé.';}else showError(e);}
 }
 $('projectSource').onclick=()=>useProject();
 $('reset').onclick=()=>useProject(true);
@@ -86,8 +100,15 @@ function render(){
   const gain=best&&baseline.feasible?(baseline.burn-best.burn)/baseline.burn*100:null;
   $('kpis').innerHTML=`<article><span>CARBURANT</span><strong>${best?f(best.burn/1000,2):'—'}<small>t</small></strong><p>Profil recommandé</p></article><article><span>DURÉE DE CROISIÈRE</span><strong>${best?duration(best.seconds):'—'}</strong><p>Pour ${f(c.distance)} km au sol</p></article><article><span>CO₂ DIRECT</span><strong>${best?f(best.co2/1000,1):'—'}<small>t</small></strong><p>Combustion du carburant uniquement</p></article><article class="gain"><span>ÉCART À LA RÉFÉRENCE</span><strong>${gain===null?'—':(gain<0?'+':'−')+f(Math.abs(gain),1)}<small>%</small></strong><p>${gain===null?'Référence non admissible':'Consommation de carburant'}</p></article>`;
   $('profileTag').textContent=best?{fuel:'Objectif carburant',time:'Objectif durée',econ:'Objectif coût équivalent'}[c.objective]:'Aucun profil admissible';
-  $('recommendation').innerHTML=best?`<div><small>MACH CONSTANT</small><strong>${f(best.profile.mach,3)}</strong></div><div><small>ALTITUDE INITIALE</small><strong>${f(best.profile.altitude)} <small>m</small></strong></div><div><small>MONTÉES</small><strong>${best.profile.steps} <small>× ${f(c.stepHeight)} m</small></strong></div>`:'<div><p class="infeasible">Modifiez le domaine ou les contraintes, puis relancez le calcul.</p>'+(isProject(snapshot.tables)?'<p class="hint">Le cas 500 t du rapport dépasse le domaine moteur retenu avec l’assemblage reconstruit. Aucun gain ne peut être annoncé dans ces conditions. Le cas de vérification 300 t / 8 km élargit le domaine d’étude ; le modèle paramétrique permet une exploration distincte.</p><button id="verificationCase" class="compact">Charger le cas de vérification 300 t</button>':'')+'</div>';
-  if($('verificationCase'))$('verificationCase').onclick=()=>{setConfig({...snapshot.config,mass:300000,altitude:8000,mach:.6,steps:0,minAltitude:8000,maxAltitude:9500,minMach:.5,maxMach:.8});run();};
+  $('recommendation').innerHTML=best?`<div><small>MACH CONSTANT</small><strong>${f(best.profile.mach,3)}</strong></div><div><small>ALTITUDE INITIALE</small><strong>${f(best.profile.altitude)} <small>m</small></strong></div><div><small>MONTÉES</small><strong>${best.profile.steps} <small>× ${f(c.stepHeight)} m</small></strong></div>`:'<div><p class="infeasible">Modifiez le domaine ou les contraintes, puis relancez le calcul.</p>'+(isProject(snapshot.tables)?'<p class="hint">Le scénario dépasse les limites retenues. Consultez le diagnostic ou chargez le cas de vérification.</p><button id="verificationCase" class="compact">Charger le cas de vérification 300 t</button>':'')+'</div>';
+  if($('verificationCase'))$('verificationCase').onclick=()=>loadScenario('verification');
+  $('feasibilityNotice').hidden=Boolean(best);
+  if(!best){
+    const point=baseline.lastPoint,mainReason=Object.entries(result.failures).sort((a,b)=>b[1]-a[1])[0]?.[0]||baseline.reasons?.[0]||'Contraintes du domaine choisi';
+    $('feasibilityTitle').textContent=mainReason.includes('N1')?'La poussée requise dépasse le domaine moteur retenu.':'Aucun profil ne respecte les contraintes actuelles.';
+    $('feasibilityDetail').textContent=point&&isProject(snapshot.tables)&&point.thrust>point.available?`À ${f(c.mass/1000)} t, ${f(c.altitude)} m et Mach ${f(c.mach,2)}, il faut ${f(point.thrust/1000,1)} kN ; le modèle fournit ${f(point.available/1000,1)} kN au régime corrigé maximal d’étude de ${f(c.n1Max)} %. Ce résultat porte sur le modèle reconstruit et ses bornes.`:`Motif principal : ${mainReason}. Vérifiez les limites de masse, carburant, altitude, durée et poussée avant de relancer.`;
+    $('recoverScenario').hidden=Boolean(snapshot.tables)&&!isProject(snapshot.tables);
+  }
   $('searchBoundary')?.remove();
   if(best){const p=best.profile,bounds=[];
     if(Math.abs(p.mach-c.minMach)<1e-8)bounds.push('Mach minimum');if(Math.abs(p.mach-c.maxMach)<1e-8)bounds.push('Mach maximum');
@@ -183,7 +204,9 @@ try{
     document.querySelector('.run-actions').append(restore);
   }
 }catch{/* Corrupt or unavailable local storage must not block startup. */}
-setConfig(DEFAULT);modelState();
+const params=new URLSearchParams(location.search),requested=params.get('scenario');
+const initialScenario=['verification','report'].includes(requested)?requested:params.get('model')==='parametric'?'report':'verification';
+setConfig(scenarioConfig(initialScenario));modelState();
 $('validation').innerHTML=selfCheck().map(x=>`<div class="check"><strong>${x.pass?'PASS':'ÉCHEC'}</strong>${esc(x.name)}</div>`).join('');
-if(new URLSearchParams(location.search).get('view')==='3d')activateTab('trajectory');
-if(new URLSearchParams(location.search).get('model')==='parametric')run();else useProject(true);
+if(params.get('view')==='3d')activateTab('trajectory');
+if(params.get('model')==='parametric')run();else useProject(true,initialScenario);

@@ -115,7 +115,7 @@ def main(base):
         page.locator('[name=wind]').fill('5')
         expect(page.locator('#flightState')).to_contain_text('Paramètres modifiés')
         # Source model: no fictitious flight for rejected 500 t case, then exercise the real 300 t trace.
-        page.goto(base+'/projets/a380-lab/?view=3d',wait_until='domcontentloaded')
+        page.goto(base+'/projets/a380-lab/?view=3d&scenario=report',wait_until='domcontentloaded')
         page.wait_for_function("document.querySelector('#status').textContent.includes('Aucun profil')",timeout=120000)
         expect(page.locator('#flightEmpty')).to_be_visible()
         expect(page.locator('#flightPlay')).to_be_disabled()

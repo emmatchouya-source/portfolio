@@ -5,21 +5,22 @@
   <meta name="description" content="Laboratoire de performance en croisière de l’A380 : profils par paliers, optimisation sous contraintes, MRC, LRC, ECON et études reproductibles.">
   <meta name="theme-color" content="#12283b">
   <title>A380 Cruise Lab — Analyse et optimisation</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=1.1.1">
 </head>
 <body>
 <a class="skip" href="#workspace">Aller aux résultats</a>
 <header class="masthead">
   <a class="brand" href="../../"><span class="brand-mark">ET<span>↗</span></span><span>A380 <b>CRUISE LAB</b><small>Performance & optimisation</small></span></a>
-  <div class="mast-meta"><span class="status-dot"></span> Laboratoire numérique <span class="version">v1.1</span><a href="../../#projets">Portfolio ↗</a></div>
+  <div class="mast-meta"><span class="status-dot"></span> Laboratoire numérique <span class="version">v1.1.1</span><a href="../../#projets">Portfolio ↗</a></div>
 </header>
 <div class="app-shell">
 <aside class="configuration" aria-label="Paramètres de l’étude">
   <div class="config-heading"><span class="eyebrow">CONFIGURATION</span><h1>Votre étude de croisière</h1><p>Définir la mission. Explorer les compromis.</p><a class="results-jump" href="#workspace">Voir les résultats ↓</a></div>
   <form id="studyForm">
+    <div class="scenario-picker"><label for="studyScenario">Cas d’étude</label><select id="studyScenario" aria-describedby="scenarioHint"><option value="verification">Vérification numérique · 300 t</option><option value="report">Rapport MGA803 · 500 t</option><option value="custom" disabled>Paramètres personnalisés</option></select><p id="scenarioHint" class="hint">Le cas de vérification est chargé au démarrage pour lancer une simulation calculable.</p></div>
     <fieldset><legend><span>01</span> Mission</legend>
       <label class="field">Distance au sol <span><input name="distance" type="number" value="4569" min="100" max="15000" step="1" required><i>km</i></span></label>
-      <label class="field">Masse initiale <span><input name="mass" type="number" value="500000" min="300000" max="575000" step="100" required><i>kg</i></span></label>
+      <label class="field">Masse initiale <span><input name="mass" type="number" value="300000" min="300000" max="575000" step="100" required><i>kg</i></span></label>
       <label class="field">Carburant initial <span><input name="fuel" type="number" value="120000" min="1000" max="250000" step="100" required><i>kg</i></span></label>
       <label class="field">Réserve à préserver <span><input name="reserve" type="number" value="15000" min="0" max="100000" step="100" required><i>kg</i></span></label>
       <label class="field">Vent longitudinal <span><input name="wind" type="number" value="0" min="-80" max="80" step="1" required><i>m/s</i></span></label>
@@ -27,8 +28,8 @@
       <label class="field">Écart de température <span><input name="disa" type="number" value="0" min="-30" max="30" step="1" required><i>K ISA</i></span></label>
     </fieldset>
     <fieldset><legend><span>02</span> Profil de référence</legend>
-      <label class="field">Mach constant <span><input name="mach" type="number" value="0.75" min="0.5" max="0.89" step="0.001" required><i>M</i></span></label>
-      <label class="field">Altitude initiale <span><input name="altitude" type="number" value="10668" min="8000" max="13100" step="1" required><i>m</i></span></label>
+      <label class="field">Mach constant <span><input name="mach" type="number" value="0.60" min="0.5" max="0.89" step="0.001" required><i>M</i></span></label>
+      <label class="field">Altitude initiale <span><input name="altitude" type="number" value="8000" min="8000" max="13100" step="1" required><i>m</i></span></label>
       <label class="field">Montées en paliers <select name="steps"><option value="0">Aucune</option><option value="1">1 montée</option><option value="2">2 montées</option></select></label>
       <label class="field">Hauteur d’une montée <span><input name="stepHeight" type="number" value="600" min="100" max="1500" step="50" required><i>m</i></span></label>
     </fieldset>
@@ -37,10 +38,10 @@
       <label class="field">Coût du temps, CI <span><input name="ci" type="number" value="160" min="0" max="1000" step="1" required><i>kg/min</i></span></label>
       <p class="hint">Coût équivalent = carburant + CI × durée en minutes. Ce CI est une pondération d’étude.</p>
       <details><summary>Domaine et contraintes</summary>
-        <label class="field">Mach minimum <span><input name="minMach" type="number" value="0.60" min="0.5" max="0.89" step="0.001" required><i>M</i></span></label>
-        <label class="field">Mach maximum <span><input name="maxMach" type="number" value="0.89" min="0.5" max="0.89" step="0.001" required><i>M</i></span></label>
-        <label class="field">Altitude initiale min. <span><input name="minAltitude" type="number" value="9000" min="8000" max="13100" step="50" required><i>m</i></span></label>
-        <label class="field">Altitude initiale max. <span><input name="maxAltitude" type="number" value="12500" min="8000" max="13100" step="50" required><i>m</i></span></label>
+        <label class="field">Mach minimum <span><input name="minMach" type="number" value="0.50" min="0.5" max="0.89" step="0.001" required><i>M</i></span></label>
+        <label class="field">Mach maximum <span><input name="maxMach" type="number" value="0.80" min="0.5" max="0.89" step="0.001" required><i>M</i></span></label>
+        <label class="field">Altitude initiale min. <span><input name="minAltitude" type="number" value="8000" min="8000" max="13100" step="50" required><i>m</i></span></label>
+        <label class="field">Altitude initiale max. <span><input name="maxAltitude" type="number" value="9500" min="8000" max="13100" step="50" required><i>m</i></span></label>
         <label class="field">Plafond de l’étude <span><input name="ceiling" type="number" value="13100" min="8000" max="13100" step="50" required><i>m</i></span></label>
         <label class="field">Montées autorisées <select name="maxSteps"><option value="0">0 maximum</option><option value="1">1 maximum</option><option value="2" selected>2 maximum</option></select></label>
         <label class="field">Durée maximale <span><input name="maxMinutes" type="number" value="0" min="0" max="1500" step="1" required><i>min</i></span></label>
@@ -50,7 +51,7 @@
         <p class="hint">0,95 : conserver 5 % de la poussée disponible du modèle. Les limites d’étude ne constituent pas une enveloppe certifiée.</p>
       </details>
     </fieldset>
-    <div class="run-actions"><button class="primary" type="submit" id="run">Analyser & optimiser <span>↗</span></button><button type="button" id="cancel" hidden>Annuler le calcul</button><button class="text-button" type="button" id="reset">Rétablir l’étude initiale</button><p class="hint" id="dirty">Paramètres initiaux du rapport, complétés pour le modèle réduit.</p></div>
+    <div class="run-actions"><button class="primary" type="submit" id="run">Analyser & optimiser <span>↗</span></button><button type="button" id="cancel" hidden>Annuler le calcul</button><button class="text-button" type="button" id="reset">Rétablir le scénario de démarrage</button><p class="hint" id="dirty">Cas de vérification numérique prêt à être calculé.</p></div>
   </form>
 </aside>
 <main id="workspace" tabindex="-1">
@@ -67,6 +68,7 @@
   <div class="notice"><span class="notice-icon">i</span><p id="modelNotice"><b>Chargement du modèle MGA803.</b> Données OpenVSP et coefficients moteur fournis ; modèle académique reconstruit, sans validation en vol.</p><button type="button" data-go="model">Voir les hypothèses ↗</button></div>
   <div class="toolbar"><div class="tabs" role="tablist" aria-label="Vues de l’étude"><button id="tab-overview" role="tab" aria-controls="overview" aria-selected="true" data-tab="overview">Synthèse</button><button id="tab-trajectory" role="tab" aria-controls="trajectory" aria-selected="false" tabindex="-1" data-tab="trajectory">Trajectoire 3D</button><button id="tab-envelope" role="tab" aria-controls="envelope" aria-selected="false" tabindex="-1" data-tab="envelope">Domaine de vol</button><button id="tab-model" role="tab" aria-controls="model" aria-selected="false" tabindex="-1" data-tab="model">Modèle & données</button><button id="tab-method" role="tab" aria-controls="method" aria-selected="false" tabindex="-1" data-tab="method">Méthode & validation</button></div><button id="exportStudy" class="compact" disabled>↓ Étude JSON</button></div>
   <div class="calculation-status" role="status" aria-live="polite" id="status">Prêt à calculer.</div><progress id="progress" max="100" value="0" hidden aria-label="Progression du calcul"></progress>
+  <div id="feasibilityNotice" class="feasibility-notice" role="region" aria-label="Diagnostic de faisabilité" hidden><div><strong id="feasibilityTitle"></strong><p id="feasibilityDetail"></p></div><button id="recoverScenario" class="primary">Charger le cas calculable à 300 t</button></div>
   <section id="overview" role="tabpanel" aria-labelledby="tab-overview">
     <div class="kpis" id="kpis"><article><span>CARBURANT</span><strong>—<small>t</small></strong><p>Profil recommandé</p></article><article><span>DURÉE DE CROISIÈRE</span><strong>—</strong><p>Distance au sol constante</p></article><article><span>CO₂ DIRECT</span><strong>—<small>t</small></strong><p>3,16 kg / kg de carburant</p></article><article class="gain"><span>ÉCART À LA RÉFÉRENCE</span><strong>—<small>%</small></strong><p>Consommation de carburant</p></article></div>
     <div class="result-grid">
@@ -135,6 +137,6 @@
 </main>
 </div>
 <dialog id="errorDialog"><h2>Vérifier les paramètres</h2><p id="errorMessage"></p><form method="dialog"><button class="primary">Compris</button></form></dialog>
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=1.1.1"></script>
 </body>
 </html>
