@@ -1,6 +1,20 @@
 # DroneLab
 
-Laboratoire de développement et d’essai de commande pour un quadricoptère X. Application statique, sans dépendance, CDN, compte ou service distant. La scène est un rendu 3D en perspective sur Canvas 2D, avec rotation de caméra, zoom, vue de dessus et suivi. Le modèle physique détermine le mouvement affiché.
+Laboratoire de développement et d’essai de commande pour multirotors plans à 4, 6 et 8 moteurs. Le simulateur statique fonctionne sans compte, CDN ou service distant. Le téléversement optionnel utilise un agent Windows local et les outils Arduino. La scène est un rendu 3D en perspective sur Canvas 2D, avec rotation de caméra, zoom, vue de dessus et suivi. Le modèle physique détermine le mouvement affiché.
+
+## Géométries disponibles
+
+Le premier lot comprend **Quad X, Quad +, Quad H, Hexa X, Hexa +, Octo X et Octo +**. Dans l’onglet **Drone**, sélectionner la géométrie, ajuster masse, distance centre–moteur, poussée par moteur et inerties, puis appliquer. Le H accepte un rapport longueur/largeur de 1 à 3, à distance centre–moteur constante. Les inerties et la poussée ne sont pas déduites automatiquement du dessin.
+
+Le schéma montre le montage vu de dessus, avant vers le haut, avec numéros et sens de rotation. Ce repérage est propre à DroneLab ; il n’affirme aucune correspondance directe avec les sorties d’une carte, PX4 ou ArduPilot. La scène, les pannes, les barres moteurs, les légendes, le CSV, les exports C/Arduino et l’agent utilisent le même nombre de moteurs.
+
+`airframes.js` constitue le catalogue commun ; la construction de l’agent en extrait `airframes.json`. Chaque moteur définit `(x,y)` en FLU et le signe de son couple de réaction. L’agent recalcule les positions à partir du catalogue embarqué et des dimensions validées, sans accepter les positions ou du code fournis par la page. L’agent **1.1.0** est requis ; fermer une ancienne version avant d’ouvrir le nouvel installateur.
+
+Les configurations exportées portent la version 2 et incluent la géométrie appliquée. Une configuration version 1 est importée comme Quad X. Le contrôleur C expose `motor_count`, `rotors[8][3]` et `motor_N[8]` ; seules les premières `motor_count` sorties sont actives, les autres restent nulles. L’adaptateur matériel reçoit aussi ce nombre. Il s’agit d’une évolution de l’interface C : un ancien adaptateur doit être porté explicitement.
+
+L’allocation utilise l’inverse à norme minimale des géométries planes équilibrées du catalogue, puis écrête les forces à leurs bornes. Les positions et les moments sont recalculés pour chaque géométrie. Elle ne résout pas une optimisation sous contraintes et ne réalloue pas la commande après une panne. Six ou huit moteurs ne garantissent donc pas un vol stabilisé après perte d’un moteur. Les modèles aérodynamiques, de batterie et de moteurs restent simplifiés et non identifiés.
+
+La [feuille de route](TACHES.md) recense les tâches pour Deadcat, géométries personnalisées, rotors coaxiaux, servos, ailes fixes, hélicoptères et VTOL, avec leurs étapes de validation.
 
 ## Lancement
 
@@ -71,7 +85,7 @@ Dans **Cartes**, cliquer sur **Installer et téléverser depuis cette page** :
 
 Arduino IDE n’est pas requis. L’agent conserve ses fichiers dans `%LOCALAPPDATA%\DroneLabAgent` et enregistre uniquement le protocole `dronelab-agent:` dans le registre du compte utilisateur pour le bouton **Ouvrir DroneLab Agent**. Il ne crée ni service ni démarrage automatique. Fermer sa fenêtre arrête le serveur local, sauf pendant une opération en cours. Une version macOS / Linux n’est pas encore distribuée.
 
-L’installation ne demande pas d’élévation administrateur et désactive les scripts d’installation de pilotes des paquets Arduino. Une carte qui exige un pilote USB absent, une procédure de bootloader ou un outil externe peut nécessiter une intervention distincte ; les règles d’un poste d’entreprise peuvent bloquer l’exécutable. L’installateur n’a pas de signature d’éditeur Windows. Aucune modification des protections du système n’est proposée. La distribution et son empreinte SHA-256 sont accessibles dans la [version de l’agent](https://github.com/emmatchouya-source/portfolio/releases/tag/dronelab-agent-v1.0.0).
+L’installation ne demande pas d’élévation administrateur et désactive les scripts d’installation de pilotes des paquets Arduino. Une carte qui exige un pilote USB absent, une procédure de bootloader ou un outil externe peut nécessiter une intervention distincte ; les règles d’un poste d’entreprise peuvent bloquer l’exécutable. L’installateur n’a pas de signature d’éditeur Windows. Aucune modification des protections du système n’est proposée. La distribution et son empreinte SHA-256 sont accessibles dans la [version de l’agent](https://github.com/emmatchouya-source/portfolio/releases/tag/dronelab-agent-v1.1.0).
 
 Le serveur écoute uniquement sur `127.0.0.1:47831`. Il autorise l’origine exacte du portfolio, demande un accord dans sa fenêtre et fournit un jeton en mémoire valable une heure. Les requêtes sont bornées, les tâches appartiennent au jeton qui les a créées, et un seul traitement s’exécute à la fois. La page envoie un profil et des paramètres numériques ; elle ne peut fournir ni code source, ni commande, ni URL de téléchargement. L’agent utilise les modèles de banc embarqués et impose `DL_ACTUATORS_ENABLED=0`. Les paquets proviennent des index fabricants autorisés ; seuls les dix profils déjà vérifiés ont une version de cœur fixée, les autres restent des cibles de portage à vérifier.
 
@@ -86,7 +100,7 @@ Sources du catalogue : [cœurs officiels Arduino](https://github.com/arduino), [
 - Monde local **ENU** : X Est, Y Nord, Z vers le haut. Il ne s’agit pas d’un repère géographique latitude/longitude.
 - Corps **FLU** : X avant, Y gauche, Z haut. Quaternions `[w,x,y,z]` Hamilton, corps vers monde.
 - Toutes les grandeurs internes et le C utilisent les unités SI : m, s, kg, N, rad, rad/s, kg·m². L’interface convertit les angles en degrés.
-- Moteurs : M1 avant gauche, M2 arrière gauche, M3 arrière droit, M4 avant droit. Spins de couple de réaction `+,-,+,-`. Poussées suivant +Z corps.
+- Moteurs : positions et ordre dans le schéma et le manifeste. Le Quad X conserve M1 avant gauche, M2 arrière gauche, M3 arrière droit, M4 avant droit. Les signes indiquent le couple de réaction sur le corps ; `+` correspond à une hélice CW vue de dessus. Poussées suivant +Z corps.
 - Ne pas transmettre directement ces axes à une pile FRD/NED : les vecteurs, quaternions, signes et ordres moteurs nécessitent une transformation explicite.
 
 ### Physique
@@ -138,11 +152,29 @@ bool ok = dl_step(&ctl, &DL_DEFAULT, &estimated_state,
 /* out.motor_N : poussées en newtons, pas des consignes PWM. */
 ```
 
-`estimated_state` et `mission_target` sont à fournir par l’intégration. `armed=false` remet l’état du contrôleur à zéro et renvoie quatre sorties nulles. La fonction renvoie `false` et des sorties nulles sur entrée invalide ; le superviseur matériel doit gérer cette situation. Aucun appel ne doit armer un appareil uniquement sur la base de ce résultat.
+`estimated_state` et `mission_target` sont à fournir par l’intégration. `armed=false` remet l’état du contrôleur à zéro et renvoie toutes les sorties nulles. La fonction renvoie `false` et des sorties nulles sur entrée invalide ou géométrie non prise en charge ; le superviseur matériel doit gérer cette situation. Aucun appel ne doit armer un appareil uniquement sur la base de ce résultat.
 
-Pour produire un micrologiciel utilisable sur un drone, il reste à choisir et calibrer la carte, les capteurs et ESC ; intégrer leurs pilotes et leurs horodatages ; fournir l’estimation, l’ordonnanceur et le superviseur (armement, arrêt, radio, batterie, perte de capteurs, limites), convertir les axes et les poussées, puis qualifier les résultats avec le logiciel cible et le contrôleur réel. Aucun binaire flashable, pilote matériel, liaison MAVLink, PX4 SITL ou HIL n’est inclus. Ces éléments seront ajoutés pour le matériel retenu.
+Pour produire un micrologiciel utilisable sur un drone, il reste à choisir et calibrer la carte, les capteurs et ESC ; intégrer leurs pilotes et leurs horodatages ; fournir l’estimation, l’ordonnanceur et le superviseur (armement, arrêt, radio, batterie, perte de capteurs, limites), convertir les axes et les poussées, puis qualifier les résultats avec le logiciel cible et le contrôleur réel. Aucun micrologiciel de vol complet, pilote matériel, liaison MAVLink, PX4 SITL ou HIL n’est inclus. Ces éléments seront ajoutés pour le matériel retenu.
 
 ## Vérification
+
+Le lot multirotor est couvert par les commandes suivantes, dans cet ordre :
+
+```sh
+python tests/airframes.py
+python tests/airframes_native.py
+python tests/airframes_agent.py
+python tests/arduino_export.py
+python tests/arduino_compile.py
+python tests/airframes_compile.py
+python tests/agent_bridge.py
+python tests/agent_bridge.py --real-compile
+python tests/agent_browser.py
+```
+
+Les 130 contrôles numériques et d’export couvrent les sept géométries : équilibre, moments, saturation, cinq missions, perturbation avec capteurs, perte GNSS, dernier moteur en panne, formats et schéma. Les bornes de suivi à 40 s sont de 1 m, ou 2 m pour le cercle dont le contrôleur de référence présente un retard ; chaque géométrie doit aussi rester à moins de 10 cm du résultat Quad X de référence. Ces seuils sont des critères de régression, pas une précision garantie pour un drone réel. Le test C vérifie 700 pas JavaScript/C, toutes les sorties, la saturation et la mise à zéro sur géométrie invalide ou désarmement.
+
+La matrice Arduino compile les sept géométries sur UNO AVR et UNO R4 Minima. Les huit autres cibles déjà vérifiées restent limitées à la compilation Quad X indiquée dans le catalogue. L’agent est testé séparément avec comparaison de ses paramètres à ceux du navigateur, compilation réelle et parcours HTTP simulé. Les tests n’effectuent aucun téléversement physique. Les entrées du catalogue indiquent précisément les géométries compilées et ne constituent pas une validation en vol.
 
 ```sh
 python -m pip install playwright

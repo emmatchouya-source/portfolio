@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Laboratoire de vol autonome : simulation 3D, dynamique du quadricoptère, capteurs, commande en cascade et export C de référence.">
+  <meta name="description" content="Laboratoire de vol autonome : simulation 3D de quadricoptères, hexacoptères et octocoptères, capteurs, commande en cascade et export C de référence.">
   <meta name="theme-color" content="#0b1017"><title>DroneLab — Laboratoire de vol autonome</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1017'/%3E%3Cpath d='m8 8 16 16M8 24 24 8' stroke='%2357dfbc' stroke-width='3'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=agent-connection-1">
+  <link rel="stylesheet" href="styles.css?v=airframes-1">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="./" aria-label="DroneLab accueil"><span class="brand-icon">✣</span><span>DRONE<span class="accent">LAB</span><small>LABORATOIRE DE VOL AUTONOME</small></span></a>
-    <div class="project-label"><span class="dot"></span>QUADRICOPTÈRE X <span class="version">v1.1 · navigateur</span></div>
+    <div class="project-label"><span class="dot"></span><span id="airframeLabel">QUAD X</span> <span class="version">v1.2 · navigateur</span></div>
     <div class="header-actions"><a href="../../index.html#projets" class="text-link">← Portfolio</a><button id="openExport" class="button outline">↗ Exporter</button></div>
   </header>
   <div class="workspace">
@@ -34,13 +34,17 @@
         </section>
         <section id="panel-aircraft" class="panel">
           <div class="section-title"><span>01</span><h2>Plateforme</h2></div>
+          <label class="field wide">Géométrie du drone<select id="airframe"></select></label>
+          <div id="framePreview" class="frame-preview"></div>
+          <p class="hint">Aperçu des réglages. Appliquer pour changer le drone simulé. Repérage propre à DroneLab ; vérifier le câblage avant tout portage.</p>
           <label class="field wide">Gabarit de départ<select id="preset"><option value="standard">Standard · 1,5 kg</option><option value="micro">Léger · 250 g</option><option value="heavy">Lourd · 4 kg</option></select></label>
           <div id="aircraft-fields"></div>
-          <div class="info-card"><span class="mini-label">MODÈLE À 6 DEGRÉS DE LIBERTÉ</span><p>Corps rigide, attitude par quaternion, quatre poussées indépendantes, inerties, retard moteur, traînée quadratique et batterie simplifiée.</p></div>
+          <div class="info-card"><span class="mini-label">MODÈLE À 6 DEGRÉS DE LIBERTÉ</span><p>Corps rigide, attitude par quaternion, 4 à 8 poussées indépendantes selon la géométrie, inerties, retard moteur, traînée et batterie simplifiées. Les inerties et la poussée par moteur se règlent séparément pour le montage étudié.</p></div>
+          <a href="TACHES.md" class="text-link">Feuille de route des architectures ↗</a>
         </section>
         <section id="panel-control" class="panel">
           <div class="section-title"><span>01</span><h2>Architecture en cascade</h2></div>
-          <div class="cascade"><span>Position</span><b>↓</b><span>Vitesse · PI + anticipation</span><b>↓</b><span>Attitude · quaternion</span><b>↓</b><span>Vitesses angulaires · PID</span><b>↓</b><span>Allocation des 4 moteurs</span></div>
+          <div class="cascade"><span>Position</span><b>↓</b><span>Vitesse · PI + anticipation</span><b>↓</b><span>Attitude · quaternion</span><b>↓</b><span>Vitesses angulaires · PID</span><b>↓</b><span id="allocationLabel">Allocation des 4 moteurs</span></div>
           <label class="field wide">État utilisé par la commande<select id="feedback"><option value="estimate">Estimation à partir des capteurs</option><option value="truth">État physique exact · comparaison</option></select></label>
           <div id="control-fields"></div>
           <p class="hint">Les gains s’appliquent après réinitialisation. La saturation bloque l’intégration des deux boucles PI/PID.</p>
@@ -55,7 +59,7 @@
           <div class="section-title"><span>02</span><h2>Injection de défauts</h2></div>
           <label class="toggle"><input id="gpsDropout" type="checkbox"><span>Couper le GNSS</span></label>
           <label class="field wide">Panne moteur<select id="motorFailure"><option value="-1">Aucune</option><option value="0">M1 · avant gauche</option><option value="1">M2 · arrière gauche</option><option value="2">M3 · arrière droit</option><option value="3">M4 · avant droit</option></select></label>
-          <p class="hint">GNSS perdu &gt; 1,2 s : descente. Panne d’un moteur : descente tentée ; un quadricoptère peut perdre sa stabilité.</p>
+          <p class="hint">GNSS perdu &gt; 1,2 s : descente. Panne d’un moteur : descente tentée, sans réallocation après panne ; la stabilité n’est pas garantie, même avec 6 ou 8 moteurs.</p>
         </section>
         <section id="panel-hardware" class="panel">
           <div class="section-title"><span>01</span><h2>Carte de commande</h2></div>
@@ -126,20 +130,20 @@
     </main>
   </div>
   <div id="toast" role="status" aria-live="polite" hidden></div>
-  <dialog id="aboutDialog"><div class="dialog-head"><h2>Un laboratoire pour développer la commande.</h2><button id="closeAbout" class="button icon" aria-label="Fermer">×</button></div><p>DroneLab simule un quadricoptère X à six degrés de liberté. La scène 3D représente le véritable état calculé par la dynamique. La commande utilise par défaut un état estimé à partir des capteurs simulés.</p><p>Les modèles de poussée, vent, traînée, capteurs et batterie sont simplifiés et non identifiés sur un drone réel. Le filtre complémentaire peut dériver, notamment pendant des accélérations soutenues ou sans GNSS.</p><p>Le contrôleur C exporté est une base de développement. Il ne constitue pas un micrologiciel de vol complet. L’intégration matérielle, les essais avec simulateur externe et contrôleur réel, les essais sur banc puis en vol restent à réaliser.</p><p>Pas de liaison avec un drone réel, de traitement caméra, d’évitement d’obstacles, de CFD, de SITL PX4 ou d’HIL dans cette version.</p><p>Références : <a href="https://docs.px4.io/main/en/flight_stack/controller_diagrams" target="_blank" rel="noopener">architecture de commande PX4</a> · <a href="https://docs.px4.io/main/en/simulation/" target="_blank" rel="noopener">validation par simulation</a>.</p><a class="button outline" href="README.md">Documentation technique</a></dialog>
+  <dialog id="aboutDialog"><div class="dialog-head"><h2>Un laboratoire pour développer la commande.</h2><button id="closeAbout" class="button icon" aria-label="Fermer">×</button></div><p>DroneLab simule des quadricoptères, hexacoptères et octocoptères plans à six degrés de liberté. La scène 3D représente le véritable état calculé par la dynamique. La commande utilise par défaut un état estimé à partir des capteurs simulés.</p><p>Les modèles de poussée, vent, traînée, capteurs et batterie sont simplifiés et non identifiés sur un drone réel. Le filtre complémentaire peut dériver, notamment pendant des accélérations soutenues ou sans GNSS.</p><p>Le contrôleur C exporté est une base de développement. Il ne constitue pas un micrologiciel de vol complet. L’intégration matérielle, les essais avec simulateur externe et contrôleur réel, les essais sur banc puis en vol restent à réaliser.</p><p>Pas de liaison avec un drone réel, de traitement caméra, d’évitement d’obstacles, de CFD, de SITL PX4 ou d’HIL dans cette version.</p><p>Références : <a href="https://docs.px4.io/main/en/flight_stack/controller_diagrams" target="_blank" rel="noopener">architecture de commande PX4</a> · <a href="https://docs.px4.io/main/en/simulation/" target="_blank" rel="noopener">validation par simulation</a>.</p><a class="button outline" href="README.md">Documentation technique</a></dialog>
   <dialog id="agentDialog" aria-labelledby="agentTitle">
     <div class="dialog-head"><h2 id="agentTitle">Ta carte, depuis DroneLab.</h2><button id="closeAgent" class="button icon" aria-label="Fermer">×</button></div>
     <p>Installe l’agent une fois, puis prépare et téléverse le programme depuis cette page. Arduino IDE n’est pas nécessaire.</p>
     <ol class="agent-steps">
-      <li><b>Télécharge et ouvre l’installateur.</b><p>Ouvre le fichier téléchargé et garde la fenêtre de l’agent ouverte. Installation dans ton compte, sans commande à saisir.</p><a id="agentDownload" class="button primary" href="https://github.com/emmatchouya-source/portfolio/releases/download/dronelab-agent-v1.0.0/DroneLab-Agent-Setup.exe">↓ Installer l’agent · Windows x64 · 28 Mo</a><p class="hint">Déjà installé ? <a href="dronelab-agent:open">Ouvrir DroneLab Agent</a></p></li>
+      <li><b>Télécharge et ouvre l’installateur.</b><p>Ouvre le fichier téléchargé et garde la fenêtre de l’agent ouverte. Installation dans ton compte, sans commande à saisir.</p><a id="agentDownload" class="button primary" href="https://github.com/emmatchouya-source/portfolio/releases/download/dronelab-agent-v1.1.0/DroneLab-Agent-Setup.exe">↓ Installer l’agent 1.1 · Windows x64 · 28 Mo</a><p class="hint">Mise à jour : ferme l’ancienne fenêtre de l’agent avant d’ouvrir l’installateur. Déjà installé ? <a href="dronelab-agent:open">Ouvrir DroneLab Agent</a></p></li>
       <li><b>Connecte l’agent.</b><p>Autorise l’accès local si le navigateur le demande, puis accepte la connexion dans la fenêtre de l’agent.</p><div class="agent-connection-row"><button id="agentConnect" class="button outline">Connecter l’agent</button><span id="agentConnection" class="agent-connection" data-state="offline" role="status" aria-live="polite" aria-atomic="true">Agent non connecté</span></div></li>
-      <li><b>Branche la carte en USB.</b><p>La carte choisie dans le panneau Cartes sera utilisée avec tes paramètres appliqués.</p><label for="agentPort">Port USB</label><div class="agent-port-row"><select id="agentPort"><option value="">Connecte l’agent pour voir les ports</option></select><button id="agentPortsRefresh" class="button outline" aria-label="Actualiser les ports USB">Actualiser</button></div><div class="agent-actions"><button id="agentPrepare" class="button outline">1. Préparer et compiler</button><button id="agentUpload" class="button primary">2. Téléverser sur la carte</button></div><p class="hint">Le téléversement remplace le programme présent sur la carte. Les sorties moteurs du programme de banc restent inactives.</p></li>
+      <li><b>Branche la carte en USB.</b><p>La carte choisie dans le panneau Cartes sera utilisée avec tes paramètres appliqués.</p><p id="agentTarget" class="hint"></p><label for="agentPort">Port USB</label><div class="agent-port-row"><select id="agentPort"><option value="">Connecte l’agent pour voir les ports</option></select><button id="agentPortsRefresh" class="button outline" aria-label="Actualiser les ports USB">Actualiser</button></div><div class="agent-actions"><button id="agentPrepare" class="button outline">1. Préparer et compiler</button><button id="agentUpload" class="button primary">2. Téléverser sur la carte</button></div><p class="hint">Le téléversement remplace le programme présent sur la carte. Les sorties moteurs du programme de banc restent inactives.</p></li>
     </ol>
     <p id="agentStatus" role="status" aria-live="polite">Agent non connecté.</p>
     <button id="agentResume" class="button outline" hidden>Reprendre le suivi</button>
     <details class="agent-journal"><summary>Journal de préparation et de téléversement</summary><pre id="agentLog">Le journal apparaîtra ici.</pre></details>
     <p id="agentPlatform" class="hint amber-text" hidden>L’installateur proposé fonctionne sur Windows x64. Une version macOS / Linux n’est pas encore proposée.</p>
-    <p class="hint">L’agent ne demande pas de droits administrateur. Certains pilotes USB ou les règles de ton entreprise peuvent en nécessiter. Cet exécutable n’est pas signé : Windows peut afficher une vérification ou en bloquer l’ouverture. <a href="https://github.com/emmatchouya-source/portfolio/releases/tag/dronelab-agent-v1.0.0" target="_blank" rel="noopener">Version et empreinte SHA-256 ↗</a></p>
+    <p class="hint">L’agent ne demande pas de droits administrateur. Certains pilotes USB ou les règles de ton entreprise peuvent en nécessiter. Cet exécutable n’est pas signé : Windows peut afficher une vérification ou en bloquer l’ouverture. <a href="https://github.com/emmatchouya-source/portfolio/releases/tag/dronelab-agent-v1.1.0" target="_blank" rel="noopener">Version et empreinte SHA-256 ↗</a></p>
   </dialog>
-  <noscript>Active JavaScript pour utiliser le simulateur DroneLab.</noscript><script type="module" src="app.js?v=panel-actions-1"></script>
+  <noscript>Active JavaScript pour utiliser le simulateur DroneLab.</noscript><script type="module" src="app.js?v=airframes-1"></script>
 </body></html>

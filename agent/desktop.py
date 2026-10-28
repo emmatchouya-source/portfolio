@@ -15,7 +15,7 @@ import tkinter as tk
 from tkinter import messagebox,ttk
 from bridge import Agent,make_server,PORT,VERSION,ORIGIN
 
-SITE=ORIGIN+'/portfolio/projets/drone-lab/?v=agent-1'
+SITE=ORIGIN+'/portfolio/projets/drone-lab/?v=airframes-1'
 
 def assets_path():
     if hasattr(sys,'_MEIPASS'):return Path(sys._MEIPASS)/'assets'
@@ -58,8 +58,15 @@ def self_test(home,assets):
     run=subprocess.run([str(cli),'version','--json'],capture_output=True,text=True,creationflags=subprocess.CREATE_NO_WINDOW,timeout=30)
     if run.returncode:raise RuntimeError(run.stderr)
     root=tk.Tk();root.withdraw();ttk.Label(root,text='DroneLab').pack();root.update();root.destroy()
-    result={'version':VERSION,'cli':json.loads(run.stdout),'assets':all((assets/name).is_file() for name in ['boards.json','DroneLab.ino','dl_hal.h','controller.c']),
-            'tk':True,'installedToUserProfile':False,'registryModified':False}
+    agent=Agent(home/'selftest-state',assets,cli,lambda origin:False)
+    c={'mass':1.5,'arm':.23,'thrust':9,'inertia':[.022,.022,.04],'yawRatio':.018,'posP':1.3,'velP':2.5,'velI':.35,'attP':5,'rateP':18,'rateI':8,'rateD':.12,'tilt':30,'speed':3,'hAspect':1.5}
+    board=next(iter(agent.boards.values()))
+    for profile in agent.frames.values():
+        c['airframe']=profile['id']
+        folder=agent.project({'id':'selftest-'+profile['id'],'board':board,'configuration':{'format':'dronelab-config','version':2,'config':c.copy()}})
+        if '#define DL_MOTOR_COUNT '+str(len(profile['positions'])) not in (folder/'dl_board.h').read_text():raise RuntimeError('Catalogue de géométries incohérent.')
+    result={'version':VERSION,'cli':json.loads(run.stdout),'assets':all((assets/name).is_file() for name in ['boards.json','airframes.json','DroneLab.ino','dl_hal.h','controller.c']),
+            'geometryCount':len(agent.frames),'tk':True,'installedToUserProfile':False,'registryModified':False}
     (home/'agent-selftest.json').write_text(json.dumps(result,indent=2),encoding='utf-8')
 
 def main():
@@ -74,7 +81,13 @@ def main():
     if sys.platform!='win32':raise RuntimeError('Cet installateur cible Windows x64.')
     try:
         with urllib.request.urlopen(f'http://127.0.0.1:{PORT}/health',timeout=1) as response:
-            if json.load(response).get('application')=='DroneLab Agent':return
+            running=json.load(response)
+            if running.get('application')=='DroneLab Agent':
+                if running.get('version')!=VERSION:
+                    root=tk.Tk();root.withdraw()
+                    messagebox.showinfo('Mise à jour DroneLab Agent','Ferme la fenêtre de l’ancien agent, puis ouvre à nouveau cet installateur pour installer la version '+VERSION+'.',parent=root)
+                    root.destroy()
+                return
     except Exception:pass
     home=Path(os.environ['LOCALAPPDATA'])/'DroneLabAgent'
     events=queue.Queue();root=tk.Tk();root.title('DroneLab Agent');root.geometry('570x365');root.minsize(500,350)

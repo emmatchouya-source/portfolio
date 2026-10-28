@@ -41,7 +41,8 @@ def main():
                 if hosted:context.grant_permissions(['local-network-access'],origin=ORIGIN)
                 page=context.new_page();errors=[];page.on('pageerror',lambda error:errors.append(str(error)))
                 page.on('console',lambda message:print('BROWSER:',message.text) if message.type=='error' else None)
-                page.goto(ORIGIN+'/portfolio/projets/drone-lab/?v=agent-connection-1' if hosted else origin+'/projets/drone-lab/',wait_until='networkidle')
+                page.goto(ORIGIN+'/portfolio/projets/drone-lab/?v=airframes-1' if hosted else origin+'/projets/drone-lab/',wait_until='networkidle')
+                page.locator('[data-panel=aircraft]').click();page.locator('#airframe').select_option('octo-x');page.locator('#applyConfig').click()
                 page.get_by_role('button',name='Cartes',exact=True).click()
                 # Choose via the actual suggestions, not by mutating page state.
                 page.locator('#boardSelect').fill('Arduino UNO')
@@ -51,6 +52,14 @@ def main():
                 assert page.locator('#agentDownload').get_attribute('href').endswith('/DroneLab-Agent-Setup.exe')
                 expect(page.locator('#agentUpload')).to_be_disabled()
                 expect(page.locator('#agentConnection')).to_have_text('Agent non connecté')
+                expect(page.locator('#agentTarget')).to_contain_text('8 moteurs')
+                # A version 1.0 agent must not silently compile a Quad X instead.
+                old_health=f'http://127.0.0.1:{bridge.server_port}/health'
+                page.route(old_health,lambda route:route.fulfill(json={'application':'DroneLab Agent','version':'1.0.0','busy':False},headers={'Access-Control-Allow-Origin':ORIGIN if hosted else origin}))
+                page.locator('#agentConnect').click()
+                expect(page.locator('#agentConnection')).to_contain_text('mise à jour requise')
+                expect(page.locator('#agentPrepare')).to_be_disabled()
+                page.unroute(old_health)
                 page.locator('#agentConnect').click()
                 expect(page.locator('#agentConnection')).to_contain_text('En attente d’autorisation',timeout=10000)
                 expect(page.locator('#agentConnection')).to_have_attribute('data-state','connecting')
@@ -74,6 +83,7 @@ def main():
                 expect(page.locator('#agentUpload')).to_be_enabled()
                 page.locator('#agentPrepare').click()
                 expect(page.locator('#agentStatus')).to_contain_text('Compilation réussie',timeout=15000)
+                assert next(iter(agent.jobs.values()))['configuration']['geometry']['motor_count']==8
                 assert not any(a[0]=='upload' for a in agent.calls)
                 page.locator('#agentUpload').click()
                 expect(page.locator('#agentStatus')).to_contain_text('Programme de banc téléversé',timeout=15000)

@@ -39,14 +39,19 @@ export class Scene {
     line([shadow,p],'#5ee0bc40',1,[3,4]);
     const tp=sim.target.p,ta=project(tp);if(ta&&sim.mode!=='ready'){c.strokeStyle='#e8b476';c.lineWidth=1;c.beginPath();c.arc(ta[0],ta[1],7,0,Math.PI*2);c.moveTo(ta[0]-11,ta[1]);c.lineTo(ta[0]+11,ta[1]);c.moveTo(ta[0],ta[1]-11);c.lineTo(ta[0],ta[1]+11);c.stroke();}
     const est=project(sim.estimate.p);if(est&&norm(sub(sim.estimate.p,p))>.04){c.fillStyle='#70a9ff';c.beginPath();c.arc(est[0],est[1],2.5,0,Math.PI*2);c.fill();}
-    const q=sim.s.q, transform=v=>add(p,rotate(q,v)), arm=sim.c.arm/Math.SQRT2, prop=sim.c.arm*.43;
-    const rotors=[[arm,arm,0],[-arm,arm,0],[-arm,-arm,0],[arm,-arm,0]];
+    const q=sim.s.q, transform=v=>add(p,rotate(q,v)), prop=sim.geometry.propRadius;
+    const rotors=sim.geometry.rotors.map(r=>[r.x,r.y,0]);
+    if(sim.geometry.profile.layout==='h'){
+      line([transform(rotors[0]),transform(rotors[1])],'#8193a8',4);line([transform(rotors[2]),transform(rotors[3])],'#8193a8',4);
+      line([transform([0,rotors[0][1],0]),transform([0,rotors[2][1],0])],'#78d9c4',4);
+    }
     const parts=rotors.map((r,i)=>({r,i,depth:project(transform(r))?.[2]||0})).sort((a,b)=>b.depth-a.depth);
     for(const {r,i} of parts){
-      line([transform([0,0,0]),transform(r)],i===0||i===3?'#78d9c4':'#8193a8',4);
+      if(sim.geometry.profile.layout!=='h')line([transform([0,0,0]),transform(r)],r[0]>0?'#78d9c4':'#8193a8',4);
       const disk=[];for(let j=0;j<=32;j++){const angle=j*Math.PI/16;disk.push(transform(add(r,[prop*Math.cos(angle),prop*Math.sin(angle),.025])));}
       polygon(disk,sim.motors[i]>.1?'#7dcdbd26':'#233c4c','#7eaaab70');
-      const angle=sim.t*(35+sim.motors[i]*12)*(i%2?-1:1);line([transform(add(r,[-prop*Math.cos(angle),-prop*Math.sin(angle),.03])),transform(add(r,[prop*Math.cos(angle),prop*Math.sin(angle),.03]))],'#9dc9c4',1.5);
+      const angle=-sim.t*(35+sim.motors[i]*12)*sim.geometry.rotors[i].spin;line([transform(add(r,[-prop*Math.cos(angle),-prop*Math.sin(angle),.03])),transform(add(r,[prop*Math.cos(angle),prop*Math.sin(angle),.03]))],'#9dc9c4',1.5);
+      if(prop*f/(project(transform(r))?.[2]||1)>10)text(transform(add(r,[0,0,.07])),`M${i+1}`,sim.failedMotor===i?'#f08f75':'#c4e5df',9);
     }
     const l=sim.c.arm*.36,z=sim.c.arm*.22,body=[[-l,-l,z],[l,-l,z],[l,l,z],[-l,l,z]];polygon(body.map(transform),'#a4bbca','#ddeaf0');
     line([transform([0,0,z+.02]),transform([l*1.7,0,z+.02])],'#5ee0bc',2);
@@ -60,12 +65,12 @@ export function drawAttitude(canvas,q){
   const c=canvas.getContext('2d'),w=canvas.width,h=canvas.height,[r,p]=euler(q);c.clearRect(0,0,w,h);c.save();c.translate(w/2,h/2);c.beginPath();c.arc(0,0,w*.44,0,2*Math.PI);c.clip();c.rotate(-r);const y=p*110;c.fillStyle='#224557';c.fillRect(-200,-200+y,400,200);c.fillStyle='#30352f';c.fillRect(-200,y,400,200);c.strokeStyle='#a6c8c5';c.lineWidth=1;c.beginPath();c.moveTo(-100,y);c.lineTo(100,y);c.stroke();c.strokeStyle='#b5c3bd70';for(let i=-3;i<=3;i++)if(i){c.beginPath();c.moveTo(-12,y+i*19);c.lineTo(12,y+i*19);c.stroke();}c.restore();c.save();c.translate(w/2,h/2);c.strokeStyle='#5ee0bc';c.lineWidth=2;c.beginPath();c.moveTo(-30,0);c.lineTo(-10,0);c.lineTo(-10,5);c.moveTo(10,5);c.lineTo(10,0);c.lineTo(30,0);c.stroke();c.fillStyle='#5ee0bc';c.fillRect(-2,-2,4,4);c.strokeStyle='#557080';c.lineWidth=2;c.beginPath();c.arc(0,0,w*.44,0,Math.PI*2);c.stroke();c.restore();
 }
 
-export const COLORS=['#5ee0bc','#f1b36c','#70a9ff','#c394e8'];
-export function chartSpec(type){
-  return {altitude:{labels:['Réelle','Consigne','Estimée'],unit:'m',values:r=>[r.p[2],r.target[2],r.estimated[2]]},attitude:{labels:['Roulis','Tangage','Lacet'],unit:'°',values:r=>r.angles.map(v=>v*180/Math.PI)},motors:{labels:['M1','M2','M3','M4'],unit:'N',values:r=>r.motors},error:{labels:['Écart de position'],unit:'m',values:r=>[r.error]}}[type];
+export const COLORS=['#5ee0bc','#f1b36c','#70a9ff','#c394e8','#ef8fae','#d9d971','#70d4ed','#c8aa8c'];
+export function chartSpec(type,motorCount=4){
+  return {altitude:{labels:['Réelle','Consigne','Estimée'],unit:'m',values:r=>[r.p[2],r.target[2],r.estimated[2]]},attitude:{labels:['Roulis','Tangage','Lacet'],unit:'°',values:r=>r.angles.map(v=>v*180/Math.PI)},motors:{labels:Array.from({length:motorCount},(_,i)=>`M${i+1}`),unit:'N',values:r=>r.motors},error:{labels:['Écart de position'],unit:'m',values:r=>[r.error]}}[type];
 }
-export function drawChart(canvas,history,type){
-  const {ctx:c,w,h}=fit(canvas);if(!w||!h)return;const spec=chartSpec(type),last=history.at(-1)?.t||0,rows=history.filter(r=>r.t>=last-30),series=rows.map(r=>spec.values(r)),flat=series.flat().filter(Number.isFinite);
+export function drawChart(canvas,history,type,motorCount=history.at(-1)?.motors.length??4){
+  const {ctx:c,w,h}=fit(canvas);if(!w||!h)return;const spec=chartSpec(type,motorCount),last=history.at(-1)?.t||0,rows=history.filter(r=>r.t>=last-30),series=rows.map(r=>spec.values(r)),flat=series.flat().filter(Number.isFinite);
   let lo=Math.min(0,...flat),hi=Math.max(1,...flat),padding=(hi-lo)*.12;lo-=padding;hi+=padding;
   const left=45,right=w-13,top=12,bottom=h-25,x=t=>left+(t-Math.max(0,last-30))/30*(right-left),y=v=>bottom-(v-lo)/(hi-lo)*(bottom-top);
   c.clearRect(0,0,w,h);c.font='8px Consolas, monospace';c.lineWidth=1;

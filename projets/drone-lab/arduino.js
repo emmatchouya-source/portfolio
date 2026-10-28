@@ -1,4 +1,4 @@
-import {generateC,configuration} from './exports.js';
+import {generateC,configuration} from './exports.js?v=airframes-1';
 import {zipStore} from './zip.js';
 
 export function customBoard(input){
@@ -33,8 +33,8 @@ static inline bool dl_hw_read_target(DL_Target *target) {
 /* Implement a board-specific, calibrated thrust->ESC driver. Newtons != PWM.
  * Must provide its own independent timeout/kill path; not analogWrite().
  */
-static inline void dl_hw_write_motor_newtons(const double motor_N[4]) {
-  (void)motor_N;
+static inline void dl_hw_write_motor_newtons(const double motor_N[DL_MAX_MOTORS], unsigned motor_count) {
+  (void)motor_N; (void)motor_count;
 }
 `;
 
@@ -53,14 +53,16 @@ static uint32_t last_tick=0, max_compute_us=0, deadline_misses=0;
 static bool integration_started=false, fault_latched=false;
 
 static void stop_outputs() {
-  for (unsigned i=0;i<4;i++) output.motor_N[i]=0;
+  for (unsigned i=0;i<DL_MAX_MOTORS;i++) output.motor_N[i]=0;
 #if DL_ACTUATORS_ENABLED && !DL_LIMITED_PROFILE
-  dl_hw_write_motor_newtons(output.motor_N);
+  dl_hw_write_motor_newtons(output.motor_N, DL_MOTOR_COUNT);
 #endif
   dl_reset(&controller);
 }
 static void show_status() {
   Serial.println(DL_BOARD_NAME);
+  Serial.print("Airframe: "); Serial.println(DL_AIRFRAME_NAME);
+  Serial.print("Motors: "); Serial.println(DL_MOTOR_COUNT);
   Serial.print("Target period us: "); Serial.println(DL_PERIOD_US);
   Serial.print("Max controller compute us: "); Serial.println(max_compute_us);
   Serial.print("Deadline misses: "); Serial.println(deadline_misses);
@@ -79,7 +81,7 @@ static void benchmark_controller() {
     ok=dl_step(&test,&DL_DEFAULT,&state,&target,1.0/DL_CONTROL_HZ,true,&result) && ok;
     const uint32_t elapsed=(uint32_t)(micros()-begin);
     if(elapsed>worst)worst=elapsed;
-    checksum+=result.motor_N[i%4];
+    checksum+=result.motor_N[i%DL_MOTOR_COUNT];
   }
   Serial.print("Controller benchmark worst us: "); Serial.println(worst);
   Serial.print("Computation valid: "); Serial.println(ok);
@@ -114,7 +116,7 @@ void loop() {
   const uint32_t compute_us=(uint32_t)(micros()-begin);
   if(compute_us>max_compute_us)max_compute_us=compute_us;
   if(!ok || (uint32_t)(micros()-now)>=DL_PERIOD_US){deadline_misses++;fault_latched=true;stop_outputs();return;}
-  dl_hw_write_motor_newtons(output.motor_N);
+  dl_hw_write_motor_newtons(output.motor_N, DL_MOTOR_COUNT);
 #else
   stop_outputs(); // Shipped state: no pins configured, no ESC signal emitted.
 #endif
@@ -124,10 +126,11 @@ void loop() {
 export function arduinoFiles(template,sim,board){
   validateBoard(board);
   const slug=board.id.replace(/[^A-Za-z0-9_]/g,'_').slice(0,55),folder=`DroneLab_${slug}`,base=folder+'/';
-  const boardHeader=`#pragma once\n// Selection does not certify a real-aircraft installation.\n#define DL_BOARD_NAME ${JSON.stringify(board.name)}\n#define DL_BOARD_FQBN ${JSON.stringify(board.fqbn)}\n#define DL_CONTROL_HZ 240UL\n#define DL_PERIOD_US ((1000000UL + DL_CONTROL_HZ/2) / DL_CONTROL_HZ)\n#define DL_STATE_MAX_AGE_US 20000UL\n#define DL_LIMITED_PROFILE ${board.limited?1:0}\n#define DL_ACTUATORS_ENABLED 0\n`;
-  const manifest={format:'dronelab-arduino-project',version:1,board,configuration:configuration(sim),scope:board.limited?'controller benchmark only; reduced stabilization requires separate development':'portable controller and integration scaffold; no hardware validation',actuators_enabled:false,controller_precision:'double (size is target dependent)',validation:{flight:false,sensors:false,esc:false,compile:board.validation},remaining:['Real sensor drivers and calibration','State estimator and coordinate conversions','Receiver, mission and flight supervisor','Thrust mapping and timed ESC output','Full loop timing and hardware tests']};
+  const applied=configuration(sim);
+  const boardHeader=`#pragma once\n// Selection does not certify a real-aircraft installation.\n#define DL_BOARD_NAME ${JSON.stringify(board.name)}\n#define DL_BOARD_FQBN ${JSON.stringify(board.fqbn)}\n#define DL_AIRFRAME_NAME ${JSON.stringify(applied.geometry.airframe)}\n#define DL_MOTOR_COUNT ${applied.geometry.motor_count}\n#define DL_CONTROL_HZ 240UL\n#define DL_PERIOD_US ((1000000UL + DL_CONTROL_HZ/2) / DL_CONTROL_HZ)\n#define DL_STATE_MAX_AGE_US 20000UL\n#define DL_LIMITED_PROFILE ${board.limited?1:0}\n#define DL_ACTUATORS_ENABLED 0\n`;
+  const manifest={format:'dronelab-arduino-project',version:2,board,configuration:applied,scope:board.limited?'controller benchmark only; reduced stabilization requires separate development':'portable controller and integration scaffold; no hardware validation',actuators_enabled:false,controller_precision:'double (size is target dependent)',validation:{flight:false,sensors:false,esc:false,compile:(board.validation?.airframes||[]).includes(sim.c.airframe)?board.validation:null},remaining:['Real sensor drivers and calibration','State estimator and coordinate conversions','Receiver, mission and flight supervisor','Thrust mapping and timed ESC output','Full loop timing and hardware tests']};
   const index=board.indexUrl?`\nAdditional board manager URL (for third-party cores):\n${board.indexUrl}\n`:'';
-  const readme=`# DroneLab — ${board.name}\n\n## What this archive contains\n\nArduino IDE project with the applied simulation gains, controller, target profile and inactive hardware adapter. It can be compiled and uploaded as a BENCH program. It is NOT a complete flight firmware. No GPIO or motor output is configured by default.\n\n## Upload\n\n1. Extract the ZIP. Open ${folder}.ino inside its same-named folder.\n2. Install board package ${board.core}, choose the exact board and USB port.\n3. Compile and upload with Arduino IDE. Serial monitor: 115200 baud.\n4. Send i for status, b for a 32-step controller benchmark. No command arms the board.\n\nArduino CLI equivalent (install CLI separately):\n\n\x60\x60\x60sh\narduino-cli core install ${board.core}${board.indexUrl?' --additional-urls '+board.indexUrl:''}\narduino-cli compile --fqbn ${board.fqbn} ${folder}\narduino-cli upload --fqbn ${board.fqbn} --port YOUR_PORT ${folder}\n\x60\x60\x60\n${index}\n## Target profile\n\n${board.notes}\n${board.limited?'This 8-bit profile is restricted to benchmarking. A reduced stabilization controller needs separate development; no autonomous-flight capability is asserted.':'The full-loop rate of 240 Hz is a target, not a measured guarantee. Sensors, ESC protocols, interrupt load and radio tasks alter the timing budget.'}\n\nCompilation status: ${board.validation?JSON.stringify(board.validation):'Not verified with this exact board/core.'}\nHardware flight: NOT VALIDATED. A successful compile does not verify wiring, sensors or flight behavior.\n\n## Hardware integration\n\nImplement dl_hal.h with your calibrated sensor drivers, estimator, timestamped state, mission/receiver supervisor and calibrated motor driver. ENU/FLU, SI units, Hamilton [w,x,y,z]. Convert explicitly if hardware uses NED/FRD. Four output values are NEWTONS, not PWM duty cycle.\n\nDL_ACTUATORS_ENABLED is shipped as 0. The adapter also returns false for ready/armed/state/target. Keep outputs inactive during porting. A controller benchmark measures only computation; validate the complete loop, kill mechanism and sensor/ESC timeouts separately. Reset faults only while disarmed.\n\nThe actuator adapter must handle zero-thrust / disarmed / error conditions itself and provide an independent hardware timeout. A complete autopilot, failsafe policy and hardware-specific pin mapping must be supplied before flight testing.\n\n## Source\n\n${board.source||'Custom profile: verify against your board manufacturer.'}\nhttps://docs.arduino.cc/software/ide-v2/tutorials/getting-started/ide-v2-uploading-a-sketch/\n`;
+  const readme=`# DroneLab — ${board.name}\n\n## What this archive contains\n\nArduino IDE project with the applied simulation gains, controller, target profile and inactive hardware adapter. It can be compiled and uploaded as a BENCH program. It is NOT a complete flight firmware. No GPIO or motor output is configured by default.\n\n## Upload\n\n1. Extract the ZIP. Open ${folder}.ino inside its same-named folder.\n2. Install board package ${board.core}, choose the exact board and USB port.\n3. Compile and upload with Arduino IDE. Serial monitor: 115200 baud.\n4. Send i for status, b for a 32-step controller benchmark. No command arms the board.\n\nArduino CLI equivalent (install CLI separately):\n\n\x60\x60\x60sh\narduino-cli core install ${board.core}${board.indexUrl?' --additional-urls '+board.indexUrl:''}\narduino-cli compile --fqbn ${board.fqbn} ${folder}\narduino-cli upload --fqbn ${board.fqbn} --port YOUR_PORT ${folder}\n\x60\x60\x60\n${index}\n## Target profile\n\n${board.notes}\n${board.limited?'This 8-bit profile is restricted to benchmarking. A reduced stabilization controller needs separate development; no autonomous-flight capability is asserted.':'The full-loop rate of 240 Hz is a target, not a measured guarantee. Sensors, ESC protocols, interrupt load and radio tasks alter the timing budget.'}\n\nCompilation status for this geometry: ${manifest.validation.compile?JSON.stringify(manifest.validation.compile):'Not verified with this exact board/core.'}\nHardware flight: NOT VALIDATED. A successful compile does not verify wiring, sensors or flight behavior.\n\n## Hardware integration\n\nImplement dl_hal.h with your calibrated sensor drivers, estimator, timestamped state, mission/receiver supervisor and calibrated motor driver. ENU/FLU, SI units, Hamilton [w,x,y,z]. Convert explicitly if hardware uses NED/FRD. The ${applied.geometry.motor_count} active outputs are NEWTONS, not PWM duty cycle. Motor positions and reaction-torque signs are in manifest.json.\n\nDL_ACTUATORS_ENABLED is shipped as 0. The adapter also returns false for ready/armed/state/target. Keep outputs inactive during porting. A controller benchmark measures only computation; validate the complete loop, kill mechanism and sensor/ESC timeouts separately. Reset faults only while disarmed.\n\nThe actuator adapter must handle zero-thrust / disarmed / error conditions itself and provide an independent hardware timeout. A complete autopilot, failsafe policy and hardware-specific pin mapping must be supplied before flight testing.\n\n## Source\n\n${board.source||'Custom profile: verify against your board manufacturer.'}\nhttps://docs.arduino.cc/software/ide-v2/tutorials/getting-started/ide-v2-uploading-a-sketch/\n`;
   return [{name:base+folder+'.ino',content:SKETCH},{name:base+'dl_controller.h',content:'#pragma once\n'+generateC(template,sim.c)},{name:base+'dl_board.h',content:boardHeader},{name:base+'dl_hal.h',content:HAL},{name:base+'manifest.json',content:JSON.stringify(manifest,null,2)},{name:base+'simulation-config.json',content:JSON.stringify(configuration(sim),null,2)},{name:base+'README.md',content:readme}];
 }
 export function arduinoZip(template,sim,board){return zipStore(arduinoFiles(template,sim,board));}

@@ -12,5 +12,5 @@ with temporary_home('dl-package-') as temp:
         error=Path(temp)/'agent-selftest-error.txt'
         raise RuntimeError(error.read_text() if error.exists() else f'Packaged self-test failed ({run.returncode})')
     data=json.loads(report.read_text())
-    assert data['assets'] and data['tk'] and not data['installedToUserProfile'] and not data['registryModified'],data
+    assert data['assets'] and data['tk'] and data['geometryCount']==7 and data['version']=='1.1.0' and not data['installedToUserProfile'] and not data['registryModified'],data
     print(json.dumps(data))

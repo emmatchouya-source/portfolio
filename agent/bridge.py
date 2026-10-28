@@ -12,9 +12,11 @@ import secrets
 import subprocess
 import threading
 import time
+import copy
+from geometry import geometry,controller_initial
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-VERSION='1.0.0'
+VERSION='1.1.0'
 PORT=47831
 ORIGIN='https://emmatchouya-source.github.io'
 FQBN=re.compile(r'^[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+:[A-Za-z0-9_.-]+(?::[A-Za-z0-9_.-]+=[A-Za-z0-9_.-]+(?:,[A-Za-z0-9_.-]+=[A-Za-z0-9_.-]+)*)?$')
@@ -26,10 +28,15 @@ EXTRA_INDEX={'esp32:esp32':'https://espressif.github.io/arduino-esp32/package_es
 LIMITS={'mass':(.1,10),'arm':(.07,.7),'thrust':(.5,80),'yawRatio':(.005,.05),'posP':(.1,4),
  'velP':(.1,8),'velI':(0,2),'attP':(.5,12),'rateP':(1,45),'rateI':(0,25),'rateD':(0,.5),'tilt':(5,45),'speed':(.5,8)}
 
-def checked_config(value):
-    if not isinstance(value,dict) or value.get('format')!='dronelab-config' or value.get('version')!=1:
+def checked_config(value,frames):
+    if not isinstance(value,dict) or value.get('format')!='dronelab-config' or value.get('version') not in [1,2]:
         raise ValueError('Configuration DroneLab non reconnue.')
+    value=copy.deepcopy(value)
     c=value.get('config',{})
+    if not isinstance(c,dict):raise ValueError('Configuration de drone invalide.')
+    if value['version']==1:c['airframe']='quad-x'
+    elif not c.get('airframe'):raise ValueError('Géométrie de drone manquante.')
+    c.setdefault('hAspect',1.5)
     for key,(lo,hi) in LIMITS.items():
         v=c.get(key)
         if isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) or not lo<=v<=hi:
@@ -37,8 +44,10 @@ def checked_config(value):
     inertia=c.get('inertia')
     if not isinstance(inertia,list) or len(inertia)!=3 or any(isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) or not .0001<=v<=2 for v in inertia):
         raise ValueError('Inerties invalides.')
-    if any(v>sum(inertia)-v for v in inertia) or 4*c['thrust']<1.3*9.80665*c['mass']:
+    g=geometry(c,frames)
+    if any(v>sum(inertia)-v for v in inertia) or g['motor_count']*c['thrust']<1.3*9.80665*c['mass']:
         raise ValueError('Inerties ou poussées incompatibles.')
+    value['geometry']=g;value['version']=2
     json.dumps(value,allow_nan=False)
     return value
 
@@ -48,6 +57,7 @@ class Agent:
         self.assets=Path(assets).resolve();self.cli=str(Path(cli).resolve());self.approve=approve
         self.origins=set(origins or [ORIGIN]);self.event=event or (lambda text:None)
         self.boards={b['id']:b for b in json.loads((self.assets/'boards.json').read_text(encoding='utf-8'))}
+        self.frames={f['id']:f for f in json.loads((self.assets/'airframes.json').read_text(encoding='utf-8'))}
         self.cores={b['core'] for b in self.boards.values()}|set(EXTRA_INDEX)
         self.sessions={};self.jobs={};self.lock=threading.RLock();self.active=None;self.ports_cache=[]
         self.pair_lock=threading.Lock()
@@ -138,11 +148,11 @@ class Agent:
     def project(self,job):
         board=job['board'];c=job['configuration']['config'];folder=self.home/'work'/job['id']/'DroneLab'
         folder.mkdir(parents=True,exist_ok=False)
-        f=lambda n:format(n,'.16g')
-        initial='static const DL_Config DL_DEFAULT = {\n    '+', '.join(f(c[k]) for k in ['mass','arm','thrust'])+', {'+', '.join(map(f,c['inertia']))+'}, '+f(c['yawRatio'])+',\n    '+', '.join(f(c[k]) for k in ['posP','velP','velI','attP','rateP','rateI','rateD'])+',\n    '+f(c['tilt']*math.pi/180)+', '+f(c['speed'])+'\n};'
+        g=geometry(c,self.frames);initial=controller_initial(c,g)
         controller=(self.assets/'controller.c').read_text(encoding='utf-8')
         controller=re.sub(r'/\* CONFIG_BEGIN \*/[\s\S]*?/\* CONFIG_END \*/','/* CONFIG_BEGIN */\n'+initial+'\n/* CONFIG_END */',controller)
         header='#pragma once\n#define DL_BOARD_NAME '+json.dumps(board['name'],ensure_ascii=True)+'\n#define DL_BOARD_FQBN '+json.dumps(board['fqbn'])+'\n#define DL_CONTROL_HZ 240UL\n#define DL_PERIOD_US ((1000000UL + DL_CONTROL_HZ/2) / DL_CONTROL_HZ)\n#define DL_STATE_MAX_AGE_US 20000UL\n#define DL_LIMITED_PROFILE '+('1' if board.get('limited') else '0')+'\n#define DL_ACTUATORS_ENABLED 0\n'
+        header+='#define DL_AIRFRAME_NAME '+json.dumps(g['airframe'])+'\n#define DL_MOTOR_COUNT '+str(g['motor_count'])+'\n'
         files={'DroneLab.ino':(self.assets/'DroneLab.ino').read_text(encoding='utf-8'),'dl_hal.h':(self.assets/'dl_hal.h').read_text(encoding='utf-8'),
             'dl_controller.h':'#pragma once\n'+controller,'dl_board.h':header,'simulation-config.json':json.dumps(job['configuration'],allow_nan=False,indent=2)}
         for name,content in files.items():(folder/name).write_text(content,encoding='utf-8')
@@ -150,7 +160,7 @@ class Agent:
 
     def start(self,payload,owner):
         if not isinstance(payload,dict) or payload.get('action') not in ['prepare','upload']:raise ValueError('Action non reconnue.')
-        board=self.board(payload.get('board'));configuration=checked_config(payload.get('configuration'))
+        board=self.board(payload.get('board'));configuration=checked_config(payload.get('configuration'),self.frames)
         port=payload.get('port','')
         if payload['action']=='upload':
             if not isinstance(port,str) or len(port)>200 or not any(p['address']==port for p in self.ports()):raise ValueError('Choisir un port USB détecté par l’agent.')

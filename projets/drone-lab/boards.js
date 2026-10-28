@@ -17,10 +17,57 @@ export const BOARDS = [
     "validation": {
       "coreVersion": "1.6.0",
       "date": "2026-10-27",
-      "scope": "template with default gains, actuator outputs disabled",
-      "flashBytes": 54532,
+      "scope": "planar multirotor bench template, actuator outputs disabled",
+      "airframes": [
+        "quad-x",
+        "quad-plus",
+        "quad-h",
+        "hexa-x",
+        "hexa-plus",
+        "octo-x",
+        "octo-plus"
+      ],
+      "controllerSha256": "277547fc682dcd41bd6cce91b7c02d4ce23b8037f98dd2551fc442b82cab09b5",
+      "flashBytes": 55796,
       "ramBytes": 4060,
-      "hardwareTested": false
+      "hardwareTested": false,
+      "airframeBuilds": [
+        {
+          "airframe": "quad-x",
+          "flashBytes": 55796,
+          "ramBytes": 4060
+        },
+        {
+          "airframe": "quad-plus",
+          "flashBytes": 55796,
+          "ramBytes": 4060
+        },
+        {
+          "airframe": "quad-h",
+          "flashBytes": 55796,
+          "ramBytes": 4060
+        },
+        {
+          "airframe": "hexa-x",
+          "flashBytes": 55804,
+          "ramBytes": 4060
+        },
+        {
+          "airframe": "hexa-plus",
+          "flashBytes": 55804,
+          "ramBytes": 4060
+        },
+        {
+          "airframe": "octo-x",
+          "flashBytes": 55796,
+          "ramBytes": 4060
+        },
+        {
+          "airframe": "octo-plus",
+          "flashBytes": 55796,
+          "ramBytes": 4060
+        }
+      ]
     },
     "indexUrl": ""
   },
@@ -40,8 +87,12 @@ export const BOARDS = [
     "validation": {
       "coreVersion": "1.6.0",
       "date": "2026-10-27",
-      "scope": "template with default gains, actuator outputs disabled",
-      "flashBytes": 67080,
+      "scope": "planar multirotor bench template, actuator outputs disabled",
+      "airframes": [
+        "quad-x"
+      ],
+      "controllerSha256": "277547fc682dcd41bd6cce91b7c02d4ce23b8037f98dd2551fc442b82cab09b5",
+      "flashBytes": 68344,
       "ramBytes": 6860,
       "hardwareTested": false
     },
@@ -63,8 +114,12 @@ export const BOARDS = [
     "validation": {
       "coreVersion": "1.6.0",
       "date": "2026-10-27",
-      "scope": "template with default gains, actuator outputs disabled",
-      "flashBytes": 54572,
+      "scope": "planar multirotor bench template, actuator outputs disabled",
+      "airframes": [
+        "quad-x"
+      ],
+      "controllerSha256": "277547fc682dcd41bd6cce91b7c02d4ce23b8037f98dd2551fc442b82cab09b5",
+      "flashBytes": 55836,
       "ramBytes": 4060,
       "hardwareTested": false
     },
@@ -550,8 +605,12 @@ export const BOARDS = [
     "validation": {
       "coreVersion": "1.6.12",
       "date": "2026-10-27",
-      "scope": "template with default gains, actuator outputs disabled",
-      "flashBytes": 27480,
+      "scope": "planar multirotor bench template, actuator outputs disabled",
+      "airframes": [
+        "quad-x"
+      ],
+      "controllerSha256": "277547fc682dcd41bd6cce91b7c02d4ce23b8037f98dd2551fc442b82cab09b5",
+      "flashBytes": 28432,
       "ramBytes": null,
       "hardwareTested": false
     },
@@ -573,8 +632,12 @@ export const BOARDS = [
     "validation": {
       "coreVersion": "1.6.12",
       "date": "2026-10-27",
-      "scope": "template with default gains, actuator outputs disabled",
-      "flashBytes": 27480,
+      "scope": "planar multirotor bench template, actuator outputs disabled",
+      "airframes": [
+        "quad-x"
+      ],
+      "controllerSha256": "277547fc682dcd41bd6cce91b7c02d4ce23b8037f98dd2551fc442b82cab09b5",
+      "flashBytes": 28432,
       "ramBytes": null,
       "hardwareTested": false
     },
@@ -596,10 +659,57 @@ export const BOARDS = [
     "validation": {
       "coreVersion": "1.8.8",
       "date": "2026-10-27",
-      "scope": "template with default gains, actuator outputs disabled",
-      "flashBytes": 12662,
-      "ramBytes": 790,
-      "hardwareTested": false
+      "scope": "planar multirotor bench template, actuator outputs disabled",
+      "airframes": [
+        "quad-x",
+        "quad-plus",
+        "quad-h",
+        "hexa-x",
+        "hexa-plus",
+        "octo-x",
+        "octo-plus"
+      ],
+      "controllerSha256": "277547fc682dcd41bd6cce91b7c02d4ce23b8037f98dd2551fc442b82cab09b5",
+      "flashBytes": 13696,
+      "ramBytes": 900,
+      "hardwareTested": false,
+      "airframeBuilds": [
+        {
+          "airframe": "quad-x",
+          "flashBytes": 13696,
+          "ramBytes": 900
+        },
+        {
+          "airframe": "quad-plus",
+          "flashBytes": 13698,
+          "ramBytes": 902
+        },
+        {
+          "airframe": "quad-h",
+          "flashBytes": 13696,
+          "ramBytes": 900
+        },
+        {
+          "airframe": "hexa-x",
+          "flashBytes": 13742,
+          "ramBytes": 900
+        },
+        {
+          "airframe": "hexa-plus",
+          "flashBytes": 13744,
+          "ramBytes": 902
+        },
+        {
+          "airframe": "octo-x",
+          "flashBytes": 13696,
+          "ramBytes": 900
+        },
+        {
+          "airframe": "octo-plus",
+          "flashBytes": 13698,
+          "ramBytes": 902
+        }
+      ]
     },
     "indexUrl": ""
   },
@@ -635,9 +745,13 @@ export const BOARDS = [
     "validation": {
       "coreVersion": "1.8.8",
       "date": "2026-10-27",
-      "scope": "template with default gains, actuator outputs disabled",
-      "flashBytes": 12664,
-      "ramBytes": 792,
+      "scope": "planar multirotor bench template, actuator outputs disabled",
+      "airframes": [
+        "quad-x"
+      ],
+      "controllerSha256": "277547fc682dcd41bd6cce91b7c02d4ce23b8037f98dd2551fc442b82cab09b5",
+      "flashBytes": 13696,
+      "ramBytes": 900,
       "hardwareTested": false
     },
     "indexUrl": ""
@@ -658,9 +772,13 @@ export const BOARDS = [
     "validation": {
       "coreVersion": "1.8.8",
       "date": "2026-10-27",
-      "scope": "template with default gains, actuator outputs disabled",
-      "flashBytes": 13014,
-      "ramBytes": 804,
+      "scope": "planar multirotor bench template, actuator outputs disabled",
+      "airframes": [
+        "quad-x"
+      ],
+      "controllerSha256": "277547fc682dcd41bd6cce91b7c02d4ce23b8037f98dd2551fc442b82cab09b5",
+      "flashBytes": 14048,
+      "ramBytes": 914,
       "hardwareTested": false
     },
     "indexUrl": ""
@@ -697,9 +815,13 @@ export const BOARDS = [
     "validation": {
       "coreVersion": "1.8.8",
       "date": "2026-10-27",
-      "scope": "template with default gains, actuator outputs disabled",
-      "flashBytes": 14618,
-      "ramBytes": 759,
+      "scope": "planar multirotor bench template, actuator outputs disabled",
+      "airframes": [
+        "quad-x"
+      ],
+      "controllerSha256": "277547fc682dcd41bd6cce91b7c02d4ce23b8037f98dd2551fc442b82cab09b5",
+      "flashBytes": 15658,
+      "ramBytes": 869,
       "hardwareTested": false
     },
     "indexUrl": ""
@@ -720,9 +842,13 @@ export const BOARDS = [
     "validation": {
       "coreVersion": "1.8.8",
       "date": "2026-10-27",
-      "scope": "template with default gains, actuator outputs disabled",
-      "flashBytes": 14616,
-      "ramBytes": 757,
+      "scope": "planar multirotor bench template, actuator outputs disabled",
+      "airframes": [
+        "quad-x"
+      ],
+      "controllerSha256": "277547fc682dcd41bd6cce91b7c02d4ce23b8037f98dd2551fc442b82cab09b5",
+      "flashBytes": 15654,
+      "ramBytes": 865,
       "hardwareTested": false
     },
     "indexUrl": ""

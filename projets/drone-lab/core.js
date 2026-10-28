@@ -1,8 +1,9 @@
 import {G,clamp,add,sub,scale,dot,norm,unit,cross,wrap,conj,mul,rotate,integrate,euler,fromAxes,random} from './math.js';
+import {frame,geometry,wrench} from './airframes.js';
 
 export const DT=1/240;
 export const DEFAULTS=Object.freeze({
-  mass:1.5, arm:.23, thrust:9, inertia:[.022,.022,.040], motorTau:.045, yawRatio:.018,
+  airframe:'quad-x', hAspect:1.5, mass:1.5, arm:.23, thrust:9, inertia:[.022,.022,.040], motorTau:.045, yawRatio:.018,
   drag:.12, wind:1.5, gust:.6, windDirection:35, noise:1,
   posP:1.3, velP:2.5, velI:.35, attP:5, rateP:18, rateI:8, rateD:.12,
   tilt:30, speed:3, altitude:5, radius:6, fence:35, ceiling:20, batteryMah:5200,
@@ -15,25 +16,25 @@ export const PRESETS={
 };
 export function config(input={}) {
   const c={...DEFAULTS,...input,inertia:[...(input.inertia||DEFAULTS.inertia)]};
+  const count=frame(c.airframe).positions.length;
+  if(!Number.isFinite(c.hAspect)||c.hAspect<1||c.hAspect>3)throw Error('Rapport longueur/largeur H invalide (1 à 3).');
   const ranges={mass:[.1,10],arm:[.07,.7],thrust:[.5,80],motorTau:[.01,.2],yawRatio:[.005,.05],drag:[0,1],wind:[0,12],gust:[0,6],windDirection:[0,360],noise:[0,3],posP:[.1,4],velP:[.1,8],velI:[0,2],attP:[.5,12],rateP:[1,45],rateI:[0,25],rateD:[0,.5],tilt:[5,45],speed:[.5,8],altitude:[1,15],radius:[2,12],fence:[20,60],ceiling:[16,30],batteryMah:[200,25000],seed:[0,4294967295]};
   for(const [k,[lo,hi]] of Object.entries(ranges)) if(!Number.isFinite(c[k])||c[k]<lo||c[k]>hi) throw Error(`Paramètre invalide : ${k} (${lo} à ${hi}).`);
   if(c.inertia.length!==3||c.inertia.some(v=>!Number.isFinite(v)||v<.0001||v>2)) throw Error('Inerties invalides.');
   if(c.inertia.some((v,i)=>v>c.inertia[(i+1)%3]+c.inertia[(i+2)%3])) throw Error('Inerties non physiques : chaque inertie doit être inférieure à la somme des deux autres.');
   if(!['hover','square','circle','eight','waypoints'].includes(c.mission)||!['estimate','truth'].includes(c.feedback)) throw Error('Mission ou retour de commande invalide.');
-  if(c.thrust*4<c.mass*G*1.3) throw Error('Poussée insuffisante : rapport poussée/poids minimal 1,3.');
+  if(c.thrust*count<c.mass*G*1.3) throw Error('Poussée insuffisante : rapport poussée/poids minimal 1,3.');
   const extent=c.mission==='circle'?2*c.radius:c.mission==='square'?Math.SQRT2*c.radius:c.mission==='eight'?1.12*c.radius:0;
   if(extent>c.fence-2)throw Error('Le circuit dépasse la zone de vol : réduis sa dimension ou agrandis le rayon de la zone.');
   return c;
 }
 
-// Rotor order FL, RL, RR, FR in body FLU. Spins +,-,+,-.
-export function allocate(c, total, torque) {
-  const a=c.arm/Math.SQRT2, xy=[[a,a],[-a,a],[-a,-a],[a,-a]], spins=[1,-1,1,-1];
-  const raw=xy.map(([x,y],i)=>total/4+y*torque[0]/(4*a*a)-x*torque[1]/(4*a*a)+spins[i]*torque[2]/(4*c.yawRatio));
+export function allocate(c, total, torque,g=geometry(c)) {
+  const command=[total,...torque],raw=g.mix.map(row=>dot(row,command));
   return {forces:raw.map(f=>clamp(f,0,c.thrust)),saturated:raw.some(f=>f<0||f>c.thrust)};
 }
 export class Controller {
-  constructor(c){this.c=c;this.iv=[0,0,0];this.ir=[0,0,0];this.prev=[0,0,0];this.der=[0,0,0];this.saturated=false;}
+  constructor(c){this.c=c;this.geometry=geometry(c);this.iv=[0,0,0];this.ir=[0,0,0];this.prev=[0,0,0];this.der=[0,0,0];this.saturated=false;}
   update(s, target, dt) {
     const c=this.c;
     let vd=add(scale(sub(target.p,s.p),c.posP),target.v);
@@ -50,7 +51,7 @@ export class Controller {
     if(!this.saturated)this.ir=this.ir.map((v,i)=>clamp(v+er[i]*dt,-.6,.6));
     const gyro=cross(s.w,s.w.map((v,i)=>v*c.inertia[i]));
     const torque=er.map((v,i)=>c.inertia[i]*(c.rateP*v+c.rateI*this.ir[i]-c.rateD*this.der[i])+gyro[i]);
-    const total=clamp(dot(f,rotate(s.q,[0,0,1])),0,4*c.thrust), out=allocate(c,total,torque);
+    const total=clamp(dot(f,rotate(s.q,[0,0,1])),0,this.geometry.count*c.thrust), out=allocate(c,total,torque,this.geometry);
     this.saturated=out.saturated;
     return {...out,total,torque,qd};
   }
@@ -110,13 +111,13 @@ export class Simulation {
     this.s={p:[0,0,0],v:[0,0,0],q:[1,0,0,0],w:[0,0,0],acc:[0,0,0]};
     this.sensors=new Sensors(this.c);this.estimate=new Estimator();this.controller=new Controller(this.c);
     this.t=0;this.mode='ready';this.phase='Au sol';this.target={p:[0,0,0],v:[0,0,0],a:[0,0,0],yaw:0};
-    this.motors=[0,0,0,0];this.command=[0,0,0,0];this.energy=0;this.battery=1;this.voltage=16.8;this.current=0;
+    this.geometry=geometry(this.c);this.motors=Array(this.geometry.count).fill(0);this.command=[...this.motors];this.energy=0;this.battery=1;this.voltage=16.8;this.current=0;
     this.dropout=false;this.failedMotor=-1;this.events=[];this.history=[];this.trail=[];this.route=route(this.c,this.waypoints);this.waypoint=0;this.dwell=0;this.missionTime=null;
     this.metrics={samples:0,sumError2:0,maxError:0,saturation:0};this.hold=[0,0,this.c.altitude];this.reason='';this.landed=false;
     this.sensors.sample(this.s,0,false);
   }
   log(msg){if(this.events.length>200)this.events.shift();this.events.push({t:this.t,message:msg});}
-  start(){if(this.mode!=='ready')return;this.mode='mission';this.log('Mission lancée · quadricoptère X');}
+  start(){if(this.mode!=='ready')return;this.mode='mission';this.log('Mission lancée · '+this.geometry.profile.name);}
   land(reason='Atterrissage demandé'){if(['ready','landed','crashed'].includes(this.mode))return;this.mode='land';this.hold=[...this.estimate.p];this.reason=reason;this.log(reason);}
   rtl(reason='Retour au point de départ'){if(['ready','landed','crashed'].includes(this.mode))return;this.mode='rtl';this.reason=reason;this.log(reason);}
   holdPosition(){if(!['mission','rtl','hold'].includes(this.mode))return;this.hold=[...this.estimate.p];this.mode='hold';this.log('Maintien de position');}
@@ -165,12 +166,11 @@ export class Simulation {
     if(this.battery<.08&&!['ready','land'].includes(this.mode))this.land('Batterie critique · descente');
     this.target=this.guidance(dt);
     const active=this.mode!=='ready', feedback=c.feedback==='truth'?s:this.estimate;
-    if(active){const out=this.controller.update(feedback,this.target,dt);this.command=out.forces;}else this.command=[0,0,0,0];
+    if(active){const out=this.controller.update(feedback,this.target,dt);this.command=out.forces;}else this.command.fill(0);
     const voltageFactor=clamp((this.voltage/16.8)**2,.65,1);
     this.motors=this.motors.map((v,i)=>v+(i===this.failedMotor?0:this.command[i]*voltageFactor-v)*(1-Math.exp(-dt/c.motorTau)));
     if(this.failedMotor>=0)this.motors[this.failedMotor]*=Math.exp(-dt/c.motorTau);
-    const total=this.motors.reduce((a,b)=>a+b,0), a=c.arm/Math.SQRT2;
-    const [f0,f1,f2,f3]=this.motors, torque=[a*(f0+f1-f2-f3),a*(-f0+f1+f2-f3),c.yawRatio*(f0-f1+f2-f3)];
+    const [total,...torque]=wrench(c,this.motors,this.geometry);
     const gyro=cross(s.w,s.w.map((v,i)=>v*c.inertia[i]));
     const dw=torque.map((v,i)=>(v-gyro[i]-.002*s.w[i])/c.inertia[i]);
     s.w=add(s.w,scale(dw,dt));s.q=integrate(s.q,s.w,dt);
@@ -184,11 +184,11 @@ export class Simulation {
       if(active&&this.t>1&&(impact>3||tilt>Math.PI/3)){this.mode='crashed';this.phase='Collision';this.log('Collision au sol · simulation arrêtée');}
       else if(this.mode==='land'&&this.hold[2]<.1){this.mode='landed';this.phase='Au sol';this.landed=true;this.log('Atterrissage terminé');}
     }
-    if(['crashed','landed'].includes(this.mode)){this.motors=[0,0,0,0];this.command=[0,0,0,0];}
+    if(['crashed','landed'].includes(this.mode)){this.motors.fill(0);this.command.fill(0);}
     this.current=active?1.2+this.motors.reduce((a,f)=>a+.5*Math.max(0,f)**1.5,0):.2;
     this.energy+=this.current*dt/3600;this.battery=clamp(1-this.energy/(c.batteryMah/1000),0,1);this.voltage=14+2.8*this.battery-.015*this.current;
     this.sensors.sample(s,this.t,this.dropout);this.estimate.update(this.sensors,dt);
-    if(!s.p.concat(s.v,s.q,s.w,this.estimate.p,this.estimate.q).every(Number.isFinite)){this.mode='crashed';this.phase='Erreur numérique';this.motors=[0,0,0,0];this.command=[0,0,0,0];this.log('État non fini · arrêt');return;}
+    if(!s.p.concat(s.v,s.q,s.w,this.estimate.p,this.estimate.q).every(Number.isFinite)){this.mode='crashed';this.phase='Erreur numérique';this.motors.fill(0);this.command.fill(0);this.log('État non fini · arrêt');return;}
     const error=norm(sub(this.target.p,s.p));
     if(active){this.metrics.samples++;this.metrics.sumError2+=error*error;this.metrics.maxError=Math.max(this.metrics.maxError,error);if(this.controller.saturated)this.metrics.saturation++;}
     const sampleIndex=Math.round(this.t/DT);

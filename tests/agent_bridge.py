@@ -39,8 +39,8 @@ class FakeAgent(Agent):
             return '{"success":true}'
         return '{}'
 
-def wait_job(agent,ident,owner='owner'):
-    deadline=time.monotonic()+30
+def wait_job(agent,ident,owner='owner',timeout=30):
+    deadline=time.monotonic()+timeout
     while time.monotonic()<deadline:
         value=agent.snapshot(ident,owner)
         if value['state'] in ['succeeded','failed']:return value
@@ -115,6 +115,25 @@ class BridgeTests(unittest.TestCase):
         job=self.agent.start(self.payload,'owner');self.assertEqual(wait_job(self.agent,job)['state'],'failed')
         self.assertFalse(any(a[0]=='upload' for a in self.agent.calls));self.assertIsNone(self.agent.active)
 
+    def test_airframes_and_untrusted_geometry(self):
+        for profile in self.agent.frames.values():
+            p=copy.deepcopy(self.payload);p['configuration'].update(version=2,geometry={'motor_count':999,'rotors':['untrusted']})
+            p['configuration']['config'].update(airframe=profile['id'],hAspect=1.5)
+            ident=self.agent.start(p,'owner');result=wait_job(self.agent,ident)
+            self.assertEqual(result['state'],'succeeded')
+            folder=self.agent.home/'work'/ident/'DroneLab'
+            actual=json.loads((folder/'simulation-config.json').read_text())
+            self.assertEqual(actual['geometry']['motor_count'],len(profile['positions']))
+            self.assertNotIn('untrusted',(folder/'dl_controller.h').read_text())
+            self.assertIn('#define DL_MOTOR_COUNT '+str(len(profile['positions'])),(folder/'dl_board.h').read_text())
+        for value in ['y6','unknown',None]:
+            p=copy.deepcopy(self.payload);p['configuration']['version']=2;p['configuration']['config']['airframe']=value
+            with self.assertRaises(ValueError):self.agent.start(p,'owner')
+        p=copy.deepcopy(self.payload);p['configuration']['config']['airframe']='octo-x'
+        ident=self.agent.start(p,'owner');wait_job(self.agent,ident)
+        actual=json.loads((self.agent.home/'work'/ident/'DroneLab'/'simulation-config.json').read_text())
+        self.assertEqual(actual['geometry']['airframe'],'quad-x')
+
 def real_compile():
     """Uses installed official CLI/core. Never enumerates or uploads a device."""
     with temporary_home('dl-real-') as temp:
@@ -122,10 +141,12 @@ def real_compile():
         agent=Agent(home/'home',assets,ROOT/'.test-artifacts/arduino/arduino-cli.exe',lambda origin:False)
         agent.config=ROOT/'.test-artifacts/arduino/arduino-cli.json'
         board=next(b for b in agent.boards.values() if b['fqbn']=='arduino:avr:uno')
-        ident=agent.start({'action':'prepare','board':board,'configuration':CONFIG},'test')
-        result=wait_job(agent,ident,'test')
-        if result['state']!='succeeded':raise RuntimeError(result['log'])
-        print(json.dumps({'realCompile':'arduino:avr:uno','result':result['result']}))
+        for frame in ['quad-x','octo-plus']:
+            c=copy.deepcopy(CONFIG);c['version']=2;c['config'].update(airframe=frame,hAspect=1.5)
+            ident=agent.start({'action':'prepare','board':board,'configuration':c},'test')
+            result=wait_job(agent,ident,'test',timeout=900)
+            if result['state']!='succeeded':raise RuntimeError(result['log'])
+            print(json.dumps({'realCompile':'arduino:avr:uno','airframe':frame,'result':result['result']}))
 
 if __name__=='__main__':
     if '--real-compile' in sys.argv:real_compile()

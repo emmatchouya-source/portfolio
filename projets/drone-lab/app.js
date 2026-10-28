@@ -1,21 +1,31 @@
-import {Simulation,config,DEFAULTS,PRESETS,DT} from './core.js';
+import {Simulation,config,DEFAULTS,PRESETS,DT} from './core.js?v=airframes-1';
 import {norm,sub,euler} from './math.js';
-import {Scene,drawAttitude,drawChart,chartSpec,COLORS} from './renderer.js';
-import {configuration,csv,report,generateC,download} from './exports.js';
-import {BOARDS} from './boards.js';
-import {customBoard,arduinoZip} from './arduino.js';
+import {Scene,drawAttitude,drawChart,chartSpec,COLORS} from './renderer.js?v=airframes-1';
+import {configuration,csv,report,generateC,download} from './exports.js?v=airframes-1';
+import {AIRFRAMES} from './airframes.js';
+import {drawFrame} from './frame-view.js';
+import {BOARDS} from './boards.js?v=airframes-1';
+import {customBoard,arduinoZip} from './arduino.js?v=airframes-1';
 import {createBoardPicker} from './board-picker.js';
-import {setupAgent} from './agent-client.js?v=connection-1';
+import {setupAgent} from './agent-client.js?v=airframes-1';
 
 const $=id=>document.getElementById(id),labels={hover:'VOL STATIONNAIRE',square:'CIRCUIT CARRÉ',circle:'ORBITE CIRCULAIRE',eight:'TRAJECTOIRE EN HUIT',waypoints:'POINTS DE PASSAGE'};
 const fields={
   mission:[['altitude','Altitude cible','m',1,15,.5],['radius','Dimension du circuit','m',2,12,.5],['speed','Vitesse maximale','m/s',.5,8,.5]],
   environment:[['wind','Vent moyen','m/s',0,12,.5],['windDirection','Direction du vent','°',0,360,5],['gust','Amplitude des rafales','m/s',0,6,.1],['fence','Rayon de la zone de vol','m',20,60,1],['ceiling','Plafond de vol','m',16,30,1]],
-  aircraft:[['mass','Masse totale','kg',.1,10,.05],['arm','Centre → moteur','m',.07,.7,.01],['thrust','Poussée max / moteur','N',.5,80,.1],['motorTau','Constante moteur','s',.01,.2,.005],['yawRatio','Couple / poussée','m',.005,.05,.001],['drag','Coefficient de traînée','kg/m',0,1,.01],['ix','Inertie Ixx','kg·m²',.0001,2,.0001],['iy','Inertie Iyy','kg·m²',.0001,2,.0001],['iz','Inertie Izz','kg·m²',.0001,2,.0001],['batteryMah','Capacité batterie','mAh',200,25000,50]],
+  aircraft:[['mass','Masse totale','kg',.1,10,.05],['arm','Centre → moteur','m',.07,.7,.01],['hAspect','Longueur / largeur H','×',1,3,.1],['thrust','Poussée max / moteur','N',.5,80,.1],['motorTau','Constante moteur','s',.01,.2,.005],['yawRatio','Couple / poussée','m',.005,.05,.001],['drag','Coefficient de traînée','kg/m',0,1,.01],['ix','Inertie Ixx','kg·m²',.0001,2,.0001],['iy','Inertie Iyy','kg·m²',.0001,2,.0001],['iz','Inertie Izz','kg·m²',.0001,2,.0001],['batteryMah','Capacité batterie','mAh',200,25000,50]],
   control:[['posP','Position · Kp','s⁻¹',.1,4,.1],['velP','Vitesse · Kp','s⁻¹',.1,8,.1],['velI','Vitesse · Ki','s⁻²',0,2,.05],['attP','Attitude · Kp','s⁻¹',.5,12,.5],['rateP','Rotation · Kp','s⁻¹',1,45,1],['rateI','Rotation · Ki','s⁻²',0,25,.5],['rateD','Rotation · Kd','—',0,.5,.01],['tilt','Inclinaison maximale','°',5,45,1]],
   sensor:[['noise','Niveau de bruit','×',0,3,.1],['seed','Graine aléatoire','—',0,4294967295,1]]
 };
 for(const [group,items] of Object.entries(fields))for(const [key,label,unit,min,max,step] of items){const el=document.createElement('label');el.className='field';el.htmlFor=key;el.append(document.createTextNode(label));const wrap=document.createElement('span');wrap.className='input-wrap';const input=document.createElement('input');Object.assign(input,{id:key,type:'number',min,max,step});input.required=true;const suffix=document.createElement('small');suffix.textContent=unit;wrap.append(input,suffix);el.append(wrap);$(`${group}-fields`).append(el);}
+for(const f of AIRFRAMES)$('airframe').append(new Option(`${f.name} · ${f.positions.length} moteurs`,f.id));
+function previewFrame(){
+  $('hAspect').closest('label').hidden=$('airframe').value!=='quad-h';
+  if($('airframe').value!=='quad-h'&&!$('hAspect').checkValidity())$('hAspect').value=DEFAULTS.hAspect;
+  const c={airframe:$('airframe').value,arm:Number($('arm').value),hAspect:Number($('hAspect').value),yawRatio:Number($('yawRatio').value)};
+  if(c.arm>0&&c.hAspect>=1&&c.hAspect<=3)drawFrame($('framePreview'),c);
+}
+for(const id of ['airframe','arm','hAspect'])$(id).addEventListener('input',previewFrame);
 
 let waypoints=[[0,0,5],[6,0,5],[6,6,5],[0,0,5]],sim,playing=false,dirty=false,accumulator=0,last=performance.now(),lastUi=0,lastEvents=-1,toastTimer;
 const scene=new Scene($('scene'));
@@ -29,15 +39,15 @@ function renderWaypoints(){
   $('waypointList').replaceChildren();waypoints.forEach((p,i)=>{const row=document.createElement('div');row.className='waypoint-row';p.forEach((v,j)=>{const input=document.createElement('input');Object.assign(input,{type:'number',value:v,step:.5});input.setAttribute('aria-label',`Point ${i+1}, ${['Est','Nord','Altitude'][j]}`);input.onchange=()=>{waypoints[i][j]=Number(input.value);markDirty();};row.append(input);});const remove=document.createElement('button');remove.textContent='×';remove.setAttribute('aria-label',`Supprimer le point ${i+1}`);remove.onclick=()=>{waypoints.splice(i,1);renderWaypoints();markDirty();};row.append(remove);$('waypointList').append(row);});
 }
 $('addWaypoint').onclick=()=>{if(waypoints.length>=30){toast('Maximum : 30 points.',true);return;}waypoints.push([0,0,Number($('altitude').value)||5]);renderWaypoints();markDirty();};
-function fill(c){for(const items of Object.values(fields))for(const [key] of items)$(key).value=({ix:c.inertia[0],iy:c.inertia[1],iz:c.inertia[2]})[key]??c[key];$('mission').value=c.mission;$('feedback').value=c.feedback;showWaypointEditor();renderWaypoints();}
-function read(){const c={};for(const items of Object.values(fields))for(const [key] of items){if(!$(key).checkValidity())throw Error(`Vérifie le champ « ${$(key).closest('label').firstChild.textContent} ».`);c[key]=Number($(key).value);}c.inertia=[c.ix,c.iy,c.iz];delete c.ix;delete c.iy;delete c.iz;c.mission=$('mission').value;c.feedback=$('feedback').value;return config(c);}
-function newSim(c,wp=waypoints){const next=new Simulation(c,wp);sim=next;playing=false;accumulator=0;lastEvents=-1;dirty=false;$('dirtyBadge').hidden=true;$('gpsDropout').checked=false;$('motorFailure').value='-1';$('missionLabel').textContent=labels[c.mission];try{localStorage.setItem('droneLabConfig',JSON.stringify(configuration(sim)));}catch{/* Storage may be disabled. */}updateUi();scene.draw(sim);drawChart($('chart'),sim.history,$('chartType').value);}
+function fill(c){for(const items of Object.values(fields))for(const [key] of items)$(key).value=({ix:c.inertia[0],iy:c.inertia[1],iz:c.inertia[2]})[key]??c[key];$('airframe').value=c.airframe;$('mission').value=c.mission;$('feedback').value=c.feedback;previewFrame();showWaypointEditor();renderWaypoints();}
+function read(){const c={};for(const items of Object.values(fields))for(const [key] of items){if(!$(key).checkValidity())throw Error(`Vérifie le champ « ${$(key).closest('label').firstChild.textContent} ».`);c[key]=Number($(key).value);}c.inertia=[c.ix,c.iy,c.iz];delete c.ix;delete c.iy;delete c.iz;c.airframe=$('airframe').value;c.mission=$('mission').value;c.feedback=$('feedback').value;return config(c);}
+function newSim(c,wp=waypoints){const next=new Simulation(c,wp);sim=next;playing=false;accumulator=0;lastEvents=-1;dirty=false;$('dirtyBadge').hidden=true;$('gpsDropout').checked=false;rebuildMotors();$('motorFailure').value='-1';$('airframeLabel').textContent=sim.geometry.profile.short;$('allocationLabel').textContent=`Allocation des ${sim.motors.length} moteurs`;$('missionLabel').textContent=labels[c.mission];showBoard();try{localStorage.setItem('droneLabConfig',JSON.stringify(configuration(sim)));}catch{/* Storage may be disabled. */}legend();updateUi();scene.draw(sim);drawChart($('chart'),sim.history,$('chartType').value,sim.motors.length);}
 function apply(){try{newSim(read());toast('Configuration appliquée. Prêt pour un nouvel essai.');}catch(e){toast(e.message,true);}}
 $('applyConfig').onclick=apply;
 $('defaults').onclick=()=>{waypoints=[[0,0,5],[6,0,5],[6,6,5],[0,0,5]];fill(DEFAULTS);$('preset').value='standard';newSim(DEFAULTS);toast('Paramètres initiaux restaurés.');};
 for(const el of document.querySelectorAll('.panel input:not([type=file]),.panel select'))if(!el.closest('#panel-hardware')&&!['gpsDropout','motorFailure','preset'].includes(el.id))el.addEventListener('input',markDirty);
 $('mission').addEventListener('change',showWaypointEditor);
-$('preset').onchange=()=>{for(const [key,value] of Object.entries(PRESETS[$('preset').value])){if(key==='inertia'){['ix','iy','iz'].forEach((id,i)=>$(id).value=value[i]);}else if($(key))$(key).value=value;}markDirty();};
+$('preset').onchange=()=>{for(const [key,value] of Object.entries(PRESETS[$('preset').value])){if(key==='inertia'){['ix','iy','iz'].forEach((id,i)=>$(id).value=value[i]);}else if($(key))$(key).value=value;}previewFrame();markDirty();};
 $('play').onclick=()=>{
   if(dirty){toast('Applique les paramètres pour commencer un nouvel essai.',true);return;}
   if(['landed','crashed'].includes(sim.mode)){newSim(sim.c);}
@@ -51,9 +61,12 @@ $('gpsDropout').onchange=()=>{sim.dropout=$('gpsDropout').checked;sim.log(sim.dr
 $('motorFailure').onchange=()=>{sim.failedMotor=Number($('motorFailure').value);sim.log(sim.failedMotor>=0?`Défaut injecté : moteur ${sim.failedMotor+1}`:'Tous les moteurs rétablis');updateUi();};
 $('orbitView').onclick=()=>{scene.top=false;setView();};$('topView').onclick=()=>{scene.top=true;setView();};$('followView').onclick=()=>{scene.follow=!scene.follow;setView();};$('resetView').onclick=()=>{scene.reset();setView();};
 function setView(){$('orbitView').classList.toggle('active',!scene.top);$('topView').classList.toggle('active',scene.top);$('followView').classList.toggle('active',scene.follow);$('followView').setAttribute('aria-pressed',scene.follow);}
-function legend(){const spec=chartSpec($('chartType').value);$('chartLegend').replaceChildren();spec.labels.forEach((label,i)=>{const span=document.createElement('span'),mark=document.createElement('i');mark.style.borderColor=COLORS[i];span.append(mark,document.createTextNode(label));$('chartLegend').append(span);});}
-$('chartType').onchange=()=>{legend();drawChart($('chart'),sim.history,$('chartType').value);};legend();
-for(let i=0;i<4;i++){const el=document.createElement('div');el.className='motor-item';el.innerHTML=`M${i+1}<div><i></i></div><b>0.0 N</b>`;$('motorBars').append(el);}
+function legend(){const spec=chartSpec($('chartType').value,sim?.motors.length??4);$('chartLegend').replaceChildren();spec.labels.forEach((label,i)=>{const span=document.createElement('span'),mark=document.createElement('i');mark.style.borderColor=COLORS[i];span.append(mark,document.createTextNode(label));$('chartLegend').append(span);});}
+$('chartType').onchange=()=>{legend();drawChart($('chart'),sim.history,$('chartType').value,sim.motors.length);};legend();
+function rebuildMotors(){
+  $('motorBars').replaceChildren();$('motorFailure').replaceChildren(new Option('Aucune','-1'));
+  sim.geometry.rotors.forEach((r,i)=>{const el=document.createElement('div');el.className='motor-item';el.innerHTML=`M${i+1}<div><i></i></div><b>0.0 N</b>`;$('motorBars').append(el);$('motorFailure').append(new Option(`M${i+1} · ${r.spin>0?'CW':'CCW'}`,String(i)));});
+}
 const clock=t=>`${String(Math.floor(t/60)).padStart(2,'0')}:${(t%60).toFixed(1).padStart(4,'0')}`;
 function updateUi(){
   const s=sim.s,err=norm(sub(sim.target.p,s.p)),angles=euler(s.q).map(v=>v*180/Math.PI),finished=['landed','crashed'].includes(sim.mode),started=sim.mode!=='ready';
@@ -77,7 +90,7 @@ const jsonDownload=(name,value)=>download(name,JSON.stringify(value,null,2),'app
 $('exportConfig').onclick=()=>{jsonDownload('dronelab-config.json',configuration(sim));toast(dirty?'Configuration active exportée ; modifications non appliquées exclues.':'Configuration exportée.');};
 $('exportCsv').onclick=()=>{if(!sim.history.length){toast('Lance un essai pour enregistrer des mesures.',true);return;}download('dronelab-telemetry.csv',csv(sim),'text/csv;charset=utf-8');};
 $('exportReport').onclick=()=>jsonDownload('dronelab-report.json',report(sim));
-$('exportC').onclick=async()=>{try{const r=await fetch('controller.c');if(!r.ok)throw Error('Le modèle C ne peut pas être chargé. Utilise le serveur local ou le site hébergé.');download('dronelab_controller.c',generateC(await r.text(),sim.c),'text/x-c;charset=utf-8');toast('Loi de commande C exportée avec les paramètres actifs.');}catch(e){toast(e.message,true);}};
+$('exportC').onclick=async()=>{try{const r=await fetch('controller.c?v=airframes-1');if(!r.ok)throw Error('Le modèle C ne peut pas être chargé. Utilise le serveur local ou le site hébergé.');download('dronelab_controller.c',generateC(await r.text(),sim.c),'text/x-c;charset=utf-8');toast('Loi de commande C exportée avec les paramètres actifs.');}catch(e){toast(e.message,true);}};
 let selectedBoard=BOARDS.find(b=>b.fqbn==='arduino:renesas_uno:minima');
 try{const saved=localStorage.getItem('droneLabBoard');selectedBoard=BOARDS.find(b=>b.id===saved)||selectedBoard;}catch{/* Optional persistence. */}
 const boardLabel=b=>b.name+(b.limited?' · banc limité':'');
@@ -97,7 +110,7 @@ function showBoard(){
     const b=currentBoard(),title=document.createElement('h3');title.textContent=b.name;box.append(title);
     const status=document.createElement('span');status.className='board-status';status.textContent=b.limited?'BANC UNIQUEMENT · PROFIL 8 BITS LIMITÉ':'PROJET DE PORTAGE · CADENCE À MESURER';box.append(status);
     const dl=document.createElement('dl');
-    for(const [label,value] of [['Architecture',b.architecture],['Flash : limite déclarée par le cœur',formatBytes(b.flash)],['RAM : limite déclarée par le cœur',formatBytes(b.ram)],['Paquet Arduino',b.core],['Cible de compilation (FQBN)',b.fqbn],['Vérification du modèle initial',b.validation?`Cœur ${b.validation.coreVersion} · compilation réussie`:'Non vérifiée pour cette cible'],['Validation en vol','Non réalisée']]){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;dl.append(dt,dd);}box.append(dl);
+    for(const [label,value] of [['Architecture',b.architecture],['Flash : limite déclarée par le cœur',formatBytes(b.flash)],['RAM : limite déclarée par le cœur',formatBytes(b.ram)],['Paquet Arduino',b.core],['Cible de compilation (FQBN)',b.fqbn],['Compilation de la géométrie active',(b.validation?.airframes||[]).includes(sim?.c.airframe??'quad-x')?`Cœur ${b.validation.coreVersion} · compilation réussie`:'Non vérifiée pour cette carte et cette géométrie'],['Validation en vol','Non réalisée']]){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=value;dl.append(dt,dd);}box.append(dl);
     const note=document.createElement('p');note.textContent=b.notes;box.append(note);box.hidden=false;$('boardSource').hidden=!b.source;if(b.source)$('boardSource').href=b.source;$('exportArduino').disabled=false;
   }catch(e){$('boardHelp').textContent=e.message;$('boardHelp').hidden=!$('boardSelect').value&&!custom;$('exportArduino').disabled=true;$('boardSource').hidden=true;}
 }
@@ -108,18 +121,18 @@ const boardPicker=createBoardPicker({input:$('boardSelect'),list:$('boardOptions
 $('boardGroup').onchange=()=>{if($('boardGroup').value&&selectedBoard.group!==$('boardGroup').value)$('boardSelect').value='';boardPicker.refresh();showBoard();};
 for(const id of ['customBoardToggle','customBoardName','customBoardFqbn','customBoardLimited'])$(id).addEventListener('input',()=>{boardPicker.close();showBoard();});
 $('openHardware').onclick=()=>choosePanel('hardware');
-$('exportArduino').onclick=async()=>{try{const b=currentBoard(),r=await fetch('controller.c');if(!r.ok)throw Error('Impossible de charger le modèle de commande.');download(`DroneLab_${b.id.replace(/[^A-Za-z0-9_-]/g,'_')}.zip`,arduinoZip(await r.text(),sim,b),'application/zip');toast(dirty?'Projet exporté avec la configuration active, sorties moteurs inactives. Réglages non appliqués exclus.':'Projet Arduino exporté · sorties moteurs inactives.');}catch(e){toast(e.message,true);}};
+$('exportArduino').onclick=async()=>{try{const b=currentBoard(),r=await fetch('controller.c?v=airframes-1');if(!r.ok)throw Error('Impossible de charger le modèle de commande.');download(`DroneLab_${b.id.replace(/[^A-Za-z0-9_-]/g,'_')}_${sim.c.airframe}.zip`,arduinoZip(await r.text(),sim,b),'application/zip');toast(dirty?'Projet exporté avec la configuration active, sorties moteurs inactives. Réglages non appliqués exclus.':'Projet Arduino exporté · sorties moteurs inactives.');}catch(e){toast(e.message,true);}};
 $('boardSelect').value=boardLabel(selectedBoard);boardPicker.refresh();showBoard();
 setupAgent({getBoard:currentBoard,getConfiguration:()=>configuration(sim),isDirty:()=>dirty});
-function parseImport(data){if(data.format!=='dronelab-config'||data.version!==1||!data.config||!Array.isArray(data.waypoints)||data.waypoints.length>30)throw Error('Format de configuration non reconnu.');const allowed=Object.keys(DEFAULTS),clean={};for(const k of allowed)if(Object.hasOwn(data.config,k))clean[k]=data.config[k];return {c:config(clean),wp:data.waypoints};}
-$('importConfig').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Fichier trop volumineux.');const {c,wp}=parseImport(JSON.parse(await file.text()));newSim(c,wp);waypoints=wp.map(p=>[...p]);fill(c);toast('Configuration importée et appliquée.');}catch(e){toast(`Import refusé : ${e.message}`,true);}event.target.value='';};
+function parseImport(data){if(data.format!=='dronelab-config'||![1,2].includes(data.version)||!data.config||!Array.isArray(data.waypoints)||data.waypoints.length>30)throw Error('Format de configuration non reconnu.');if(data.version===2&&!data.config.airframe)throw Error('Géométrie manquante dans la configuration.');const allowed=Object.keys(DEFAULTS),clean={};for(const k of allowed)if(Object.hasOwn(data.config,k))clean[k]=data.config[k];if(data.version===1)clean.airframe='quad-x';return {c:config(clean),wp:data.waypoints};}
+$('importConfig').onchange=async event=>{const file=event.target.files[0];if(!file)return;try{if(file.size>100000)throw Error('Fichier trop volumineux.');const {c,wp}=parseImport(JSON.parse(await file.text()));newSim(c,wp);waypoints=wp.map(p=>[...p]);fill(sim.c);toast('Configuration importée et appliquée.');}catch(e){toast(`Import refusé : ${e.message}`,true);}event.target.value='';};
 $('about').onclick=()=>$('aboutDialog').showModal();$('closeAbout').onclick=()=>$('aboutDialog').close();$('aboutDialog').addEventListener('click',e=>{if(e.target===$('aboutDialog')){const r=$('aboutDialog').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)$('aboutDialog').close();}});
 let initial=config();try{const raw=localStorage.getItem('droneLabConfig');if(raw){const {c,wp}=parseImport(JSON.parse(raw));new Simulation(c,wp);initial=c;waypoints=wp;}}catch{/* Invalid or obsolete stored configuration: use defaults. */}
-fill(initial);newSim(initial);window.addEventListener('resize',()=>{scene.draw(sim);drawChart($('chart'),sim.history,$('chartType').value);});
+fill(initial);newSim(initial);window.addEventListener('resize',()=>{scene.draw(sim);drawChart($('chart'),sim.history,$('chartType').value,sim.motors.length);});
 document.addEventListener('visibilitychange',()=>{last=performance.now();accumulator=0;});
 function frame(now){
   const elapsed=Math.min(.1,(now-last)/1000);last=now;
   if(playing&&!document.hidden){accumulator+=elapsed*Number($('timescale').value);let steps=0;while(accumulator>=DT&&steps<100){sim.step();accumulator-=DT;steps++;if(['landed','crashed'].includes(sim.mode)){playing=false;accumulator=0;break;}}}
-  scene.draw(sim);if(now-lastUi>100){updateUi();drawChart($('chart'),sim.history,$('chartType').value);setView();lastUi=now;}requestAnimationFrame(frame);
+  scene.draw(sim);if(now-lastUi>100){updateUi();drawChart($('chart'),sim.history,$('chartType').value,sim.motors.length);setView();lastUi=now;}requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

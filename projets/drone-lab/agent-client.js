@@ -1,5 +1,6 @@
 // Only the local agent's fixed API is exposed; the page never sends source code.
-const BASE='http://127.0.0.1:47831',VERSION='1.0.0';
+import {frame} from './airframes.js';
+const BASE='http://127.0.0.1:47831',VERSION='1.1.0';
 export function setupAgent({getBoard,getConfiguration,isDirty}){
   const $=id=>document.getElementById(id),dialog=$('agentDialog');
   let token='',busy=false,ports=[],pendingJob=null,connection='offline',expiresAt=0,checking=false;
@@ -39,12 +40,12 @@ export function setupAgent({getBoard,getConfiguration,isDirty}){
     else if(ports.length===1)$('agentPort').value=ports[0].address;
     status(ports.length?'Agent connecté. Choisis ta carte dans le panneau Cartes, puis prépare son programme.':'Agent connecté. Branche la carte avec un câble USB de données, puis actualise les ports.');
   }
-  $('openAgent').onclick=()=>dialog.showModal();$('closeAgent').onclick=()=>dialog.close();
+  $('openAgent').onclick=()=>{const g=getConfiguration().geometry;$('agentTarget').textContent=`${frame(g.airframe).name} · ${g.motor_count} moteurs · paramètres appliqués.`;dialog.showModal();};$('closeAgent').onclick=()=>dialog.close();
   $('agentConnect').onclick=()=>task(async()=>{
     connectionStatus('connecting','Connexion en cours…');
     status('Connexion… Autorise DroneLab dans la fenêtre de l’agent.');
     const health=await request('/health',{timeout:6000});
-    if(health.application!=='DroneLab Agent'||health.version!==VERSION){connectionStatus('offline','Agent non connecté · mise à jour requise');throw Error('Télécharge la version actuelle de DroneLab Agent, puis ouvre-la.');}
+    if(health.application!=='DroneLab Agent'||health.version!==VERSION){connectionStatus('offline','Agent non connecté · mise à jour requise');throw Error('Installe DroneLab Agent 1.1 pour gérer les géométries de drone. Ferme l’ancienne fenêtre de l’agent avant d’ouvrir l’installateur.');}
     if(!token||Date.now()>=expiresAt){
       connectionStatus('connecting','En attente d’autorisation dans l’agent…');
       const paired=await request('/connect',{body:{}});token=paired.token;expiresAt=Date.now()+3600000;

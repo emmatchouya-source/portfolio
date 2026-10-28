@@ -7,6 +7,8 @@ import os
 import subprocess
 import shutil
 import tempfile
+import hashlib
+import re
 
 def tool_path(path):
     """Older ARM GCC toolchains need short paths on Windows (MAX_PATH)."""
@@ -53,6 +55,9 @@ def main():
     for fqbn in targets:
         project=next(p for p in projects if p['board']['fqbn']==fqbn)
         folder=ARTIFACT/'arduino-projects'/project['files'][0]['name'].split('/')[0]
+        source=(ROOT/'projets/drone-lab/controller.c').read_text(encoding='utf-8')
+        normalize=lambda text:re.sub(r'/\* CONFIG_BEGIN \*/[\s\S]*?/\* CONFIG_END \*/','CONFIG',text.removeprefix('#pragma once\n')).strip()
+        if normalize((folder/'dl_controller.h').read_text(encoding='utf-8'))!=normalize(source):raise RuntimeError('Rerun arduino_export.py after controller changes')
         build=ARTIFACT/'arduino-build'/project['board']['id']
         build.mkdir(parents=True,exist_ok=True)
         command=[tool_path(cli),'--config-file',tool_path(config),'compile','--fqbn',fqbn,'--build-path',tool_path(build),'--json',tool_path(folder)]
@@ -66,7 +71,7 @@ def main():
             print(run.stdout[-5000:]+run.stderr[-5000:],flush=True)
             raise RuntimeError('Compilation failed: '+fqbn)
         data=json.loads(run.stdout)
-        result={'fqbn':fqbn,'success':True,'build':data}
+        result={'fqbn':fqbn,'success':True,'controllerSha256':hashlib.sha256(source.encode('utf-8')).hexdigest(),'build':data}
         results.append(result)
         (ARTIFACT/'arduino-compile-results.json').write_text(json.dumps(results,indent=2),encoding='utf-8')
         print('PASS: '+fqbn,flush=True)
