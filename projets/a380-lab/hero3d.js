@@ -1,7 +1,7 @@
-import {aircraftMesh} from './aircraft-mesh.js?v=1.3.6';
-import {perspectiveCamera,clamp} from './trajectory.js?v=1.3.6';
-import {shadowFootprint} from './shadow.js?v=1.3.6';
-import {DepthMeshRenderer} from './depth-mesh.js?v=1.3.6';
+import {aircraftMesh} from './aircraft-mesh.js?v=1.3.7';
+import {perspectiveCamera,clamp} from './trajectory.js?v=1.3.7';
+import {shadowFootprint} from './shadow.js?v=1.3.7';
+import {DepthMeshRenderer} from './depth-mesh.js?v=1.3.7';
 
 const mesh=aircraftMesh();
 class AircraftShowcase{

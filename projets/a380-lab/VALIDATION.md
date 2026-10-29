@@ -1,5 +1,18 @@
 # Vérification de la version 1.0.0
 
+## Version 1.3.7 — attaches des moteurs
+
+- Ajout de quatre pylônes solides entre les nacelles et les ailes du maillage partagé par l’introduction et la trajectoire. Les nacelles sont légèrement remontées ; elles restent entièrement sous les ailes.
+- Les attaches suivent les triangles réels de l’aile et pénètrent légèrement dans les deux surfaces pour supprimer les interstices. Ces proportions restent illustratives, sans revendication de conformité à une CAO Airbus ; aucun calcul de performance n’est modifié.
+- Contrôle indépendant par intersections rayon–triangle des attaches supérieures, vérification du contact avec les facettes des nacelles (32 points), captures de face et de trois quarts en WebGL et en rendu logiciel. Contrôles du pare-brise, de la profondeur ailes/moteurs et de l’animation automatique.
+
+```text
+python -X utf8 tests/test_a380_pylons.py
+python -X utf8 tests/test_a380_cockpit.py
+python -X utf8 tests/test_a380_depth.py
+python -X utf8 tests/test_a380_hero.py
+```
+
 ## Version 1.3.6 — pare-brise du cockpit
 
 - Le pare-brise plan qui coupait la coque est remplacé par six panneaux ajustés aux facettes réelles du nez, avec un léger décalage vers l’extérieur et des montants visibles.
