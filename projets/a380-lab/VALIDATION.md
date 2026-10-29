@@ -1,5 +1,19 @@
 # Vérification de la version 1.0.0
 
+## Version 1.5.0 — angles fidèles et mission entière
+
+- Suppression de l’amplification verticale automatique, y compris dans les vues globales. « Auto » règle toujours ×1. Les deux vues orthographiques imposent ×1 ; l’amplification manuelle des vues en perspective reste explicitement schématique.
+- Dézoom du suivi automatique par boutons, molette et pincement jusqu’à la mission entière. Ajustement du centre et de la distance de caméra aux limites du trajet ; bouton intégré « Mission entière », sans changer le mode de caméra. Le cadrage complet reste adapté lorsque la phase évolue.
+- Profil global orthographique et profils SVG avec un seul coefficient pixels/mètre pour la distance et l’altitude. Détails séparés du décollage, de la montée, de la croisière, de la descente, de l’atterrissage et des montées par paliers, chacun avec son propre zoom uniforme. Aucun raccord visuel fictif entre des cadres de zoom différent.
+- Cadrage des montées par paliers adapté à leur longueur calculée, avec transitions continues. Les faibles angles restent faibles ; le dénivelé, la distance et la pente maximale sont chiffrés dans chaque détail.
+- Vérifications indépendantes des angles SVG, du cadrage complet sur ordinateur et mobile, des pentes orthographiques, des cas de vent et de l’invariance des résultats. Aucune donnée ou équation de performance modifiée.
+
+```text
+python -X utf8 tests/test_a380_profile_geometry.py
+python -X utf8 tests/test_a380_profile_scale.py
+python -X utf8 tests/test_a380_auto_framing.py
+```
+
 ## Version 1.4.1 — cadrage automatique selon la phase
 
 - Ouverture en suivi local à échelle réelle pour la croisière seule comme pour le vol complet. L’altitude n’est plus écrasée par un cadrage sur plusieurs milliers de kilomètres.

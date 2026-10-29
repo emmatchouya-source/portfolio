@@ -40,9 +40,8 @@ def main(base):
         page.locator('.flight-viewport').screenshot(path=str(ARTIFACTS/'auto-framing-cruise-default.png'))
         before=export(page)
         page.locator('#flightCamera').select_option('orbit')
-        expect(page.locator('#flightScaleWarning')).to_be_visible()
-        page.wait_for_function("Number(document.querySelector('#flightCanvas').dataset.verticalFactor)>1")
-        assert 1<float(page.locator('#flightExaggeration').input_value())<=200
+        expect(page.locator('#flightScaleWarning')).to_be_hidden()
+        expect(canvas).to_have_attribute('data-vertical-factor','1')
         page.locator('#flightExaggeration').evaluate("el=>{el.value=165;el.dispatchEvent(new Event('input'));}")
         expect(page.locator('#flightAutoScale')).to_have_attribute('aria-pressed','false')
         expect(canvas).to_have_attribute('data-vertical-factor','165')
@@ -82,7 +81,7 @@ def main(base):
             if(automaticVerticalFactor(view,distance,10000,1084,515)!==1)throw Error('local scale distorted');
           for(const distance of [100,4569,15000])for(const height of [1000,8000,13000])for(const width of [350,1084]){
             const factor=automaticVerticalFactor('orbit',distance,height,width,515);
-            if(!Number.isInteger(factor)||factor<1||factor>200)throw Error('unbounded global scale');
+            if(factor!==1)throw Error('global scale distorted');
           }
           if(sceneView('auto','cruise')!=='follow'||sceneView('auto','flare')!=='arrival'||sceneView('auto','rotation')!=='departure')throw Error('phase camera');
           return checks;

@@ -1,4 +1,4 @@
-import {DEFAULT} from './model.js?v=1.4.1';
+import {DEFAULT} from './model.js?v=1.5.0';
 export const SCENARIOS=Object.freeze({
   verification:Object.freeze({...DEFAULT,mass:300000,altitude:8000,mach:.6,steps:0,minAltitude:8000,maxAltitude:9500,minMach:.5,maxMach:.8,climbRate:1.27}),
   climbs:Object.freeze({...DEFAULT,mass:300000,altitude:8000,mach:.6,steps:2,minAltitude:8000,maxAltitude:9500,minMach:.5,maxMach:.8,climbRate:1.27}),

@@ -1,3 +1,5 @@
+import {missionProfileChart} from './profile-panels.js?v=1.5.0';
+export {phaseProfileCharts} from './profile-panels.js?v=1.5.0';
 export const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const f=(v,d=0)=>Number(v).toLocaleString('fr-FR',{maximumFractionDigits:d,minimumFractionDigits:d});
 const colors={teal:'#107a70',grey:'#93a7b3',gold:'#b48642',orange:'#bb622d',purple:'#6879a7'};
@@ -21,17 +23,7 @@ function line(points,x,y,color,dashed=false,width=2) {
   return `<polyline points="${points.map(p=>`${x(p[0]).toFixed(2)},${y(p[1]).toFixed(2)}`).join(' ')}" fill="none" stroke="${color}" stroke-width="${width}" ${dashed?'stroke-dasharray="5 4"':''}/>`;
 }
 export function profileChart(best,baseline,distance) {
-  if(!best)return '<p class="empty">Aucun profil admissible.</p>';
-  const w=650,h=260,g=frame(w,h,'Altitude des profils sur la distance au sol','Distance (km)','Altitude (m)');
-  const rows=best.rows,other=baseline?.feasible?baseline.rows:[];
-  const heights=rows.concat(other).map(r=>r.h),ymin=Math.floor((Math.min(...heights)-350)/500)*500,ymax=Math.ceil((Math.max(...heights)+350)/500)*500;
-  const {x,y}=axes(g,w,h,0,distance,ymin,ymax);
-  if(other.length)g.parts.push(line(other.map(r=>[r.x,r.h]),x,y,colors.grey,true));
-  const pts=rows.map(r=>[r.x,r.h]);
-  g.parts.push(`<polygon points="${x(0)},${y(ymin)} ${pts.map(p=>`${x(p[0])},${y(p[1])}`).join(' ')} ${x(distance)},${y(ymin)}" fill="#107a7010"/>`,line(pts,x,y,colors.teal));
-  // Three audit markers expose the mission integration at representative positions.
-  [0,Math.floor(rows.length/2),rows.length-1].forEach(i=>{const r=rows[i];g.parts.push(`<circle class="chart-point" cx="${x(r.x)}" cy="${y(r.h)}" r="4" fill="${colors.teal}"><title>${f(r.x)} km · ${f(r.h)} m · masse ${f(r.mass/1000,2)} t · carburant ${f(r.burn/1000,2)} t · CL ${f(r.cl,3)}</title></circle>`);});
-  return g.parts.join('')+'</svg>';
+  return missionProfileChart(best,baseline);
 }
 export function speedChart(speeds,c) {
   if(!speeds.points.length)return '<p class="empty">Aucune vitesse admissible au point de référence.</p>';
