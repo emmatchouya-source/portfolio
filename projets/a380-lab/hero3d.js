@@ -54,7 +54,7 @@ class AircraftShowcase{
     const elapsed=timestamp-this.last;
     if(elapsed>=1000/30){
       const dt=Math.min(.08,elapsed/1000);this.time+=dt;
-      if(!this.pointer)this.yaw+=dt*(this.motion.matches?0.045:.13);
+      if(!this.pointer)this.yaw+=dt*(this.motion.matches?0.045:.16);
       this.last=timestamp;this.render();
     }
     this.frame=requestAnimationFrame(t=>this.tick(t));
