@@ -114,6 +114,7 @@ def main(base):
         for camera in ['top','side','orbit']:
             page.locator('#flightCamera').select_option(camera)
             page.wait_for_timeout(60)
+        page.locator('#missionConditions > summary').click()
         page.locator('[name=wind]').fill('5')
         expect(page.locator('#flightState')).to_contain_text('Paramètres modifiés')
         # Source model: no fictitious flight for rejected 500 t case, then exercise the real 300 t trace.

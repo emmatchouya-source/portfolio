@@ -26,7 +26,7 @@ def main(base):
         expect(page.locator('#flightProfile')).to_have_value('baseline')
         # Two configured climbs, but deliberately no climbs allowed in the optimizer.
         page.locator('[name=steps]').select_option('2')
-        page.locator('#studyForm summary').click()
+        page.locator('#searchSettings > summary').click()
         for name,value in {'minMach':'.59','maxMach':'.6','minAltitude':'8000','maxAltitude':'8000'}.items():
             page.locator('[name='+name+']').fill(value)
         page.locator('[name=maxSteps]').select_option('0')

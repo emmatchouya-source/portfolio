@@ -1,5 +1,5 @@
 // Shared opaque-mesh renderer: visibility is resolved per pixel, never by face centroid.
-import {SUN_DIRECTION} from './shadow.js?v=1.3.7';
+import {SUN_DIRECTION} from './shadow.js?v=1.4.0';
 
 function colorFor(face,lighting){
   const color=[1,3,5].map(i=>parseInt(face.color.slice(i,i+2),16)/255);

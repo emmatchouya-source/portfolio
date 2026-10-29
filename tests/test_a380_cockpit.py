@@ -12,9 +12,9 @@ def main(base):
         page=browser.new_page(viewport={'width':1200,'height':700})
         page.goto(base+'/index.html',wait_until='domcontentloaded')
         result=page.evaluate('''async()=>{
-          const {aircraftMesh}=await import('./projets/a380-lab/aircraft-mesh.js?v=1.3.6');
-          const {DepthMeshRenderer}=await import('./projets/a380-lab/depth-mesh.js?v=1.3.6');
-          const {perspectiveCamera}=await import('./projets/a380-lab/trajectory.js?v=1.3.6');
+          const {aircraftMesh}=await import('./projets/a380-lab/aircraft-mesh.js?v=1.4.0');
+          const {DepthMeshRenderer}=await import('./projets/a380-lab/depth-mesh.js?v=1.4.0');
+          const {perspectiveCamera}=await import('./projets/a380-lab/trajectory.js?v=1.4.0');
           const mesh=aircraftMesh(),panes=mesh.filter(f=>f.part==='cockpit-glass');
           if(panes.length!==6)throw Error('six distinct glazing panes required');
           const sub=(a,b)=>a.map((v,i)=>v-b[i]),dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];

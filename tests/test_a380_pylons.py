@@ -12,9 +12,9 @@ def main(base):
         page = browser.new_page(viewport={'width': 1200, 'height': 850})
         page.goto(base+'/index.html', wait_until='domcontentloaded')
         result = page.evaluate('''async()=>{
-          const {aircraftMesh}=await import('./projets/a380-lab/aircraft-mesh.js?v=1.3.7');
-          const {DepthMeshRenderer}=await import('./projets/a380-lab/depth-mesh.js?v=1.3.7');
-          const {perspectiveCamera}=await import('./projets/a380-lab/trajectory.js?v=1.3.7');
+          const {aircraftMesh}=await import('./projets/a380-lab/aircraft-mesh.js?v=1.4.0');
+          const {DepthMeshRenderer}=await import('./projets/a380-lab/depth-mesh.js?v=1.4.0');
+          const {perspectiveCamera}=await import('./projets/a380-lab/trajectory.js?v=1.4.0');
           const mesh=aircraftMesh(),pylons=mesh.filter(f=>f.part==='engine-pylon');
           const ids=[...new Set(pylons.map(f=>f.engine))];
           if(ids.length!==4||pylons.length!==24)throw Error('four solid pylons required');

@@ -1,4 +1,4 @@
-import {validateAirportConfig} from './airport-config.js?v=1.3.7';
+import {validateAirportConfig} from './airport-config.js?v=1.4.0';
 const G=9.80665,RAD=Math.PI/180,RHO0=1.225;
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
 const smooth=x=>{const u=clamp(x);return u*u*u*(10+u*(-15+6*u));};

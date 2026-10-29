@@ -12,9 +12,9 @@ def main(base):
         page=browser.new_page(viewport={'width':900,'height':750})
         page.goto(base+'/index.html',wait_until='domcontentloaded')
         result=page.evaluate('''async()=>{
-          const {aircraftMesh}=await import('./projets/a380-lab/aircraft-mesh.js?v=1.3.6');
-          const {DepthMeshRenderer}=await import('./projets/a380-lab/depth-mesh.js?v=1.3.6');
-          const {perspectiveCamera,profileCamera}=await import('./projets/a380-lab/trajectory.js?v=1.3.6');
+          const {aircraftMesh}=await import('./projets/a380-lab/aircraft-mesh.js?v=1.4.0');
+          const {DepthMeshRenderer}=await import('./projets/a380-lab/depth-mesh.js?v=1.4.0');
+          const {perspectiveCamera,profileCamera}=await import('./projets/a380-lab/trajectory.js?v=1.4.0');
           const mesh=aircraftMesh().map(f=>({...f,kind:f.color==='#bed1dc'?'wing':['#98b7c9','#193649'].includes(f.color)?'engine':'other'}));
           const wing=mesh.filter(f=>f.kind==='wing'),engine=mesh.filter(f=>f.kind==='engine');
           if(Math.max(...engine.flatMap(f=>f.points.map(p=>p[2])))>=Math.min(...wing.flatMap(f=>f.points.map(p=>p[2]))))throw Error('engine geometry above wing');

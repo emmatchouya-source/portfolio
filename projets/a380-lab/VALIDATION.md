@@ -1,5 +1,19 @@
 # Vérification de la version 1.0.0
 
+## Version 1.4.0 — atelier d’analyse de mission
+
+- Présentation factuelle du projet et de ses auteurs, animation 3D intégrée sans cadre décoratif, typographie système et réduction des surfaces encadrées.
+- Bande d’indicateurs, graphique principal sur toute la largeur et tableau comparatif placé immédiatement après. Les vitesses caractéristiques et le diagnostic suivent le bilan.
+- Paramètres avancés repliables, panneau de configuration mobile fermé au démarrage ; les champs invalides et leurs groupes sont révélés avant le focus de validation native.
+- Statut non validé en vol toujours visible ; détails accessibles et conservés dans le PDF. Aucune équation, donnée d’entrée ou limite physique modifiée.
+- Contrôles navigateur de 360 à 1 512 px, onglets, provenance, formulaire, animation automatique, export/réimport et impression. Le cas initial conserve 49 801,884 kg pour la référence et 36 157,754 kg pour le meilleur profil exploré (tolérance du contrôle : 0,1 kg).
+
+```text
+python -X utf8 tests/test_a380_workbench.py
+python -X utf8 tests/test_a380_startup.py
+python -X utf8 tests/test_a380_hero.py
+```
+
 ## Version 1.3.7 — attaches des moteurs
 
 - Ajout de quatre pylônes solides entre les nacelles et les ailes du maillage partagé par l’introduction et la trajectoire. Les nacelles sont légèrement remontées ; elles restent entièrement sous les ailes.

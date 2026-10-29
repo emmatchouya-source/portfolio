@@ -1,10 +1,13 @@
-import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck,upgradeConfig} from './model.js?v=1.3.7';
-import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js?v=1.3.7';
-import {TrajectoryPlayer} from './scene3d.js?v=1.3.7';
-import {SCENARIO_LABELS,identifyScenario,scenarioConfig} from './scenarios.js?v=1.3.7';
-import {AIRPORT_FIELDS,AIRPORT_LIMITS,PHASE_LABELS} from './airport-config.js?v=1.3.7';
-import {airportReport} from './airport-report.js?v=1.3.7';
+import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck,upgradeConfig} from './model.js?v=1.4.0';
+import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js?v=1.4.0';
+import {TrajectoryPlayer} from './scene3d.js?v=1.4.0';
+import {SCENARIO_LABELS,identifyScenario,scenarioConfig} from './scenarios.js?v=1.4.0';
+import {AIRPORT_FIELDS,AIRPORT_LIMITS,PHASE_LABELS} from './airport-config.js?v=1.4.0';
+import {airportReport} from './airport-report.js?v=1.4.0';
 const $=id=>document.getElementById(id),form=$('studyForm');
+const compactLayout=matchMedia('(max-width: 820px)');
+const syncConfiguration=()=>{$('configurationPanel').open=!compactLayout.matches;};
+compactLayout.addEventListener('change',syncConfiguration);syncConfiguration();
 for(const [key,title,unit,group] of AIRPORT_FIELDS){
   const label=document.createElement('label');label.className=group==='quick'?'field':'stack';label.append(document.createTextNode(group==='quick'?title:`${title} (${unit})`));
   const input=document.createElement('input');input.type='number';input.name=key;input.min=AIRPORT_LIMITS[key][0];input.max=AIRPORT_LIMITS[key][1];input.step='any';input.required=true;input.value=DEFAULT[key];
@@ -43,6 +46,14 @@ document.querySelectorAll('[data-tab]').forEach(b=>{
   b.onkeydown=e=>{const tabs=[...document.querySelectorAll('[data-tab]')],i=tabs.indexOf(b);let n;if(e.key==='ArrowRight')n=(i+1)%tabs.length;else if(e.key==='ArrowLeft')n=(i+tabs.length-1)%tabs.length;else if(e.key==='Home')n=0;else if(e.key==='End')n=tabs.length-1;else return;e.preventDefault();activateTab(tabs[n].dataset.tab,true);};
 });
 document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>activateTab(b.dataset.go,true));
+document.querySelector('.project-link').addEventListener('click',()=>activateTab('method'));
+function revealField(field){
+  const panel=field?.closest('[role=tabpanel]');if(panel?.hidden)activateTab(panel.id,true);
+  for(let ancestor=field?.parentElement;ancestor;ancestor=ancestor.parentElement)if(ancestor.tagName==='DETAILS')ancestor.open=true;
+}
+// Native validation runs before submit; reveal a collapsed invalid control first.
+form.addEventListener('invalid',e=>revealField(e.target),true);
+document.querySelectorAll('[form="studyForm"]').forEach(el=>el.addEventListener('invalid',()=>revealField(el)));
 function markDirty(){
   syncScenario();
   airportState();
@@ -58,7 +69,7 @@ function modelState(){
   form.elements.disa.disabled=imported&&!isProject(tables);
   for(const key of ['cgOffset','n1Min','n1Max'])form.elements[key].disabled=!isProject(tables);
   $('modelTag').textContent=isProject(tables)?'Projet MGA803':imported?'Tables importées':'Paramétrique';
-  $('modelNotice').innerHTML=isProject(tables)?'<b>Modèle reconstruit à partir des fichiers du projet MGA803.</b> 490 cas OpenVSP et coefficients moteur fournis. Équilibrage calculé, sans validation en vol ; limites de régime corrigé définies pour l’étude.':imported?`<b>Tables de croisière importées : ${esc(tables.name)}.</b> Provenance déclarée par l’utilisateur, sans validation automatique de la fidélité physique. Interpolation limitée au domaine fourni.`:'<b>Modèle paramétrique de démonstration.</b> Polaire et propulsion synthétiques pour comparer les hypothèses. Pour utiliser les fichiers fournis, activez le modèle du projet dans « Modèle & données ».';
+  $('modelNotice').innerHTML=isProject(tables)?'<b>Modèle MGA803.</b> 490 cas OpenVSP · Trent 970B-84 · équilibrage longitudinal reconstruit.':imported?`<b>Tables importées : ${esc(tables.name)}.</b> Interpolation dans le domaine fourni ; fidélité physique non vérifiée.`:'<b>Modèle paramétrique.</b> Polaire et propulsion synthétiques de démonstration.';
   syncScenario();
   airportState();
 }
@@ -81,11 +92,11 @@ function busy(on){
   if(!on)modelState();
 }
 function run(){
-  let config;try{const invalid=[...form.elements].find(el=>el.willValidate&&!el.validity.valid),panel=invalid?.closest('[role=tabpanel]');if(panel?.hidden)activateTab(panel.id,true);if(!form.reportValidity())return;config=readConfig();}catch(e){showError(e);return;}
+  let config;try{const invalid=[...form.elements].find(el=>el.willValidate&&!el.validity.valid);if(invalid)revealField(invalid);if(!form.reportValidity())return;config=readConfig();}catch(e){showError(e);return;}
   worker?.terminate();busy(true);$('progress').value=0;started=performance.now();
   status('Exploration du domaine…');
   const current={config:structuredClone(config),tables:tables?structuredClone(tables):null,scenario:identifyScenario(config)};
-  try{worker=new Worker(new URL('./worker.js?v=1.3.7',import.meta.url),{type:'module'});}catch(e){busy(false);status('Impossible de démarrer le calcul.',true);showError(e);return;}
+  try{worker=new Worker(new URL('./worker.js?v=1.4.0',import.meta.url),{type:'module'});}catch(e){busy(false);status('Impossible de démarrer le calcul.',true);showError(e);return;}
   worker.onmessage=({data})=>{
     if(data.type==='progress'){$('progress').value=data.value;status(`${data.phase} · ${data.value} %`);return;}
     if(data.type==='error'){worker.terminate();worker=null;busy(false);status('Calcul interrompu : '+data.message,true);showError(Error(data.message));return;}
@@ -165,7 +176,7 @@ function setupHeat(){
   const select=cell=>{
     if(worker)return;
     form.elements.mach.value=cell.dataset.mach;form.elements.altitude.value=cell.dataset.altitude;form.elements.steps.value=0;markDirty();
-    $('heatSelection').textContent=`Référence sélectionnée : Mach ${f(Number(cell.dataset.mach),3)}, ${f(Number(cell.dataset.altitude))} m, sans montée. Relancez « Analyser & optimiser » pour l’appliquer.`;
+    $('heatSelection').textContent=`Référence sélectionnée : Mach ${f(Number(cell.dataset.mach),3)}, ${f(Number(cell.dataset.altitude))} m, sans montée. Relancez « Calculer et comparer » pour l’appliquer.`;
   };
   cells.forEach(cell=>{
     cell.onclick=()=>select(cell);
@@ -233,4 +244,5 @@ const initialScenario=['verification','climbs','full','report'].includes(request
 setConfig(scenarioConfig(initialScenario));modelState();
 $('validation').innerHTML=selfCheck().map(x=>`<div class="check"><strong>${x.pass?'PASS':'ÉCHEC'}</strong>${esc(x.name)}</div>`).join('');
 if(params.get('view')==='3d')activateTab('trajectory');
+if(location.hash==='#projectStory')activateTab('method');
 if(params.get('model')==='parametric')run();else useProject(true,initialScenario);

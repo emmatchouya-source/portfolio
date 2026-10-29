@@ -11,7 +11,7 @@ def main(base):
         page=browser.new_page(viewport={'width':1512,'height':1080},device_scale_factor=2)
         errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(base+'/projets/a380-lab/',wait_until='domcontentloaded')
-        expect(page.locator('.version')).to_have_text('v1.3.7')
+        expect(page.locator('.version')).to_have_text('v1.4.0')
         figure=page.locator('#aircraftShowcase');canvas=page.locator('#aircraftHeroCanvas');button=page.locator('#aircraftHeroPause')
         figure.scroll_into_view_if_needed()
         expect(figure).to_have_attribute('data-animation','running')

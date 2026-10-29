@@ -1,5 +1,5 @@
-import {PHASE_LABELS} from './airport-config.js?v=1.3.7';
-import {esc} from './charts.js?v=1.3.7';
+import {PHASE_LABELS} from './airport-config.js?v=1.4.0';
+import {esc} from './charts.js?v=1.4.0';
 const f=(n,d=0)=>Number(n).toLocaleString('fr-FR',{maximumFractionDigits:d,minimumFractionDigits:d});
 const time=s=>{const n=Math.round(s);return `${Math.floor(n/60)} min ${n%60} s`;};
 export function phaseBudget(phases){

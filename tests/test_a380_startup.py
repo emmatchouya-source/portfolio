@@ -59,7 +59,7 @@ def main(base):
         page.get_by_role('tab',name='Synthèse').click()
         page.screenshot(path=str(ARTIFACTS/'startup-diagnostic.png'),full_page=True)
         # Recovery resets ALL study constraints, including a deliberately impossible CL limit.
-        page.locator('#studyForm summary').click();page.locator('[name=clMax]').fill('.3')
+        page.locator('#searchSettings > summary').click();page.locator('[name=clMax]').fill('.3')
         page.locator('#recoverScenario').click();completed(page)
         expect(page.locator('#studyScenario')).to_have_value('verification')
         expect(page.locator('[name=clMax]')).to_have_value('1')

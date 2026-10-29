@@ -1,7 +1,7 @@
-import {aircraftMesh} from './aircraft-mesh.js?v=1.3.7';
-import {perspectiveCamera,clamp} from './trajectory.js?v=1.3.7';
-import {shadowFootprint} from './shadow.js?v=1.3.7';
-import {DepthMeshRenderer} from './depth-mesh.js?v=1.3.7';
+import {aircraftMesh} from './aircraft-mesh.js?v=1.4.0';
+import {perspectiveCamera,clamp} from './trajectory.js?v=1.4.0';
+import {shadowFootprint} from './shadow.js?v=1.4.0';
+import {DepthMeshRenderer} from './depth-mesh.js?v=1.4.0';
 
 const mesh=aircraftMesh();
 class AircraftShowcase{
@@ -66,14 +66,12 @@ class AircraftShowcase{
     c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);
     const elevation=this.elevation+(this.motion.matches?0:Math.sin(this.time*.32)*.035),radius=29/this.zoom;
     const eye=[radius*Math.cos(elevation)*Math.cos(this.yaw),radius*Math.cos(elevation)*Math.sin(this.yaw),radius*Math.sin(elevation)];
-    const camera=perspectiveCamera(eye,[0,0,.15],w,h),project=camera.project,bob=this.motion.matches?0:Math.sin(this.time*.65)*.12;
+    const camera=perspectiveCamera(eye,[0,0,.15],w,h),bob=this.motion.matches?0:Math.sin(this.time*.65)*.12;
     const faces=mesh.map(face=>({...face,points:face.points.map(p=>[p[0],p[1],p[2]+bob])}));
-    const orbit=Array.from({length:97},(_,i)=>project([9.4*Math.cos(i*Math.PI/48),9.4*Math.sin(i*Math.PI/48),-2]));
-    c.beginPath();orbit.forEach((p,i)=>{if(p)i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]);});c.strokeStyle='#8cb0bd66';c.lineWidth=.7;c.setLineDash([2,5]);c.stroke();c.setLineDash([]);
     // Shadow uses the same mesh and light direction as the flight view.
     const m=this.mask.getContext('2d');m.setTransform(1,0,0,1,0,0);m.clearRect(0,0,width,height);m.scale(dpr,dpr);m.fillStyle='#1a3a49';m.beginPath();
     for(const points of shadowFootprint(faces,{center:[0,0,bob],groundZ:-2,heightMetres:2+bob,worldScale:1})){
-      const a=points.map(project);if(a.some(p=>!p))continue;
+      const a=points.map(camera.project);if(a.some(p=>!p))continue;
       const area=a.reduce((s,p,i)=>{const q=a[(i+1)%a.length];return s+p[0]*q[1]-q[0]*p[1];},0),contour=area<0?a.reverse():a;
       contour.forEach((p,i)=>i?m.lineTo(p[0],p[1]):m.moveTo(p[0],p[1]));m.closePath();
     }

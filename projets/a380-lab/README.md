@@ -29,7 +29,9 @@ Servir la racine du portfolio par HTTP :
 python -m http.server 8080
 ```
 
-Ouvrir `http://localhost:8080/projets/a380-lab/`. Un navigateur moderne supportant les modules et Web Workers est nécessaire. L’application ne nécessite aucune compilation. Les polices Google sont facultatives ; les polices système prennent le relais hors connexion.
+Ouvrir `http://localhost:8080/projets/a380-lab/`. Un navigateur moderne supportant les modules et Web Workers est nécessaire. L’application ne nécessite aucune compilation et utilise les polices système, sans téléchargement de police externe.
+
+Depuis la version 1.4, les résultats sont organisés autour du profil altitude–distance et du tableau de comparaison. Les paramètres essentiels restent visibles sur ordinateur ; le vent, les transitions et le domaine de recherche se déplient à la demande. Sur mobile, ouvrir « Paramètres de mission » pour modifier l’étude. Le statut académique du modèle reste visible et son détail est accessible dans « Hypothèses et limites » ; il est conservé à l’impression.
 
 1. Définir la mission, le profil de référence et les contraintes.
 2. Choisir l’objectif : carburant, durée, ou carburant + CI × durée en minutes.
