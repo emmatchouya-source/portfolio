@@ -7,14 +7,15 @@ const number=value=>(Object.is(value,-0)?0:value).toLocaleString('fr-FR',{maximu
 export const profilePlot=(width,height)=>({left:64,right:width-100,top:width<500?140:110,bottom:height-150});
 
 // An X/Z profile is an engineering plot, not an edge-on perspective floor.
-// Both sets of grid lines use the SAME physical interval and pixels/metre.
-export function profileGuides(ctx,camera,width,height,{origin,scale,groundAltitude,altitudeBounds}){
+// Axes have equal scale at x1; explicit amplification keeps altitude labels physical.
+export function profileGuides(ctx,camera,width,height,{origin,scale,groundAltitude,altitudeBounds,exaggeration=1}){
   const {left,right,top,bottom}=profilePlot(width,height);
   if(right<=left||bottom<=top)return;
   const zero=camera.project([0,0,0]),pixelsPerMetre=camera.lens*scale;
   const spacing=niceInterval(85/pixelsPerMetre);
+  const verticalPixelsPerMetre=pixelsPerMetre*exaggeration,altitudeSpacing=niceInterval(85/verticalPixelsPerMetre);
   const minX=origin+(left-zero[0])/pixelsPerMetre,maxX=origin+(right-zero[0])/pixelsPerMetre;
-  const minH=groundAltitude+(zero[1]-bottom)/pixelsPerMetre,maxH=groundAltitude+(zero[1]-top)/pixelsPerMetre;
+  const minH=groundAltitude+(zero[1]-bottom)/verticalPixelsPerMetre,maxH=groundAltitude+(zero[1]-top)/verticalPixelsPerMetre;
   ctx.save();ctx.font='10px Consolas, monospace';ctx.lineWidth=1;
   ctx.strokeStyle='#54717e';ctx.beginPath();ctx.moveTo(left,top);ctx.lineTo(left,bottom);ctx.lineTo(right,bottom);ctx.stroke();
   const stroke=(a,b)=>{ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();};
@@ -23,17 +24,17 @@ export function profileGuides(ctx,camera,width,height,{origin,scale,groundAltitu
     ctx.strokeStyle='#294653';stroke([px,top],[px,bottom]);
     ctx.fillStyle='#a8bfca';ctx.textAlign='center';ctx.fillText(number(x/1000),px,bottom+16);
   }
-  for(let altitude=Math.ceil(minH/spacing)*spacing;altitude<=maxH;altitude+=spacing){
+  for(let altitude=Math.ceil(minH/altitudeSpacing)*altitudeSpacing;altitude<=maxH;altitude+=altitudeSpacing){
     // A transcontinental profile must not suggest altitudes of 500–1000 km.
     if(altitudeBounds&&(altitude<altitudeBounds[0]||altitude>altitudeBounds[1]))continue;
-    const py=zero[1]-(altitude-groundAltitude)*pixelsPerMetre;
+    const py=zero[1]-(altitude-groundAltitude)*verticalPixelsPerMetre;
     ctx.strokeStyle=altitude===groundAltitude?'#66858e':'#294653';stroke([left,py],[right,py]);
     ctx.fillStyle='#a8bfca';ctx.textAlign='right';ctx.fillText(number(altitude),left-8,py+3);
   }
   ctx.fillStyle='#b5cad3';ctx.textAlign='left';ctx.fillText('Altitude (m)',left,top-12);
   ctx.textAlign='right';ctx.fillText('Distance depuis le départ (km)',right,bottom+33);
   ctx.restore();
-  return {pixelsPerMetre,spacing};
+  return {pixelsPerMetre,spacing,verticalPixelsPerMetre,altitudeSpacing};
 }
 
 // Reference length at the aircraft's position, projected by the actual camera.

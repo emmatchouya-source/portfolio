@@ -27,7 +27,7 @@ def main(base):
                 page.locator('.flight-viewport').screenshot(path=str(ARTIFACTS/('view-'+phase['phase']+'.png')))
             page.locator('#flightProfileView').click()
             expect(page.locator('#flightCamera')).to_have_value('profile')
-            expect(page.locator('#flightExaggeration')).to_be_disabled()
+            expect(page.locator('#flightExaggeration')).to_be_enabled()
             page.locator('.flight-viewport').screenshot(path=str(ARTIFACTS/'view-true-profile.png'))
             page.locator('#flightFitMission').click()
             expect(canvas).to_have_attribute('data-mission-fits','true')
@@ -39,8 +39,8 @@ def main(base):
             page.locator('#flightFitMission').click()
             page.locator('.flight-viewport').screenshot(path=str(ARTIFACTS/'view-entire-mission.png'))
             values=page.evaluate('''async()=>{
-              const {perspectiveCamera,profileCamera}=await import('./trajectory.js?v=1.5.1');
-              const {profileGuides,projectedScale,profilePlot}=await import('./scene-guides.js?v=1.5.1');
+              const {perspectiveCamera,profileCamera}=await import('./trajectory.js?v=1.5.2');
+              const {profileGuides,projectedScale,profilePlot}=await import('./scene-guides.js?v=1.5.2');
               const samples=[];
               for(const [w,h] of [[1120,515],[350,410]])for(const length of [6000,60000,4500000]){
                 const scale=240/length,position=[120,0,8000*scale],radius=110,elevation=.28;

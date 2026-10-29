@@ -1,4 +1,4 @@
-# Représentation des trajectoires — version 1.5.1
+# Représentation des trajectoires — version 1.5.2
 
 ## Choix de représentation
 
@@ -7,16 +7,18 @@ La vue globale d’un trajet de 4 569 km à 8 km d’altitude est presque plate 
 Trois usages sont désormais explicites :
 
 - **3D à échelles identiques par défaut** : positions calculées, caméra mobile, sol et repères ancrés au trajet. Une perspective oblique ne permet pas de mesurer directement un angle sur l’écran.
-- **Profil local fidèle** : projection orthographique latérale, même nombre de pixels par mètre sur les deux axes. Le cadrage dépend de la phase et de la durée des montées par paliers. Les pentes au sol sont conservées ; la perspective et l’amplification verticale sont désactivées dans cette vue. La grille cartésienne altitude–distance remplace le plan de sol vu sur la tranche.
+- **Profil local fidèle** : projection orthographique latérale, même nombre de pixels par mètre sur les deux axes. Le cadrage dépend de la phase et de la durée des montées par paliers. À ×1, les pentes au sol sont conservées, sans perspective. L’exagération manuelle est également disponible dans ce profil et dans le profil global ; les graduations d’altitude restent physiques et les angles amplifiés sont signalés. La grille cartésienne altitude–distance remplace le plan de sol vu sur la tranche.
 - **Relief amplifié sur demande** : aide à la lecture de toute la mission, avec avertissement visible dans et au-dessus de la scène. Un changement de caméra ne rétablit plus une ancienne amplification implicitement.
 
 Le profil utilise les points calculés et ne remplace pas la trajectoire par une courbe décorative. Les changements de caméra n’altèrent ni les masses, ni les forces, ni les durées ou le carburant. Le modèle d’avion reste agrandi dans les vues locales et son assiette basse vitesse illustrative : l’incidence n’est pas identifiée par les données de croisière. En vue globale, un repère ponctuel matérialise la position : une maquette agrandie y donnerait à l’avion une envergure apparente de plusieurs centaines de kilomètres.
+
+Le facteur manuel est conservé lors des changements de vue, du recentrage et du cadrage de la mission entière. Auto et Profil local fidèle rétablissent ×1. En profil amplifié, les pixels par mètre vertical et l’espacement des graduations tiennent compte du facteur, sans modifier les altitudes, les pentes calculées ou les exports physiques.
 
 ## Caméras et repères
 
 Trois boutons intégrés à la scène donnent accès au suivi 3D, au profil latéral et à la mission entière. Le dézoom reste possible en suivi automatique. Par défaut, l’azimut latéral conserve une croisière horizontale à l’écran ; la perspective oblique reste orientable à la souris. Ce choix évite de suggérer une montée simplement par le cadrage de la caméra.
 
-Le profil orthographique réserve une zone de tracé en dehors des commandes, y compris en portrait. Les deux axes utilisent le même intervalle métrique et la même échelle ; seules les altitudes du domaine de la mission sont graduées. L’altitude maximale et la distance totale restent lisibles en vue globale. L’aspect presque plat d’un profil de 4 570 km à 8 km d’altitude est conservé.
+Le profil orthographique réserve une zone de tracé en dehors des commandes, y compris en portrait. À ×1, les deux axes utilisent le même intervalle métrique et la même échelle ; seules les altitudes du domaine de la mission sont graduées. L’altitude maximale et la distance totale restent lisibles en vue globale. L’aspect presque plat d’un profil de 4 570 km à 8 km d’altitude est conservé.
 
 La grille du sol reste un repère local discret. Elle est supprimée en mission entière pour éviter les lignes de fuite envahissantes. Une référence de longueur est calculée avec la projection réelle de la caméra à la position de l’avion ; elle ne constitue pas une échelle uniforme de toute l’image en perspective. Les vues de profil utilisent une grille X/Z, sans ombre ni perspective au sol.
 

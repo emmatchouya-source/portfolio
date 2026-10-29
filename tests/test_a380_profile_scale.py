@@ -15,7 +15,7 @@ def main(base):
         errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(base+'/projets/a380-lab/?scenario=full&view=3d',wait_until='domcontentloaded')
         page.wait_for_function("!document.querySelector('#run').disabled && document.querySelector('#flightTimeline').max>100",timeout=180000)
-        expect(page.locator('.version')).to_have_text('v1.5.1')
+        expect(page.locator('.version')).to_have_text('v1.5.2')
         values=page.evaluate('''async()=>{
           const {profileCamera}=await import('./trajectory.js?v=1.3.3');
           const {simulate}=await import('./model.js?v=1.3.3'),{scenarioConfig}=await import('./scenarios.js?v=1.3.3');
@@ -66,7 +66,7 @@ def main(base):
         page.locator('#flightTrueScale').click()
         expect(page.locator('#flightCamera')).to_have_value('profile')
         expect(page.locator('#flightExaggeration')).to_have_value('1')
-        expect(page.locator('#flightExaggeration')).to_be_disabled()
+        expect(page.locator('#flightExaggeration')).to_be_enabled()
         expect(page.locator('#flightScaleWarning')).to_be_hidden()
         page.locator('#flightCanvas').scroll_into_view_if_needed();page.wait_for_timeout(100)
         frame=page.locator('#flightCanvas').evaluate('el=>el.toDataURL()')

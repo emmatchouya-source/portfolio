@@ -1,14 +1,14 @@
-import {aircraftMesh} from './aircraft-mesh.js?v=1.5.1';
-import {VERSION} from './model.js?v=1.5.1';
-import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,profileCamera,dot} from './trajectory.js?v=1.5.1';
-import {PHASE_LABELS} from './airport-config.js?v=1.5.1';
-import {phaseBudget} from './airport-report.js?v=1.5.1';
-import {drawGroundShadow} from './shadow.js?v=1.5.1';
-import {DepthMeshRenderer} from './depth-mesh.js?v=1.5.1';
-import {clipSegment,clipPolygon,clipScreenSegment,clipScreenPolygon,groundScreenPolygon,groundGrid} from './scene-ground.js?v=1.5.1';
-import {sceneView,localView,localWindowMetres,automaticVerticalFactor,missionCameraFit} from './scene-framing.js?v=1.5.1';
-import {phaseProfileCharts} from './charts.js?v=1.5.1';
-import {profileGuides,projectedScale,profilePlot} from './scene-guides.js?v=1.5.1';
+import {aircraftMesh} from './aircraft-mesh.js?v=1.5.2';
+import {VERSION} from './model.js?v=1.5.2';
+import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,profileCamera,dot} from './trajectory.js?v=1.5.2';
+import {PHASE_LABELS} from './airport-config.js?v=1.5.2';
+import {phaseBudget} from './airport-report.js?v=1.5.2';
+import {drawGroundShadow} from './shadow.js?v=1.5.2';
+import {DepthMeshRenderer} from './depth-mesh.js?v=1.5.2';
+import {clipSegment,clipPolygon,clipScreenSegment,clipScreenPolygon,groundScreenPolygon,groundGrid} from './scene-ground.js?v=1.5.2';
+import {sceneView,localView,localWindowMetres,automaticVerticalFactor,missionCameraFit} from './scene-framing.js?v=1.5.2';
+import {phaseProfileCharts} from './charts.js?v=1.5.2';
+import {profileGuides,projectedScale,profilePlot} from './scene-guides.js?v=1.5.2';
 const $=id=>document.getElementById(id),RAD=Math.PI/180;
 const f=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
 const clock=s=>{const t=Math.round(s);return [Math.floor(t/3600),Math.floor(t/60)%60,t%60].map(v=>String(v).padStart(2,'0')).join(':');};
@@ -118,7 +118,6 @@ export class TrajectoryPlayer {
   }
   seek(time,pause=false){if(pause)this.pause();const end=this.active?.seconds||0;this.time=clamp(time,0,end);if(end-this.time<1e-6)this.time=end;this.lastFrame=0;this.sync();this.invalidate();}
   preset(view){
-    if(view!==this.view||view==='profile')$('flightExaggeration').value='1';
     this.view=view;$('flightCamera').value=view;this.pan=[0,0];this.zoom=1;this.yaw=-Math.PI/2;this.elevation=.38;
     this.fitWhole=view!=='auto'&&!localView(view);
     if(view==='top'){this.yaw=-Math.PI/2;this.elevation=1.53;}
@@ -127,7 +126,7 @@ export class TrajectoryPlayer {
     if(view==='follow'||view==='auto'){this.yaw=-Math.PI/2;this.elevation=.28;}
     this.sync();this.invalidate();
   }
-  fitMission(){this.autoScale=true;this.fitWhole=true;this.pan=[0,0];this.yaw=-Math.PI/2;this.elevation=.38;this.sync();this.invalidate();}
+  fitMission(){this.fitWhole=true;this.pan=[0,0];this.yaw=-Math.PI/2;this.elevation=.38;this.sync();this.invalidate();}
   changeZoom(multiplier){
     this.zoom=clamp(this.zoom*multiplier,this.minimumZoom,8);
     this.fitWhole=this.zoom<=this.minimumZoom*(1+1e-7);
@@ -148,7 +147,6 @@ export class TrajectoryPlayer {
   syncScale(point){
     const view=sceneView(this.view,point?.phase),size=this.canvas.getBoundingClientRect();
     if(this.autoScale)$('flightExaggeration').value=String(automaticVerticalFactor(view,this.distance||0,this.height||1,size.width||1084,size.height||515));
-    if(['profile','side'].includes(view))$('flightExaggeration').value='1';
     const factor=Number($('flightExaggeration').value);
     const global=this.fitWhole||!localView(view),profile=['profile','side'].includes(view);
     put('flightScale',`Altitude ×${factor} · ${factor>1?'schéma amplifié':'axes à même échelle'} · ${global?'position symbolisée':'avion agrandi'}`);
@@ -158,12 +156,12 @@ export class TrajectoryPlayer {
     $('flightFollowView').setAttribute('aria-pressed',String(this.view==='auto'&&!this.fitWhole));
     $('flightScale').classList.toggle('stale',factor>1);
     $('flightScaleWarning').hidden=factor===1;
-    put('flightScaleWarning',`Altitude amplifiée ×${factor} : les angles dessinés sont déformés. Le profil local fidèle utilise l’échelle réelle.`);
-    $('flightExaggeration').disabled=['profile','side'].includes(view);
+    put('flightScaleWarning',`Altitude amplifiée ×${factor} : les angles dessinés sont déformés. Le bouton Auto rétablit l’échelle réelle ×1.`);
+    $('flightExaggeration').disabled=false;
     $('flightExaggeration').setAttribute('aria-valuetext',`Altitude multipliée par ${factor}${this.autoScale?' · réglage automatique':''}`);
     $('flightAutoScale').setAttribute('aria-pressed',String(this.autoScale));
     const framing=view==='departure'?'décollage':['approach','flare','landing-roll'].includes(point?.phase)?'atterrissage':view==='arrival'?'atterrissage':point?.phase==='descent'?'descente':['departure-climb','initial-climb','climb'].includes(point?.phase)?'montée':'croisière';
-    put('flightFraming',localView(view)&&!this.fitWhole?`Cadrage ${framing} · sol schématique`:'Mission entière · axes à échelle réelle');
+    put('flightFraming',localView(view)&&!this.fitWhole?`Cadrage ${framing} · sol schématique`:`Mission entière · ${factor>1?'altitude amplifiée ×'+factor:'axes à échelle réelle'}`);
     put('flightScaleValue','×'+factor);
     return factor;
   }
@@ -174,9 +172,9 @@ export class TrajectoryPlayer {
     $('flightTimeline').max=String(active?.seconds||1);$('flightTimeline').value=String(this.time);
     $('flightTimeline').setAttribute('aria-valuetext',has?`${clock(this.time)} sur ${clock(active.seconds)}, altitude ${f(point.h)} mètres`:'Aucune trajectoire admissible');
     $('flightTime').textContent=has?`${clock(this.time)} / ${clock(active.seconds)}`:'— / —';
-    this.syncScale(point);
+    const factor=this.syncScale(point);
     const groundAngle=point&&point.gs>1?Math.atan2(point.roc||0,point.gs)/RAD:null;
-    $('flightSlopeNote').textContent=groundAngle===null?'Pente au sol : — (avion arrêté).':`Pente au sol calculée : ${f(groundAngle,2)}° (${f(Math.tan(groundAngle*RAD)*100,2)} %) · pente air γ : ${f((point.gamma||0)/RAD,2)}°. ${['profile','side'].includes(this.view)?'Projection de profil sans perspective, mêmes échelles horizontale et verticale.':'La perspective peut modifier l’angle apparent ; les profils orthographiques conservent les pentes.'}`;
+    $('flightSlopeNote').textContent=groundAngle===null?'Pente au sol : — (avion arrêté).':`Pente au sol calculée : ${f(groundAngle,2)}° (${f(Math.tan(groundAngle*RAD)*100,2)} %) · pente air γ : ${f((point.gamma||0)/RAD,2)}°. ${factor>1?`Exagération ×${factor} : les angles affichés sont amplifiés ; les valeurs calculées restent physiques.`:['profile','side'].includes(this.view)?'Projection de profil sans perspective, mêmes échelles horizontale et verticale.':'La perspective peut modifier l’angle apparent ; les profils orthographiques à ×1 conservent les pentes.'}`;
     $('flightEmpty').hidden=has;
     put('flightState',this.stale?'Paramètres modifiés · dernière étude':!has?'Aucune trajectoire admissible':this.time>=active.seconds?'Trajectoire terminée':`${this.playing?'Lecture':'Pause'} · ${PHASE_LABELS[point.phase]??'Croisière'}`);
     $('flightState').classList.toggle('stale',this.stale);
@@ -234,14 +232,14 @@ export class TrajectoryPlayer {
     if(orthographic){
       const pixels=w/(baseSpan/this.zoom);
       focus[0]+=(w/2-(plot.left+plot.right)/2)/pixels;
-      focus[2]+=(h*.53-(plot.top+plot.bottom)/2)/pixels;
+      focus[2]-=(h*.53-(plot.top+plot.bottom)/2)/pixels;
     }
     const verticalExtent=(this.height||13000)*scale*exaggeration;
     const radius=(local?Math.max(baseRadius,exaggeration>1?verticalExtent*1.5:0):baseRadius)/this.zoom;
     const eye=focus.map((v,i)=>v+[radius*Math.cos(this.elevation)*Math.cos(this.yaw),radius*Math.cos(this.elevation)*Math.sin(this.yaw),radius*Math.sin(this.elevation)][i]);
     eye[2]=Math.max(1,eye[2]);
     const camera=orthographic?profileCamera(focus,w,h,baseSpan/this.zoom):perspectiveCamera(eye,focus,w,h),project=camera.project;
-    this.canvas.dataset.zoom=String(this.zoom);this.canvas.dataset.missionFits=String(bounds.map(project).every(p=>p&&p[0]>=0&&p[0]<=w&&p[1]>=0&&p[1]<=h));
+    this.canvas.dataset.zoom=String(this.zoom);this.canvas.dataset.missionFits=String(bounds.map(project).every(p=>p&&p[0]>=(orthographic?plot.left:0)&&p[0]<=(orthographic?plot.right:w)&&p[1]>=(orthographic?plot.top:0)&&p[1]<=(orthographic?plot.bottom:h)));
     const line=(points,color,width=1,dash=[])=>{
       c.beginPath();for(let i=1;i<points.length;i++){const segment=clipSegment(points[i-1],points[i],camera);if(!segment.length)continue;const projected=segment.map(project);if(projected.some(p=>!p))continue;const clipped=clipScreenSegment(...projected,w,h);if(clipped.length){c.moveTo(...clipped[0]);c.lineTo(...clipped[1]);}}
       c.strokeStyle=color;c.lineWidth=width;c.setLineDash(dash);
@@ -262,7 +260,7 @@ export class TrajectoryPlayer {
     const gridInk=c.createLinearGradient(0,h*.15,0,h*.65),axisInk=c.createLinearGradient(0,h*.15,0,h*.65);
     gridInk.addColorStop(0,'#233f4c00');gridInk.addColorStop(.4,'#233f4c77');gridInk.addColorStop(1,'#233f4c');
     axisInk.addColorStop(0,'#42616d00');axisInk.addColorStop(1,'#42616d');
-    if(orthographic)profileGuides(c,camera,w,h,{origin,scale,groundAltitude,altitudeBounds:[this.minHeight||0,this.height||1]});
+    if(orthographic)profileGuides(c,camera,w,h,{origin,scale,groundAltitude,exaggeration,altitudeBounds:[this.minHeight||0,this.height||1]});
     else if(!this.fitWhole)for(const segment of grid.segments){
       // Fog out the dense convergence at the horizon; keep useful nearby cues.
       line(segment.points,segment.axis?axisInk:gridInk,1);
