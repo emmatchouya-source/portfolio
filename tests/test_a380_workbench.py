@@ -18,7 +18,7 @@ def main(base):
         page.on('pageerror', lambda e: errors.append(str(e)))
         page.goto(base+'/projets/a380-lab/', wait_until='domcontentloaded')
         completed(page)
-        expect(page.locator('.version')).to_have_text('v1.4.0')
+        expect(page.locator('.version')).to_have_text('v1.4.1')
         expect(page.locator('#configurationPanel')).to_have_attribute('open', '')
         expect(page.locator('#qualification > summary')).to_be_visible()
         expect(page.locator('#qualification .qualification-body')).to_be_hidden()

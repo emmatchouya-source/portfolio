@@ -141,6 +141,17 @@ td{padding:15px 12px}
 .flight-view-options label,.flight-playback label,.flight-bottom-controls label{font-size:12px}
 .flight-playback button,.flight-playback select{font-size:13px}
 .flight-viewport{border-radius:2px}
+.flight-scale-control{position:absolute;bottom:14px;left:14px;width:320px;max-width:calc(100% - 110px);padding:9px 12px 4px;color:#d4e3e8;background:#112b3aee;border:1px solid #45616e;border-radius:3px}
+.flight-scale-control>div{display:flex;align-items:center;gap:12px}
+.flight-scale-control label{font-size:12px;line-height:1.4}
+.flight-scale-control output{font:13px var(--mono);color:#6ae0bf;white-space:nowrap}
+.flight-scale-control button{margin-left:auto;font-size:11px;font-weight:500;padding:4px 8px;background:transparent;color:#d4e3e8;border-color:#57737e;min-height:30px}
+.flight-scale-control button[aria-pressed=true]{background:#214e56;color:#9bf3d8;border-color:#5aa38f}
+.flight-scale-control input{display:block;width:100%;padding:0;margin:1px 0 0;height:28px;accent-color:#6ae0bf;background:transparent;cursor:pointer}
+.flight-scale-control input:disabled{opacity:.6;cursor:default}
+.flight-scale-control small{display:block;color:#9fbac8;font-size:10px;padding-bottom:3px}
+.flight-scene-bottom{bottom:125px;left:14px;right:14px}
+.flight-camera-buttons{bottom:0}
 .flight-telemetry{border-radius:0}
 .flight-telemetry>div{background:#f6f7f7}
 .flight-telemetry span{font:11px var(--sans);white-space:normal}
@@ -221,6 +232,13 @@ td{padding:15px 12px}
   .kpis article>span,.kpis p{font-size:12px}
 }
 @media(max-width:650px){
+  .flight-viewport{height:410px}
+  .flight-scale-control{left:10px;bottom:10px;padding:8px 9px 3px}
+  .flight-scale-control>div{gap:7px}
+  .flight-scale-control label{font-size:11px;max-width:115px}
+  .flight-scale-control output{font-size:12px}
+  .flight-scale-control button{padding:3px 6px}
+  .flight-scene-bottom{bottom:124px;left:10px;right:10px;font-size:10px}
   .intro{flex-direction:column;align-items:stretch;gap:5px;margin-bottom:20px}
   .intro h1{font-size:38px;line-height:1.1;margin:10px 0 13px}
   .intro h1 br{display:none}

@@ -15,7 +15,7 @@ def main(base):
         errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(base+'/projets/a380-lab/?scenario=full&view=3d',wait_until='domcontentloaded')
         page.wait_for_function("!document.querySelector('#run').disabled && document.querySelector('#flightTimeline').max>100",timeout=180000)
-        expect(page.locator('.version')).to_have_text('v1.4.0')
+        expect(page.locator('.version')).to_have_text('v1.4.1')
         values=page.evaluate('''async()=>{
           const {profileCamera}=await import('./trajectory.js?v=1.3.3');
           const {simulate}=await import('./model.js?v=1.3.3'),{scenarioConfig}=await import('./scenarios.js?v=1.3.3');
@@ -56,10 +56,10 @@ def main(base):
         before=json.loads(event.value.path().read_text(encoding='utf-8'))
         phases={q['phase']:q for q in before['result']['baseline']['phases']}
         expect(page.locator('#flightExaggeration')).to_have_value('1')
-        # Reproduce the reported auto -> global profile transition: it must not restore x114.
+        # Only the explicitly selected mission-wide overview may amplify altitude.
         page.locator('#flightCamera').select_option('side')
-        expect(page.locator('#flightExaggeration')).to_have_value('1')
-        expect(page.locator('#flightScaleWarning')).to_be_hidden()
+        assert float(page.locator('#flightExaggeration').input_value())>1
+        expect(page.locator('#flightScaleWarning')).to_be_visible()
         page.locator('#flightAmplify').click()
         assert float(page.locator('#flightExaggeration').input_value())>1
         expect(page.locator('#flightScaleWarning')).to_be_visible()

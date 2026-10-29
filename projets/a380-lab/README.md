@@ -33,6 +33,8 @@ Ouvrir `http://localhost:8080/projets/a380-lab/`. Un navigateur moderne supporta
 
 Depuis la version 1.4, les résultats sont organisés autour du profil altitude–distance et du tableau de comparaison. Les paramètres essentiels restent visibles sur ordinateur ; le vent, les transitions et le domaine de recherche se déplient à la demande. Sur mobile, ouvrir « Paramètres de mission » pour modifier l’étude. Le statut académique du modèle reste visible et son détail est accessible dans « Hypothèses et limites » ; il est conservé à l’impression.
 
+La vue 3D démarre en suivi automatique, à échelle réelle, avec un cadrage rapproché au décollage et à l’atterrissage, intermédiaire en montée/descente et plus large en croisière. Les changements de cadrage sont progressifs. Le curseur d’exagération est directement dans la scène ; « Auto » rétablit le réglage adapté à la vue. Les vues globales amplifient l’altitude de façon explicite pour rendre la mission lisible ; elles ne conservent pas les pentes. Le profil local fidèle reste à ×1. Ces réglages de présentation ne modifient ni les points de trajectoire, ni les calculs, ni le CSV.
+
 1. Définir la mission, le profil de référence et les contraintes.
 2. Choisir l’objectif : carburant, durée, ou carburant + CI × durée en minutes.
 3. Lancer l’analyse. Les résultats correspondent toujours à la dernière configuration calculée ; une modification non appliquée est signalée.

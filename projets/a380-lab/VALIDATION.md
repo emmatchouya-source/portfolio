@@ -1,5 +1,19 @@
 # Vérification de la version 1.0.0
 
+## Version 1.4.1 — cadrage automatique selon la phase
+
+- Ouverture en suivi local à échelle réelle pour la croisière seule comme pour le vol complet. L’altitude n’est plus écrasée par un cadrage sur plusieurs milliers de kilomètres.
+- Références de cadrage locales de 6 km au roulage, en rotation, à l’arrondi et au freinage ; 12 km en montée initiale et en approche ; 40 km en montée de départ et en descente ; 60 km en croisière. Ces longueurs définissent l’échelle du repère ; l’étendue effectivement visible dépend de la perspective et du zoom. Les axes restent uniformes et l’avion reste agrandi pour la lecture.
+- Raccordement continu des cadrages au début de chaque phase, déterministe lors du déplacement du curseur temporel. Vue de suivi orientée derrière l’avion avec horizon visible par défaut.
+- Curseur d’exagération intégré à la scène, réglage manuel et bouton « Auto ». L’amplification automatique est réservée aux vues globales, bornée entre ×1 et ×200 et explicitement signalée. Le profil local fidèle impose ×1.
+- Vérifications : démarrage sans réglage, neuf phases, huit raccords continus, contrôles intégrés sur ordinateur/mobile et résultats JSON inchangés. Contrôles des 30 angles de projection et des trois cas de vent, plus 130 contrôles du sol et des caméras.
+
+```text
+python -X utf8 tests/test_a380_auto_framing.py
+python -X utf8 tests/test_a380_profile_scale.py
+python -X utf8 tests/test_a380_ground.py
+```
+
 ## Version 1.4.0 — atelier d’analyse de mission
 
 - Présentation factuelle du projet et de ses auteurs, animation 3D intégrée sans cadre décoratif, typographie système et réduction des surfaces encadrées.
