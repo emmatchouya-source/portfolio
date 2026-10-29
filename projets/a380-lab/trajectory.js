@@ -1,5 +1,5 @@
 // Playback samples the computed cruise trajectory; it never integrates new dynamics.
-import {verticalAt} from './vertical-profile.js?v=1.3.5';
+import {verticalAt} from './vertical-profile.js?v=1.3.6';
 export function prepareTrajectory(result,label){
   if(!result?.feasible||!Array.isArray(result.rows)||result.rows.length<2)return null;
   const rows=result.rows;

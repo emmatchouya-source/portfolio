@@ -13,6 +13,17 @@ export function aircraftMesh(){
     }
   }
   faces.push({points:[[-4.4,0,.48],[-5.6,0,3],[-6.5,0,3],[-6.4,0,.4]],color:'#219b8c'});
-  faces.push({points:[[5.9,-.37,.27],[5.2,-.58,.42],[5.2,.58,.42],[5.9,.37,.27]],color:'#203b52'});
+  // Six glazing panes follow the actual faceted nose surface. A single flat
+  // windshield cuts through the convex fuselage and disappears under depth testing.
+  const mix=(a,b,t)=>a.map((v,i)=>v+(b[i]-v)*t);
+  for(const [j,u0,u1,front,back] of [[1,.08,.48,.13,.68],[1,.54,.94,.09,.61],
+    [2,.06,.94,.1,.57],[3,.06,.94,.1,.57],[4,.06,.46,.09,.61],[4,.52,.92,.13,.68]]){
+    const a=body[1][j],b=body[1][j+1],d=body[2][j];
+    const u=b.map((v,i)=>v-a[i]),v=d.map((q,i)=>q-a[i]);
+    const n=[v[1]*u[2]-v[2]*u[1],v[2]*u[0]-v[0]*u[2],v[0]*u[1]-v[1]*u[0]],length=Math.hypot(...n);
+    const surface=(angle,t)=>mix(mix(body[1][j],body[1][j+1],angle),mix(body[2][j],body[2][j+1],angle),t)
+      .map((p,i)=>p+.012*n[i]/length);
+    faces.push({points:[surface(u0,front),surface(u1,front),surface(u1,back),surface(u0,back)],color:'#203b52',part:'cockpit-glass'});
+  }
   return faces;
 }

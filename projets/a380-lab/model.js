@@ -1,9 +1,9 @@
-import {projectFlight,validateProject} from './project-model.js?v=1.3.5';
-import {verticalPlan,verticalAt,pathMotion} from './vertical-profile.js?v=1.3.5';
-import {AIRPORT_DEFAULTS,AIRPORT_LIMITS,validateAirportConfig} from './airport-config.js?v=1.3.5';
-import {simulateFullMission} from './mission.js?v=1.3.5';
+import {projectFlight,validateProject} from './project-model.js?v=1.3.6';
+import {verticalPlan,verticalAt,pathMotion} from './vertical-profile.js?v=1.3.6';
+import {AIRPORT_DEFAULTS,AIRPORT_LIMITS,validateAirportConfig} from './airport-config.js?v=1.3.6';
+import {simulateFullMission} from './mission.js?v=1.3.6';
 // SI throughout: m, s, kg, N, K. No aircraft operational data are implied.
-export const VERSION = '1.3.5';
+export const VERSION = '1.3.6';
 export const G = 9.80665, R = 287.05287, GAMMA = 1.4;
 export const DEFAULT = Object.freeze({
   distance:4569, mass:500000, fuel:120000, reserve:15000, wind:0, disa:0,

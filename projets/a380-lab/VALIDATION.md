@@ -1,5 +1,17 @@
 # Vérification de la version 1.0.0
 
+## Version 1.3.6 — pare-brise du cockpit
+
+- Le pare-brise plan qui coupait la coque est remplacé par six panneaux ajustés aux facettes réelles du nez, avec un léger décalage vers l’extérieur et des montants visibles.
+- Le contrôle de profondeur est conservé : les vitres ne sont pas forcées au premier plan et les parties situées derrière la coque restent naturellement occultées.
+- Vérification de la position extérieure et de l’intégralité visible de chaque panneau avec rendu WebGL et logiciel, dans les deux ordres de dessin. Captures des vues avant gauche et droite ; essais de l’animation automatique et de l’occultation ailes/moteurs.
+
+```text
+python -X utf8 tests/test_a380_cockpit.py
+python -X utf8 tests/test_a380_hero.py
+python -X utf8 tests/test_a380_depth.py
+```
+
 ## Version 1.3.5 — profondeur et lecture automatique
 
 - Suppression du tri des faces par distance moyenne : le modèle de l’introduction et celui de la trajectoire partagent un rendu opaque à profondeur par pixel (WebGL). Les moteurs ne passent plus visuellement à travers les ailes.
