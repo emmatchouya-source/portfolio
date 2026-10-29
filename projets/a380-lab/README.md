@@ -47,7 +47,7 @@ Le lien `?scenario=report` charge explicitement le cas original ; `?scenario=ver
 
 ## Trajectoire 3D — version 1.3.3
 
-L’illustration de l’introduction utilise depuis la version 1.3.4 le même maillage que le lecteur de trajectoire, défini dans `aircraft-mesh.js`. Cette animation de présentation est indépendante du calcul : rotation lente, orientation interactive et bouton de pause. Elle respecte la préférence de mouvement réduit et suspend son rendu lorsqu’elle n’est plus visible.
+L’illustration de l’introduction utilise depuis la version 1.3.4 le même maillage que le lecteur de trajectoire, défini dans `aircraft-mesh.js`. Cette animation de présentation est indépendante du calcul : démarrage automatique, rotation lente, orientation interactive et bouton de pause. La préférence de mouvement réduit ralentit la rotation et supprime l’oscillation, sans nécessiter de clic pour démarrer. Le rendu s’arrête hors écran. Depuis la version 1.3.5, `depth-mesh.js` gère la profondeur des ailes, du fuselage et des moteurs par pixel, avec un repli logiciel si WebGL n’est pas disponible.
 
 L’onglet **Trajectoire 3D** anime un avion à quatre moteurs sur les points de la mission calculée. Le lien `?view=3d` ouvre directement cette vue. Lecture/pause, retour au début, curseur temporel et vitesses ×60 / ×300 / ×1 200 / ×3 600. Chaque position est accompagnée de la distance, altitude, Mach, TAS, masse, carburant et, en mode projet, incidence et stabilisateur équilibrés.
 

@@ -1,5 +1,18 @@
 # Vérification de la version 1.0.0
 
+## Version 1.3.5 — profondeur et lecture automatique
+
+- Suppression du tri des faces par distance moyenne : le modèle de l’introduction et celui de la trajectoire partagent un rendu opaque à profondeur par pixel (WebGL). Les moteurs ne passent plus visuellement à travers les ailes.
+- Repli logiciel avec tampon de profondeur si WebGL est indisponible ou perdu ; ajustement des plans proche/lointain au maillage pour conserver la précision dans le profil orthographique.
+- Démarrage automatique dès que l’illustration devient visible. Le réglage de mouvement réduit ralentit la rotation et supprime l’oscillation ; il ne place plus l’animation en pause initiale. La pause manuelle et l’arrêt hors écran restent disponibles.
+- Comparaison indépendante rayon–triangle sur un tour de caméra et cinq élévations, avec ordre des faces inversé, rendu graphique et logiciel. Vérification supplémentaire de surfaces rapprochées dans une caméra orthographique distante.
+
+```text
+python -X utf8 tests/test_a380_depth.py
+python -X utf8 tests/test_a380_hero.py
+python -X utf8 tests/test_a380_profile_scale.py
+```
+
 ## Version 1.3.4 — modèle animé dans l’introduction
 
 - Le dessin fixe est remplacé par une vue 3D animée : maillage partagé avec le lecteur de trajectoire, rotation lente, éclairage et ombre projetée.

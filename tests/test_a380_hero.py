@@ -11,13 +11,14 @@ def main(base):
         page=browser.new_page(viewport={'width':1512,'height':1080},device_scale_factor=2)
         errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(base+'/projets/a380-lab/',wait_until='domcontentloaded')
-        expect(page.locator('.version')).to_have_text('v1.3.4')
+        expect(page.locator('.version')).to_have_text('v1.3.5')
         figure=page.locator('#aircraftShowcase');canvas=page.locator('#aircraftHeroCanvas');button=page.locator('#aircraftHeroPause')
         figure.scroll_into_view_if_needed()
         expect(figure).to_have_attribute('data-animation','running')
         page.wait_for_function('document.querySelector("#aircraftHeroCanvas").width>200')
         frame=canvas.evaluate('el=>el.toDataURL()');page.wait_for_timeout(500)
         assert frame!=canvas.evaluate('el=>el.toDataURL()'),'hero must animate'
+        figure.screenshot(path=str(ARTIFACTS/'hero3d-autoplay.png'))
         button.click();expect(figure).to_have_attribute('data-animation','paused')
         page.wait_for_timeout(100);frame=canvas.evaluate('el=>el.toDataURL()');page.wait_for_timeout(300)
         assert frame==canvas.evaluate('el=>el.toDataURL()'),'paused hero must stop repainting'
@@ -28,6 +29,10 @@ def main(base):
         assert frame!=canvas.evaluate('el=>el.toDataURL()'),'drag must rotate the model'
         page.keyboard.press('Home');page.wait_for_timeout(60)
         page.locator('.intro').screenshot(path=str(ARTIFACTS/'hero3d-desktop.png'))
+        for _ in range(13):page.keyboard.press('ArrowLeft')
+        for _ in range(4):page.keyboard.press('ArrowUp')
+        page.wait_for_timeout(100);figure.screenshot(path=str(ARTIFACTS/'hero3d-engines-under-wings.png'))
+        page.keyboard.press('Home')
         for width in [1240,900,390]:
             page.set_viewport_size({'width':width,'height':844})
             figure.scroll_into_view_if_needed();page.wait_for_timeout(120)
@@ -49,11 +54,11 @@ def main(base):
         rp=reduced.new_page();rp.on('pageerror',lambda e:errors.append(str(e)))
         rp.goto(base+'/projets/a380-lab/',wait_until='domcontentloaded')
         rf=rp.locator('#aircraftShowcase');rf.scroll_into_view_if_needed()
-        expect(rf).to_have_attribute('data-animation','paused')
+        expect(rf).to_have_attribute('data-animation','running')
         rc=rp.locator('#aircraftHeroCanvas');rp.wait_for_timeout(100)
         frame=rc.evaluate('el=>el.toDataURL()');rp.wait_for_timeout(350)
-        assert frame==rc.evaluate('el=>el.toDataURL()'),'reduced motion must show a static 3D pose'
-        rp.locator('#aircraftHeroPause').click();expect(rf).to_have_attribute('data-animation','running')
+        assert frame!=rc.evaluate('el=>el.toDataURL()'),'hero must autoplay with gentle motion even when reduced motion is requested'
+        rp.locator('#aircraftHeroPause').click();expect(rf).to_have_attribute('data-animation','paused')
         assert not errors,errors
         browser.close()
     print('Hero 3D animation, controls, desktop/mobile, offscreen pause, reduced motion and shared trajectory mesh: PASS',flush=True)
