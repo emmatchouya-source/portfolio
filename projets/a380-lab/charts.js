@@ -1,5 +1,5 @@
-import {missionProfileChart} from './profile-panels.js?v=1.5.0';
-export {phaseProfileCharts} from './profile-panels.js?v=1.5.0';
+import {missionProfileChart} from './profile-panels.js?v=1.5.1';
+export {phaseProfileCharts} from './profile-panels.js?v=1.5.1';
 export const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const f=(v,d=0)=>Number(v).toLocaleString('fr-FR',{maximumFractionDigits:d,minimumFractionDigits:d});
 const colors={teal:'#107a70',grey:'#93a7b3',gold:'#b48642',orange:'#bb622d',purple:'#6879a7'};

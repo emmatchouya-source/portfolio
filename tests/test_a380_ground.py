@@ -14,7 +14,7 @@ def main(base):
         errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(base+'/projets/a380-lab/?scenario=full&view=3d',wait_until='domcontentloaded')
         page.wait_for_function("!document.querySelector('#run').disabled && document.querySelector('#flightTimeline').max>100",timeout=180000)
-        expect(page.locator('.version')).to_have_text('v1.5.0')
+        expect(page.locator('.version')).to_have_text('v1.5.1')
         checks=page.evaluate('''async()=>{
           const {perspectiveCamera}=await import('./trajectory.js?v=1.3.2');
           const {clipSegment,clipPolygon,clipScreenSegment,clipScreenPolygon,groundScreenPolygon,groundGrid}=await import('./scene-ground.js?v=1.3.2');
@@ -78,9 +78,12 @@ def main(base):
         assert before!=page.locator('#flightCanvas').evaluate('el=>el.toDataURL()')
         assert page.locator('#flightCamera').input_value()=='auto'
         # Check actual playing, not just seeking: reduced auto acceleration and moving scenery.
+        started=page.evaluate('performance.now()')
         page.locator('#flightPlay').click();page.wait_for_timeout(350);page.locator('#flightPlay').click()
+        elapsed=(page.evaluate('performance.now()')-started)/1000
         advance=float(page.locator('#flightTimeline').input_value())-(t+1)
-        assert 0<advance<200,advance
+        # Browser action latency varies; compare against actual wall time at ×300.
+        assert 0<advance<=elapsed*300+20,(advance,elapsed)
         for camera in ['follow','top','side','orbit','arrival']:
             page.locator('#flightCamera').select_option(camera)
             page.wait_for_timeout(60)

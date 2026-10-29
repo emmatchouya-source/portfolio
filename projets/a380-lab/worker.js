@@ -1,4 +1,4 @@
-import {optimize} from './optimizer.js?v=1.5.0';
+import {optimize} from './optimizer.js?v=1.5.1';
 self.onmessage=({data})=>{
   try { const result=optimize(data.config,data.tables,p=>postMessage({type:'progress',...p}));postMessage({type:'result',result}); }
   catch(e) {postMessage({type:'error',message:e.message});}

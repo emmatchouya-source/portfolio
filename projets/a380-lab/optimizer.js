@@ -1,4 +1,4 @@
-import {simulate,speedStudy,score,selfCheck,validateConfig} from './model.js?v=1.5.0';
+import {simulate,speedStudy,score,selfCheck,validateConfig} from './model.js?v=1.5.1';
 const axis=(lo,hi,step)=>{const a=[];for(let x=lo;x<hi-1e-8;x+=step)a.push(+x.toFixed(6));a.push(hi);return a;};
 function paretoOf(list) {
   const sorted=list.filter(r=>r.feasible).sort((a,b)=>a.seconds-b.seconds||a.burn-b.burn);

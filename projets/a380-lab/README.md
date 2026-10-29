@@ -35,6 +35,8 @@ Depuis la version 1.4, les résultats sont organisés autour du profil altitude�
 
 La vue 3D démarre en suivi automatique, à échelle réelle, avec un cadrage rapproché au décollage et à l’atterrissage, intermédiaire en montée/descente et plus large en croisière. Les changements de cadrage sont progressifs. Le curseur d’exagération est directement dans la scène ; « Auto » rétablit le réglage adapté à la vue. Depuis la version 1.5, les vues globales restent à ×1 et les deux profils orthographiques conservent les angles. Le dézoom du suivi peut atteindre la mission entière, également accessible par un bouton intégré à la scène. Les profils par phase utilisent chacun un zoom uniforme, sans raccord entre cadres : le décollage, les montées par paliers et l’atterrissage restent lisibles sans redresser leurs angles. Une éventuelle amplification manuelle est explicitement schématique. Ces réglages de présentation ne modifient ni les points de trajectoire, ni les calculs, ni le CSV.
 
+Les trois boutons dans la scène ouvrent directement le suivi 3D, le profil latéral et la mission entière. Le cadrage initial garde la croisière horizontale. Le profil latéral utilise une grille cartésienne à axes égaux, et la vue globale montre un repère de position à la place d’une maquette démesurément agrandie. Voir [les choix de représentation et les références publiques](FLIGHT_VISUALIZATION.md).
+
 1. Définir la mission, le profil de référence et les contraintes.
 2. Choisir l’objectif : carburant, durée, ou carburant + CI × durée en minutes.
 3. Lancer l’analyse. Les résultats correspondent toujours à la dernière configuration calculée ; une modification non appliquée est signalée.

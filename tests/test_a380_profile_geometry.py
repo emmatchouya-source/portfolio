@@ -35,10 +35,10 @@ def main(base):
         expect(canvas).to_have_attribute('data-mission-fits','true')
         page.locator('.flight-viewport').screenshot(path=str(ARTIFACTS/'faithful-global-profile.png'))
         values=page.evaluate('''async()=>{
-          const {geometricProfile,phaseProfileCharts}=await import('./profile-panels.js?v=1.5.0');
-          const {missionCameraFit}=await import('./scene-framing.js?v=1.5.0');
-          const {perspectiveCamera}=await import('./trajectory.js?v=1.5.0');
-          const {simulate}=await import('./model.js?v=1.5.0'),{scenarioConfig}=await import('./scenarios.js?v=1.5.0');
+          const {geometricProfile,phaseProfileCharts}=await import('./profile-panels.js?v=1.5.1');
+          const {missionCameraFit}=await import('./scene-framing.js?v=1.5.1');
+          const {perspectiveCamera}=await import('./trajectory.js?v=1.5.1');
+          const {simulate}=await import('./model.js?v=1.5.1'),{scenarioConfig}=await import('./scenarios.js?v=1.5.1');
           const host=document.createElement('div');host.id='angleAudit';host.style='width:100%;';document.body.append(host);
           const angles=[];
           for(const slope of [-5,-3,-.4,0,.4,3,5])for(const length of [1000,150000,4500000]){

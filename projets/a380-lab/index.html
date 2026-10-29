@@ -5,16 +5,16 @@
   <meta name="description" content="Laboratoire de performance de vol de l’A380 : profils par paliers, optimisation sous contraintes, MRC, LRC, ECON et études reproductibles.">
   <meta name="theme-color" content="#12283b">
   <title>A380 — Analyse et optimisation de mission · Emmanuel Tchouya</title>
-  <link rel="stylesheet" href="style.css?v=1.5.0">
-  <link rel="stylesheet" href="finite.css?v=1.5.0">
-  <link rel="stylesheet" href="hero3d.css?v=1.5.0">
-  <link rel="stylesheet" href="workbench.css?v=1.5.0">
+  <link rel="stylesheet" href="style.css?v=1.5.1">
+  <link rel="stylesheet" href="finite.css?v=1.5.1">
+  <link rel="stylesheet" href="hero3d.css?v=1.5.1">
+  <link rel="stylesheet" href="workbench.css?v=1.5.1">
 </head>
 <body>
 <a class="skip" href="#workspace">Aller aux résultats</a>
 <header class="masthead">
   <a class="brand" href="../../"><span class="brand-mark">ET</span><span>A380 <b>CRUISE LAB</b><small>Analyse de mission</small></span></a>
-  <div class="mast-meta"><span class="project-author">Emmanuel Tchouya</span><span class="version">v1.5.0</span><a href="../../#projets">Portfolio ↗</a></div>
+  <div class="mast-meta"><span class="project-author">Emmanuel Tchouya</span><span class="version">v1.5.1</span><a href="../../#projets">Portfolio ↗</a></div>
 </header>
 <div class="app-shell">
 <aside class="configuration" aria-label="Paramètres de l’étude">
@@ -111,15 +111,17 @@
       <div id="flightPending" class="flight-pending" hidden><p>Paramètres modifiés : la vue affiche encore la dernière étude calculée.</p><button id="flightRecalculate" class="primary">Appliquer et recalculer la trajectoire</button></div>
       <p id="flightScaleWarning" class="scope" role="status" hidden></p>
       <div class="flight-viewport">
-        <canvas id="flightCanvas" tabindex="0" role="img" aria-label="Vue 3D interactive de l’avion et de sa trajectoire de croisière" aria-describedby="flightHelp flightLimits">La télémétrie de la trajectoire est disponible dans les valeurs sous la scène.</canvas>
+        <canvas id="flightCanvas" tabindex="0" role="img" aria-label="Vue interactive 3D et profils à échelle réelle de la mission de l’avion" aria-describedby="flightHelp flightLimits">La télémétrie de la trajectoire est disponible dans les valeurs sous la scène.</canvas>
         <div class="flight-scene-top"><span id="flightState" role="status">En attente de trajectoire</span><span id="flightScale">Altitude ×1 · avion agrandi</span></div>
-        <button id="flightFitMission" class="flight-fit-mission" type="button">Mission entière</button>
-        <div class="flight-scene-bottom"><span id="flightStage"></span><div class="flight-camera-buttons" role="group" aria-label="Commandes de caméra"><button data-flight-control="left" aria-label="Tourner la caméra à gauche">↶</button><button data-flight-control="right" aria-label="Tourner la caméra à droite">↷</button><button data-flight-control="up" aria-label="Élever la caméra">↑</button><button data-flight-control="down" aria-label="Abaisser la caméra">↓</button><button data-flight-control="in" aria-label="Zoom avant">+</button><button data-flight-control="out" aria-label="Zoom arrière">−</button></div></div>
+        <div class="flight-view-shortcuts" role="group" aria-label="Vues de trajectoire"><button id="flightFollowView" type="button" aria-pressed="true">Suivi 3D</button><button id="flightProfileView" type="button" aria-pressed="false">Profil latéral</button><button id="flightFitMission" type="button" aria-pressed="false">Mission entière</button></div>
+        <div id="flightViewCaption" class="flight-view-caption">Suivi 3D · cadrage adapté à la phase</div>
+        <div class="flight-scene-bottom"><div class="flight-camera-buttons" role="group" aria-label="Commandes de caméra"><button data-flight-control="left" aria-label="Tourner la caméra à gauche">↶</button><button data-flight-control="right" aria-label="Tourner la caméra à droite">↷</button><button data-flight-control="up" aria-label="Élever la caméra">↑</button><button data-flight-control="down" aria-label="Abaisser la caméra">↓</button><button data-flight-control="in" aria-label="Zoom avant">+</button><button data-flight-control="out" aria-label="Zoom arrière">−</button></div></div>
         <div class="flight-scale-control" role="group" aria-label="Échelle verticale de la scène"><div><label for="flightExaggeration">Exagération verticale</label><output id="flightScaleValue" for="flightExaggeration">×1</output><button type="button" id="flightAutoScale" aria-pressed="true" title="Échelle réelle sur tous les axes et cadrage adapté à la phase.">Auto</button></div><input id="flightExaggeration" type="range" min="1" max="400" value="1" step="1"><small id="flightFraming">Cadrage adapté à la phase</small></div>
         <div id="flightEmpty" class="flight-empty"><strong>Aucune trajectoire admissible à lire</strong><p>Le modèle doit disposer d’une mission faisable. Les points rejetés ne sont pas transformés en animation.</p><button id="flightExample" class="primary" hidden>Charger le cas de vérification 300 t</button></div>
       </div>
       <div class="flight-playback"><button id="flightPlay" class="primary" disabled aria-pressed="false">▶ Lire</button><button id="flightRestart" disabled aria-label="Revenir au début de la trajectoire">↤ Début</button><label>Vitesse de lecture <select id="flightSpeed"><option value="auto">Vitesse automatique par phase</option><option value="1">Temps réel</option><option value="5">×5</option><option value="20">×20</option><option value="60">×60</option><option value="300" selected>×300</option><option value="1200">×1 200</option><option value="3600">×3 600</option></select></label><output id="flightTime" aria-label="Temps simulé et durée totale">— / —</output></div>
       <label class="flight-timeline-label" for="flightTimeline">Position dans la mission</label><input id="flightTimeline" class="flight-timeline" type="range" min="0" max="1" value="0" step="any" disabled>
+      <p id="flightStage" class="hint flight-current-phase"></p>
       <div id="flightStages" class="flight-stages" role="group" aria-label="Accéder aux paliers calculés"></div>
       <div class="flight-telemetry" aria-label="Télémétrie à l’instant sélectionné">
         <div><span>DISTANCE AU SOL</span><strong id="flightDistance">—</strong><small>km</small></div><div><span>ALTITUDE</span><strong id="flightAltitude">—</strong><small>m</small></div><div><span>MACH</span><strong id="flightMach">—</strong><small>M</small></div><div><span>VITESSE VRAIE</span><strong id="flightTAS">—</strong><small>km/h</small></div>
@@ -172,7 +174,7 @@
 </main>
 </div>
 <dialog id="errorDialog"><h2>Vérifier les paramètres</h2><p id="errorMessage"></p><form method="dialog"><button class="primary">Compris</button></form></dialog>
-<script type="module" src="app.js?v=1.5.0"></script>
-<script type="module" src="hero3d.js?v=1.5.0"></script>
+<script type="module" src="app.js?v=1.5.1"></script>
+<script type="module" src="hero3d.js?v=1.5.1"></script>
 </body>
 </html>

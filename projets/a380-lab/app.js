@@ -1,9 +1,9 @@
-import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck,upgradeConfig} from './model.js?v=1.5.0';
-import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js?v=1.5.0';
-import {TrajectoryPlayer} from './scene3d.js?v=1.5.0';
-import {SCENARIO_LABELS,identifyScenario,scenarioConfig} from './scenarios.js?v=1.5.0';
-import {AIRPORT_FIELDS,AIRPORT_LIMITS,PHASE_LABELS} from './airport-config.js?v=1.5.0';
-import {airportReport} from './airport-report.js?v=1.5.0';
+import {DEFAULT,VERSION,validateConfig,validateTables,flightPoint,selfCheck,upgradeConfig} from './model.js?v=1.5.1';
+import {esc,profileChart,speedChart,paretoChart,heatChart} from './charts.js?v=1.5.1';
+import {TrajectoryPlayer} from './scene3d.js?v=1.5.1';
+import {SCENARIO_LABELS,identifyScenario,scenarioConfig} from './scenarios.js?v=1.5.1';
+import {AIRPORT_FIELDS,AIRPORT_LIMITS,PHASE_LABELS} from './airport-config.js?v=1.5.1';
+import {airportReport} from './airport-report.js?v=1.5.1';
 const $=id=>document.getElementById(id),form=$('studyForm');
 const compactLayout=matchMedia('(max-width: 820px)');
 const syncConfiguration=()=>{$('configurationPanel').open=!compactLayout.matches;};
@@ -96,7 +96,7 @@ function run(){
   worker?.terminate();busy(true);$('progress').value=0;started=performance.now();
   status('Exploration du domaine…');
   const current={config:structuredClone(config),tables:tables?structuredClone(tables):null,scenario:identifyScenario(config)};
-  try{worker=new Worker(new URL('./worker.js?v=1.5.0',import.meta.url),{type:'module'});}catch(e){busy(false);status('Impossible de démarrer le calcul.',true);showError(e);return;}
+  try{worker=new Worker(new URL('./worker.js?v=1.5.1',import.meta.url),{type:'module'});}catch(e){busy(false);status('Impossible de démarrer le calcul.',true);showError(e);return;}
   worker.onmessage=({data})=>{
     if(data.type==='progress'){$('progress').value=data.value;status(`${data.phase} · ${data.value} %`);return;}
     if(data.type==='error'){worker.terminate();worker=null;busy(false);status('Calcul interrompu : '+data.message,true);showError(Error(data.message));return;}
