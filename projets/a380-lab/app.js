@@ -112,7 +112,7 @@ function run(){
 }
 form.addEventListener('submit',e=>{e.preventDefault();run();});
 $('cancel').onclick=()=>{worker?.terminate();worker=null;busy(false);status('Calcul annulé. Les éventuels résultats précédents sont conservés.');};
-async function useProject(start=false,id='verification'){
+async function useProject(start=false,id='full'){
   let c;try{c=start?scenarioConfig(id):readConfig();}catch(e){showError(e);return;}
   busy(true);
   try{const response=await fetch(new URL('./data/project.json',import.meta.url));if(!response.ok)throw Error('Impossible de charger les données du projet.');const data=validateTables(await response.json());
@@ -240,7 +240,7 @@ try{
   }
 }catch{/* Corrupt or unavailable local storage must not block startup. */}
 const params=new URLSearchParams(location.search),requested=params.get('scenario');
-const initialScenario=['verification','climbs','full','report'].includes(requested)?requested:params.get('model')==='parametric'?'report':'verification';
+const initialScenario=['verification','climbs','full','report'].includes(requested)?requested:params.get('model')==='parametric'?'report':'full';
 setConfig(scenarioConfig(initialScenario));modelState();
 $('validation').innerHTML=selfCheck().map(x=>`<div class="check"><strong>${x.pass?'PASS':'ÉCHEC'}</strong>${esc(x.name)}</div>`).join('');
 if(params.get('view')==='3d')activateTab('trajectory');

@@ -22,10 +22,10 @@
   <summary class="config-toggle"><strong>Paramètres de mission</strong><span>Configurer l’étude</span></summary>
   <div class="config-heading"><h2>Paramètres de mission</h2><p>Une référence commune pour comparer les profils.</p></div>
   <form id="studyForm">
-    <div class="scenario-picker"><label for="studyScenario">Cas d’étude</label><select id="studyScenario" aria-describedby="scenarioHint"><option value="verification">Vérification numérique · 300 t</option><option value="climbs">Deux montées physiques · 300 t</option><option value="full">Vol complet · vérification 300 t</option><option value="report">Rapport MGA803 · 500 t</option><option value="custom" disabled>Paramètres personnalisés</option></select><p id="scenarioHint" class="hint">Le cas de vérification est chargé au démarrage pour lancer une simulation calculable.</p></div>
+    <div class="scenario-picker"><label for="studyScenario">Cas d’étude</label><select id="studyScenario" aria-describedby="scenarioHint"><option value="verification">Vérification numérique · 300 t</option><option value="climbs">Deux montées physiques · 300 t</option><option value="full" selected>Vol complet · vérification 300 t</option><option value="report">Rapport MGA803 · 500 t</option><option value="custom" disabled>Paramètres personnalisés</option></select><p id="scenarioHint" class="hint">Le vol complet de vérification à 300 t est chargé au démarrage.</p></div>
     <fieldset><legend>Mission</legend>
-      <label class="stack">Périmètre du calcul <select name="missionMode"><option value="0">Croisière uniquement</option><option value="1">Vol complet · décollage à arrêt</option></select></label>
-      <label class="field">Distance au sol <span><input name="distance" type="number" value="4569" min="100" max="15000" step="1" required><i>km</i></span></label>
+      <label class="stack">Périmètre du calcul <select name="missionMode"><option value="0">Croisière uniquement</option><option value="1" selected>Vol complet · décollage à arrêt</option></select></label>
+      <label class="field">Distance entre seuils <span><input name="distance" type="number" value="4569" min="100" max="15000" step="1" required><i>km</i></span></label>
       <label class="field">Masse initiale <span><input name="mass" type="number" value="300000" min="300000" max="575000" step="100" required><i>kg</i></span></label>
       <label class="field">Carburant initial <span><input name="fuel" type="number" value="120000" min="1000" max="250000" step="100" required><i>kg</i></span></label>
       <label class="field">Réserve à préserver <span><input name="reserve" type="number" value="15000" min="0" max="100000" step="100" required><i>kg</i></span></label>
@@ -67,7 +67,7 @@
       </details>
     </fieldset>
     <fieldset id="airportQuick" hidden><legend>Aéroports & procédures</legend><p class="hint">Pistes horizontales et vent uniforme. Hypothèses basse vitesse éditables ; aucune distance réglementaire certifiée.</p><div id="airportQuickFields"></div><button type="button" data-go="model" class="compact">Modifier volets, freinage et moteur ↗</button></fieldset>
-    <div class="run-actions"><button class="primary" type="submit" id="run">Calculer et comparer</button><button type="button" id="cancel" hidden>Annuler le calcul</button><button class="text-button" type="button" id="reset">Rétablir le scénario de démarrage</button><p class="hint" id="dirty">Cas de vérification numérique prêt à être calculé.</p></div>
+    <div class="run-actions"><button class="primary" type="submit" id="run">Calculer et comparer</button><button type="button" id="cancel" hidden>Annuler le calcul</button><button class="text-button" type="button" id="reset">Rétablir le scénario de démarrage</button><p class="hint" id="dirty">Vol complet de vérification prêt à être calculé.</p></div>
   </form>
   </details>
 </aside>
@@ -170,7 +170,7 @@
 </main>
 </div>
 <dialog id="errorDialog"><h2>Vérifier les paramètres</h2><p id="errorMessage"></p><form method="dialog"><button class="primary">Compris</button></form></dialog>
-<script type="module" src="app.js?v=1.4.1"></script>
+<script type="module" src="app.js?v=1.4.1-full-default"></script>
 <script type="module" src="hero3d.js?v=1.4.1"></script>
 </body>
 </html>

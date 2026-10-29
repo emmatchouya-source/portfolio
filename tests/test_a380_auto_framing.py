@@ -29,7 +29,7 @@ def main(base):
         page=browser.new_page(viewport={'width':1512, 'height':1080}, accept_downloads=True)
         errors=[]
         page.on('pageerror',lambda e:errors.append(str(e)))
-        page.goto(base+'/projets/a380-lab/?view=3d',wait_until='domcontentloaded')
+        page.goto(base+'/projets/a380-lab/?view=3d&scenario=verification',wait_until='domcontentloaded')
         ready(page)
         canvas=page.locator('#flightCanvas')
         expect(page.locator('#flightCamera')).to_have_value('auto')

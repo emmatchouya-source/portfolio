@@ -16,7 +16,7 @@ def main(base):
         page = browser.new_page(viewport={'width':1512, 'height':1080}, accept_downloads=True)
         errors = []
         page.on('pageerror', lambda e: errors.append(str(e)))
-        page.goto(base+'/projets/a380-lab/', wait_until='domcontentloaded')
+        page.goto(base+'/projets/a380-lab/?scenario=verification', wait_until='domcontentloaded')
         completed(page)
         expect(page.locator('.version')).to_have_text('v1.4.1')
         expect(page.locator('#configurationPanel')).to_have_attribute('open', '')
