@@ -1,32 +1,16 @@
-import {VERSION} from './model.js?v=1.3.3';
-import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,profileCamera,dot,cross} from './trajectory.js?v=1.3.3';
-import {PHASE_LABELS} from './airport-config.js?v=1.3.3';
-import {phaseBudget} from './airport-report.js?v=1.3.3';
-import {SUN_DIRECTION,drawGroundShadow} from './shadow.js?v=1.3.3';
-import {clipSegment,clipPolygon,clipScreenSegment,clipScreenPolygon,groundScreenPolygon,groundGrid} from './scene-ground.js?v=1.3.3';
+import {aircraftMesh} from './aircraft-mesh.js?v=1.3.4';
+import {VERSION} from './model.js?v=1.3.4';
+import {prepareTrajectory,sampleTrajectory,playbackCSV,clamp,perspectiveCamera,profileCamera,dot,cross} from './trajectory.js?v=1.3.4';
+import {PHASE_LABELS} from './airport-config.js?v=1.3.4';
+import {phaseBudget} from './airport-report.js?v=1.3.4';
+import {SUN_DIRECTION,drawGroundShadow} from './shadow.js?v=1.3.4';
+import {clipSegment,clipPolygon,clipScreenSegment,clipScreenPolygon,groundScreenPolygon,groundGrid} from './scene-ground.js?v=1.3.4';
 const $=id=>document.getElementById(id),RAD=Math.PI/180;
 const f=(v,d=0)=>Number.isFinite(v)?v.toLocaleString('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}):'—';
 const clock=s=>{const t=Math.round(s);return [Math.floor(t/3600),Math.floor(t/60)%60,t%60].map(v=>String(v).padStart(2,'0')).join(':');};
 const TEAL='#6ae0bf';
 const put=(id,text)=>{const el=$(id);if(el.textContent!==text)el.textContent=text;};
 function save(name,data,type){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);}
-function aircraftMesh(){
-  const faces=[],ring=(x,r)=>Array.from({length:12},(_,i)=>[x,Math.cos(i*Math.PI/6)*r,Math.sin(i*Math.PI/6)*r*1.12]);
-  const body=[[6.7,.03],[5.8,.46],[4.6,.72],[-3.8,.72],[-5.7,.4],[-6.6,.04]].map(([x,r])=>ring(x,r));
-  for(let i=1;i<body.length;i++)for(let j=0;j<12;j++)faces.push({points:[body[i-1][j],body[i-1][(j+1)%12],body[i][(j+1)%12],body[i][j]],color:'#eaf2f6'});
-  for(const sign of [-1,1]){
-    faces.push({points:[[1.6,sign*.5,-.12],[-1.5,sign*8.5,.28],[-2.9,sign*8.2,.28],[-2.9,sign*.7,-.12]],color:'#bed1dc'});
-    faces.push({points:[[-4.5,sign*.45,.25],[-5.6,sign*3.1,.55],[-6.4,sign*3.05,.55],[-5.9,sign*.4,.25]],color:'#b4cdd7'});
-    for(const [x,y] of [[1.1,2.9],[-.2,5.6]]){
-      const a=ring(x,.37).map(p=>[p[0],p[1]+sign*y,p[2]-.85]),b=ring(x-1.9,.28).map(p=>[p[0],p[1]+sign*y,p[2]-.85]);
-      for(let j=0;j<12;j++)faces.push({points:[a[j],a[(j+1)%12],b[(j+1)%12],b[j]],color:'#98b7c9'});
-      faces.push({points:a,color:'#193649'});
-    }
-  }
-  faces.push({points:[[-4.4,0,.48],[-5.6,0,3],[-6.5,0,3],[-6.4,0,.4]],color:'#219b8c'});
-  faces.push({points:[[5.9,-.37,.27],[5.2,-.58,.42],[5.2,.58,.42],[5.9,.37,.27]],color:'#203b52'});
-  return faces;
-}
 const MESH=aircraftMesh();
 function shaded(color,normal){
   const n=Math.hypot(...normal)||1,light=clamp(.72+.27*Math.abs(dot(normal,SUN_DIRECTION))/n,.6,1);

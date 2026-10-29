@@ -1,5 +1,15 @@
 # Vérification de la version 1.0.0
 
+## Version 1.3.4 — modèle animé dans l’introduction
+
+- Le dessin fixe est remplacé par une vue 3D animée : maillage partagé avec le lecteur de trajectoire, rotation lente, éclairage et ombre projetée.
+- Orientation à la souris, au toucher ou au clavier ; pause explicite, pose fixe avec préférence de mouvement réduit, arrêt du rendu hors écran et lorsque la page est masquée.
+- Contrôles navigateur de l’animation, de la pause, des interactions, des formats ordinateur/mobile et du rendu du même maillage dans la trajectoire. Aucun calcul aérodynamique ou de performance modifié.
+
+```text
+python -X utf8 tests/test_a380_hero.py
+```
+
 ## Version 1.3.3 — pentes et profil fidèle
 
 - Échelles identiques au chargement et après changement de caméra ; suppression du rétablissement implicite de l’amplification verticale de la vue globale.

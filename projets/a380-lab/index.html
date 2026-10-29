@@ -5,14 +5,15 @@
   <meta name="description" content="Laboratoire de performance de vol de l’A380 : profils par paliers, optimisation sous contraintes, MRC, LRC, ECON et études reproductibles.">
   <meta name="theme-color" content="#12283b">
   <title>A380 Cruise Lab — Analyse et optimisation</title>
-  <link rel="stylesheet" href="style.css?v=1.3.3">
-  <link rel="stylesheet" href="finite.css?v=1.3.3">
+  <link rel="stylesheet" href="style.css?v=1.3.4">
+  <link rel="stylesheet" href="finite.css?v=1.3.4">
+  <link rel="stylesheet" href="hero3d.css?v=1.3.4">
 </head>
 <body>
 <a class="skip" href="#workspace">Aller aux résultats</a>
 <header class="masthead">
   <a class="brand" href="../../"><span class="brand-mark">ET<span>↗</span></span><span>A380 <b>CRUISE LAB</b><small>Performance & optimisation</small></span></a>
-  <div class="mast-meta"><span class="status-dot"></span> Laboratoire numérique <span class="version">v1.3.3</span><a href="../../#projets">Portfolio ↗</a></div>
+  <div class="mast-meta"><span class="status-dot"></span> Laboratoire numérique <span class="version">v1.3.4</span><a href="../../#projets">Portfolio ↗</a></div>
 </header>
 <div class="app-shell">
 <aside class="configuration" aria-label="Paramètres de l’étude">
@@ -65,13 +66,11 @@
 <main id="workspace" tabindex="-1">
   <section class="intro">
     <div><span class="eyebrow">MÉCANIQUE DU VOL / ÉTUDE DE CROISIÈRE</span><h2>Chaque kilogramme compte.<br><em>Chaque hypothèse aussi.</em></h2><p>Un espace de recherche pour comparer les profils de vol de l’A380, comprendre leurs compromis et reproduire les calculs.</p></div>
-    <svg class="aircraft" viewBox="0 0 340 200" role="img" aria-label="Schéma de l’A380 vu de dessus">
-      <defs><pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#b7c9d7" stroke-width=".5"/></pattern></defs>
-      <rect width="340" height="200" fill="url(#grid)"/><circle cx="170" cy="100" r="82" fill="none" stroke="#a5bdca" stroke-dasharray="3 5"/>
-      <path d="M170 12Q159 21 159 49L158 76 35 125 35 137 157 116 160 160 128 180 128 186 169 177 212 186 212 180 180 160 183 116 305 137 305 125 182 76 181 49Q181 21 170 12Z" fill="#f6fafc" stroke="#476b81" stroke-width="1.3"/>
-      <g fill="#d3e2e9" stroke="#476b81"><rect x="81" y="103" width="10" height="24" rx="3"/><rect x="126" y="86" width="11" height="28" rx="3"/><rect x="249" y="103" width="10" height="24" rx="3"/><rect x="203" y="86" width="11" height="28" rx="3"/></g>
-      <path d="M170 27V177M44 151H297" stroke="#7092a4" stroke-dasharray="3 4"/><text x="235" y="171" fill="#59788b" font-size="10" font-family="monospace">4 × turbofan</text><circle cx="170" cy="105" r="3" fill="#167a70"/>
-    </svg>
+    <figure class="aircraft-showcase" id="aircraftShowcase">
+      <canvas id="aircraftHeroCanvas" tabindex="0" role="img" aria-label="Modèle 3D animé de l’avion à quatre moteurs" aria-describedby="aircraftHeroHelp">Modèle illustratif à quatre moteurs, identique à celui de la simulation.</canvas>
+      <figcaption class="aircraft-caption"><b>A380</b><span>4 TURBOFANS</span></figcaption>
+      <div class="aircraft-interaction"><small id="aircraftHeroHelp">GLISSER POUR ORIENTER · FLÈCHES AU CLAVIER</small><button id="aircraftHeroPause" type="button" aria-label="Mettre l’animation 3D en pause" aria-pressed="false">Ⅱ</button></div>
+    </figure>
   </section>
   <div class="notice"><span class="notice-icon">i</span><p id="modelNotice"><b>Chargement du modèle MGA803.</b> Données OpenVSP et coefficients moteur fournis ; modèle académique reconstruit, sans validation en vol.</p><button type="button" data-go="model">Voir les hypothèses ↗</button></div>
   <div class="toolbar"><div class="tabs" role="tablist" aria-label="Vues de l’étude"><button id="tab-overview" role="tab" aria-controls="overview" aria-selected="true" data-tab="overview">Synthèse</button><button id="tab-trajectory" role="tab" aria-controls="trajectory" aria-selected="false" tabindex="-1" data-tab="trajectory">Trajectoire 3D</button><button id="tab-envelope" role="tab" aria-controls="envelope" aria-selected="false" tabindex="-1" data-tab="envelope">Domaine de vol</button><button id="tab-model" role="tab" aria-controls="model" aria-selected="false" tabindex="-1" data-tab="model">Modèle & données</button><button id="tab-method" role="tab" aria-controls="method" aria-selected="false" tabindex="-1" data-tab="method">Méthode & validation</button></div><button id="exportStudy" class="compact" disabled>↓ Étude JSON</button></div>
@@ -157,6 +156,7 @@
 </main>
 </div>
 <dialog id="errorDialog"><h2>Vérifier les paramètres</h2><p id="errorMessage"></p><form method="dialog"><button class="primary">Compris</button></form></dialog>
-<script type="module" src="app.js?v=1.3.3"></script>
+<script type="module" src="app.js?v=1.3.4"></script>
+<script type="module" src="hero3d.js?v=1.3.4"></script>
 </body>
 </html>
