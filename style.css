@@ -151,6 +151,22 @@ section{padding:96px 0 0}
 .tag{font-size:12.8px;padding:4px 10px;border-radius:999px;background:var(--bg2);color:var(--muted);border:1px solid var(--line)}
 .case .links{margin-top:auto;padding-top:6px}
 
+/* A380 : modèle partagé avec le laboratoire et profil de mission conservé. */
+.a380-visuals{display:grid;grid-template-rows:210px 170px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,var(--accent-soft),color-mix(in srgb,var(--accent-2) 8%,transparent))}
+.a380-project .aircraft-showcase{--sans:"Inter",system-ui,sans-serif;--mono:Consolas,monospace;width:100%;height:210px;flex:none;margin:0}
+.a380-project .aircraft-caption{inset:13px 17px auto}
+.a380-project .aircraft-interaction{bottom:9px;left:17px;right:17px}
+.a380-project .aircraft-interaction small{font-size:10px}
+.a380-project .aircraft-interaction button{background:var(--panel);color:var(--ink);border:1px solid var(--line);cursor:pointer}
+.a380-project .aircraft-interaction button:hover{background:var(--bg2);border-color:var(--accent)}
+.a380-project .aircraft-showcase canvas:focus-visible{outline-color:var(--accent)}
+.a380-project .a380-profile{aspect-ratio:auto;background:none;border:0;border-top:1px solid var(--line);min-width:0;padding:4px 14px}
+.a380-project .top .ctx{font-size:11px;letter-spacing:.04em}
+.a380-project .metric{font-size:12px}
+.a380-project .project-model-note{margin:0;color:var(--muted);font-size:12px;line-height:1.6}
+.a380-project .links{display:flex;align-items:center;gap:12px 18px;flex-wrap:wrap}
+.a380-project .project-demo-link{font-size:13px;font-weight:500}
+
 /* compétences */
 .skills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 .skill{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow);transition:transform .3s,border-color .3s}

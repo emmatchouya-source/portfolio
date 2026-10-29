@@ -12,7 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="projets/a380-lab/hero3d.css?v=1.5.2">
+<link rel="stylesheet" href="style.css?v=a380-project-1">
 </head>
 <body>
 <div class="bg-grid"></div><div class="bg-blob b1"></div><div class="bg-blob b2"></div>
@@ -214,9 +215,15 @@
           </div>
         </article>
 
-        <article class="case reveal">
-          <div class="thumb" aria-hidden="true">
-            <svg viewBox="0 0 320 160">
+        <article class="case reveal a380-project" id="a380Project" aria-labelledby="a380ProjectTitle">
+          <div class="a380-visuals">
+            <figure class="aircraft-showcase portfolio-aircraft" id="aircraftShowcase">
+              <canvas id="aircraftHeroCanvas" tabindex="0" role="img" aria-label="Modèle 3D de l’A380 en rotation automatique" aria-describedby="aircraftHeroHelp">Modèle illustratif à quatre moteurs, identique à celui de l’application A380 Lab.</canvas>
+              <figcaption class="aircraft-caption"><b>A380 · Vue 3D</b><span>4 turboréacteurs</span></figcaption>
+              <div class="aircraft-interaction"><small id="aircraftHeroHelp">Glisser pour orienter · flèches au clavier</small><button id="aircraftHeroPause" type="button" aria-label="Mettre l’animation 3D en pause" aria-pressed="false">Ⅱ</button></div>
+            </figure>
+          <div class="thumb a380-profile" role="img" aria-label="Schéma du profil de trajectoire avec montées par paliers et profil de référence">
+            <svg viewBox="0 0 320 160" aria-hidden="true">
               <line x1="40" y1="134" x2="290" y2="134" class="ln" stroke-width="1.5"/><line x1="40" y1="20" x2="40" y2="134" class="ln" stroke-width="1.5"/>
               <path class="draw ac" style="--len:420" d="M44 134 L 78 74 L 120 74 L 132 60 L 186 60 L 198 46 L 250 46 L 286 134" fill="none" stroke-width="3" stroke-linejoin="round"/>
               <path d="M44 134 L 84 64 L 257 64 L 286 134" fill="none" class="ac2" stroke-width="2" stroke-dasharray="6 5" stroke-linejoin="round"/>
@@ -224,16 +231,18 @@
               <text x="262" y="150" class="tx">distance</text>
             </svg>
           </div>
+          </div>
           <div class="body">
-            <div class="top"><span class="ctx">ÉTS · 2025</span><span class="metric">MRC · LRC · ECON</span></div>
-            <h3>A380 Cruise Lab — Analyse et optimisation</h3>
+            <div class="top"><span class="ctx">ÉTS · 2025 / Extension web · 2026</span><span class="metric">Du décollage à l’atterrissage</span></div>
+            <h3 id="a380ProjectTitle">A380 Cruise Lab — Simulation et optimisation de mission</h3>
             <ul class="psr">
-              <li><b>Problème</b>Quel profil de vol minimise la consommation d'un très gros porteur ?</li>
-              <li><b>Démarche</b>Extension web du projet MGA803 : modèle de croisière documenté, import de tables et optimisation sous contraintes.</li>
-              <li><b>Application</b>Données OpenVSP et moteur du projet, équilibrage longitudinal, audit de faisabilité, MRC / LRC / ECON et exports reproductibles. Modèle paramétrique distinct pour l'exploration.</li>
+              <li><b>Problème</b>Comparer le carburant et le temps de vol pour choisir un profil de mission sous contraintes.</li>
+              <li><b>Démarche</b>Extension du projet MGA803 : données OpenVSP et moteur, équilibrage longitudinal et optimisation des montées par paliers.</li>
+              <li><b>Application</b>Vol complet en 3D, du roulage à l’arrêt, montées progressives, comparaison des profils MRC / LRC / ECON et exports d’étude JSON, CSV et PDF.</li>
             </ul>
-            <div class="tags"><span class="tag">MGA803 · ÉTS</span><span class="tag">Trajectoire 3D</span><span class="tag">Optimisation</span><span class="tag">Performance avion</span></div>
-            <div class="links"><a class="btn sm primary" href="projets/a380-lab/">Lancer l'application <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+            <div class="tags"><span class="tag">Mécanique du vol</span><span class="tag">Simulation 3D</span><span class="tag">Optimisation</span><span class="tag">JavaScript</span></div>
+            <p class="project-model-note">Modèle académique documenté, non validé en vol. Phases basse vitesse paramétriques.</p>
+            <div class="links"><a class="btn sm primary" href="projets/a380-lab/">Lancer l'application <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="project-demo-link" href="projets/a380-lab/?view=3d">Voir la trajectoire 3D ↗</a></div>
           </div>
         </article>
 
@@ -341,5 +350,6 @@
 </footer>
 
 <script src="main.js"></script>
+<script type="module" src="projets/a380-lab/hero3d.js?v=1.5.2"></script>
 </body>
 </html>
