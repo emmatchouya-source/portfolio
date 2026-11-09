@@ -7,30 +7,46 @@
 <meta name="description" content="Emmanuel Tchouya — ingénierie système, intégration, exigences et essais aéronautiques. Maîtrise en génie aérospatial à l'ÉTS, Montréal. Disponible janvier 2027.">
 <meta property="og:title" content="Emmanuel Tchouya — Ingénierie système et essais aéronautiques">
 <meta property="og:description" content="Exigences, intégration et essais. Maîtrise en génie aérospatial (ÉTS), stage Flying Whales sur le dirigeable LCA60T.">
+<meta name="author" content="Emmanuel Tchouya">
+<link rel="canonical" href="https://emmatchouya-source.github.io/portfolio/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="fr_CA">
+<meta property="og:url" content="https://emmatchouya-source.github.io/portfolio/">
+<meta property="og:image" content="https://emmatchouya-source.github.io/portfolio/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Emmanuel Tchouya — ingénierie système, intégration et essais aéronautiques. Disponible janvier 2027 à Montréal.">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#2b5cff">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Emmanuel Tchouya","url":"https://emmatchouya-source.github.io/portfolio/","image":"https://emmatchouya-source.github.io/portfolio/og.png","jobTitle":"Ingénierie système et essais aéronautiques","description":"Ingénieur en génie mécatronique, en fin de maîtrise en génie aérospatial à l'ÉTS. Exigences, intégration et essais aéronautiques.","address":{"@type":"PostalAddress","addressLocality":"Montréal","addressRegion":"QC","addressCountry":"CA"},"alumniOf":[{"@type":"CollegeOrUniversity","name":"École de technologie supérieure (ÉTS)"},{"@type":"CollegeOrUniversity","name":"École nationale supérieure polytechnique de Douala (ENSPD)"}],"knowsLanguage":["fr","en"],"knowsAbout":["Ingénierie système","Traçabilité des exigences","Vérification et validation","Essais aéronautiques","3DEXPERIENCE","Python"],"sameAs":["https://www.linkedin.com/in/emmanuel-tchouya","https://github.com/emmatchouya-source"]}</script>
 <script>document.documentElement.classList.add('js');try{var t=localStorage.getItem('pfTheme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="projets/a380-lab/hero3d.css?v=1.5.2">
-<link rel="stylesheet" href="style.css?v=a380-project-1">
+<link rel="stylesheet" href="style.css?v=2026-11-09">
 </head>
 <body>
+<a class="skip" href="#contenu">Aller au contenu</a>
 <div class="bg-grid"></div><div class="bg-blob b1"></div><div class="bg-blob b2"></div>
 <div class="progress" id="progress"></div>
 
-<nav id="nav">
+<nav id="nav" aria-label="Navigation principale">
   <div class="wrap">
     <a class="brand" href="#top" aria-label="Accueil"><span class="mark">ET</span>Emmanuel Tchouya</a>
-    <ul>
+    <ul id="navLinks">
       <li><a href="#apropos">À propos</a></li>
       <li><a href="#projets">Projets</a></li>
+      <li><a href="#preuves">Preuves</a></li>
       <li><a href="#competences">Compétences</a></li>
       <li><a href="#parcours">Parcours</a></li>
+      <li class="only-mobile"><a href="contact.html">Me contacter</a></li>
     </ul>
     <div class="nav-actions">
       <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Thème"></button>
       <a class="btn primary sm" href="contact.html">Me contacter</a>
+      <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navLinks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
   </div>
 </nav>
@@ -51,7 +67,7 @@
       </div>
       <figure class="flow-card reveal" style="--d:.2s;margin:0">
         <div class="flow-head"><span><b>Écoulement autour d'un profil</b> · Joukowski</span><span id="flowInfo"></span></div>
-        <canvas id="flow" aria-label="Animation de l'écoulement de l'air autour d'un profil d'aile"></canvas>
+        <canvas id="flow" role="img" aria-label="Animation de l'écoulement de l'air autour d'un profil d'aile"></canvas>
         <figcaption class="flow-foot">
           <label for="alpha">Incidence α</label>
           <input type="range" id="alpha" min="-4" max="14" step="0.5" value="6">
@@ -69,7 +85,7 @@
   </div>
 </header>
 
-<main>
+<main id="contenu">
   <section id="apropos">
     <div class="wrap">
       <div class="sec-head reveal"><span class="eyebrow">À propos</span><h2>De l'exigence à la preuve par l'essai</h2></div>
@@ -99,7 +115,7 @@
       <div class="sec-head reveal"><span class="eyebrow">Projets</span><h2>Études de cas</h2><p>Pour chaque projet : le problème, ce que j'ai fait, et le résultat mesuré.</p></div>
       <div class="projects">
 
-        <article class="case featured reveal">
+        <article class="case featured reveal" id="p-3dx">
           <div class="thumb">
             <div class="stamp" role="img" aria-label="Confidentiel : outil interne Flying Whales"><span>Confidentiel</span><small>Flying Whales · usage interne</small></div>
             <svg viewBox="0 0 320 200" aria-hidden="true">
@@ -138,7 +154,7 @@
           </div>
         </article>
 
-        <article class="case featured reveal">
+        <article class="case featured reveal" id="p-dronelab">
           <div class="thumb" aria-hidden="true">
             <svg viewBox="0 0 320 200">
               <path d="M40 152 160 88 280 152 160 192Z" fill="none" class="ln" stroke-width="1.5"/>
@@ -163,7 +179,7 @@
           </div>
         </article>
 
-        <article class="case reveal">
+        <article class="case reveal" id="p-essais">
           <div class="thumb">
             <div class="stamp" role="img" aria-label="Confidentiel : travaux internes Flying Whales"><span>Confidentiel</span><small>Flying Whales · usage interne</small></div>
             <svg viewBox="0 0 320 160" aria-hidden="true">
@@ -191,7 +207,7 @@
           </div>
         </article>
 
-        <article class="case reveal" style="--d:.08s">
+        <article class="case reveal" id="p-aero" style="--d:.08s">
           <div class="thumb" aria-hidden="true">
             <svg viewBox="0 0 320 160">
               <line x1="40" y1="134" x2="290" y2="134" class="ln" stroke-width="1.5"/><line x1="40" y1="20" x2="40" y2="134" class="ln" stroke-width="1.5"/>
@@ -246,7 +262,7 @@
           </div>
         </article>
 
-        <article class="case reveal" style="--d:.08s">
+        <article class="case reveal" id="p-hexa" style="--d:.08s">
           <div class="thumb" aria-hidden="true">
             <svg viewBox="0 0 320 160">
               <g class="ac" stroke-width="4" stroke-linecap="round">
@@ -274,6 +290,109 @@
           </div>
         </article>
 
+      </div>
+    </div>
+  </section>
+
+  <section id="preuves">
+    <div class="wrap">
+      <div class="sec-head reveal"><span class="eyebrow">Preuves</span><h2>Chaque affirmation, tracée à sa preuve</h2><p>Une compétence se traite comme une exigence : elle n'a de valeur que vérifiée. Voici la matrice de conformité de ce portfolio, avec les quatre moyens de vérification habituels : inspection, analyse, démonstration, essai.</p></div>
+      <div class="matrix reveal">
+        <div class="mx-bar">
+          <div class="mx-filters" role="group" aria-label="Filtrer la matrice par moyen de vérification">
+            <button type="button" class="chip" data-f="all" aria-pressed="true">Tout <i></i></button>
+            <button type="button" class="chip" data-f="live" aria-pressed="false">À essayer en ligne <i></i></button>
+            <button type="button" class="chip" data-f="E" aria-pressed="false">Essai <i></i></button>
+            <button type="button" class="chip" data-f="D" aria-pressed="false">Démonstration <i></i></button>
+            <button type="button" class="chip" data-f="A" aria-pressed="false">Analyse <i></i></button>
+            <button type="button" class="chip" data-f="I" aria-pressed="false">Inspection <i></i></button>
+          </div>
+          <span class="mx-count" id="mxCount" aria-live="polite">11 affirmations</span>
+        </div>
+        <table class="mx">
+          <caption class="sr-only">Matrice de conformité : pour chaque affirmation, la preuve, le moyen de vérification et la façon d'y accéder.</caption>
+          <thead><tr><th scope="col">Réf.</th><th scope="col">Affirmation</th><th scope="col">Preuve</th><th scope="col">Moyen</th><th scope="col">Accès</th></tr></thead>
+          <tbody>
+            <tr data-moc="I" data-live="0">
+              <td class="ref">C-01</td>
+              <th scope="row">Je tiens la traçabilité des exigences d'un programme aéronautique.</th>
+              <td>Plus de 1 000 exigences tracées (TLAR, dirigeable, gondole) et matrices de conformité du LCA60T.<small>Flying Whales · 2026</small></td>
+              <td><span class="moc i">Inspection</span></td>
+              <td class="acc"><a href="#parcours">Parcours</a><small>Confidentiel · détaillé en entretien</small></td>
+            </tr>
+            <tr data-moc="I" data-live="0">
+              <td class="ref">C-02</td>
+              <th scope="row">Je traduis un règlement en critères vérifiables.</th>
+              <td>Note bilingue : critères de vibration des écrans cockpit et de distorsion du pare-brise, d'après la CS-25 et les guides FAA.<small>Flying Whales · 2026</small></td>
+              <td><span class="moc i">Inspection</span></td>
+              <td class="acc"><a href="#parcours">Parcours</a><small>Confidentiel · détaillé en entretien</small></td>
+            </tr>
+            <tr data-moc="E" data-live="0">
+              <td class="ref">C-03</td>
+              <th scope="row">Je mène une campagne d'essais de bout en bout.</th>
+              <td>6 campagnes sur bancs moteurs : instrumentation, étalonnage, acquisition, dépouillement, 6 rapports d'essais.<small>CRDI, Douala · 2021 – 2024</small></td>
+              <td><span class="moc e">Essai</span></td>
+              <td class="acc"><a href="#parcours">Parcours</a><small>Détaillé en entretien</small></td>
+            </tr>
+            <tr data-moc="A" data-live="0">
+              <td class="ref">C-04</td>
+              <th scope="row">Je conclus à partir des mesures.</th>
+              <td>38 fichiers de mesures traités en Python, 13 exigences du SRD évaluées, recommandations pour la campagne suivante.<small>Flying Whales · 2026</small></td>
+              <td><span class="moc a">Analyse</span></td>
+              <td class="acc"><a href="#p-essais">Étude de cas</a><small>Confidentiel · détaillé en entretien</small></td>
+            </tr>
+            <tr data-moc="D" data-live="0">
+              <td class="ref">C-05</td>
+              <th scope="row">J'outille ce qui se répète.</th>
+              <td>Comparateur 3DEXPERIENCE : de 8 h à 5 min par comparaison, utilisé sur 1 260 exigences, environ 11 000 lignes testées hors ligne.<small>Flying Whales · 2026</small></td>
+              <td><span class="moc d">Démonstration</span></td>
+              <td class="acc"><a href="#p-3dx">Étude de cas</a><small>Confidentiel · détaillé en entretien</small></td>
+            </tr>
+            <tr data-moc="E" data-live="1">
+              <td class="ref">C-06</td>
+              <th scope="row">Je vérifie un logiciel de commande avant tout matériel.</th>
+              <td>DroneLab : 130 contrôles automatisés ; contrôleur C exporté identique au JavaScript sur 700 pas.<small>Projet personnel · 2026</small></td>
+              <td><span class="moc e">Essai</span></td>
+              <td class="acc"><a class="live" href="projets/drone-lab/">Essayer DroneLab</a><small><a href="#p-dronelab">Étude de cas</a></small></td>
+            </tr>
+            <tr data-moc="D" data-live="1">
+              <td class="ref">C-07</td>
+              <th scope="row">Je modélise les performances d'un avion et j'optimise sous contraintes.</th>
+              <td>AéroOptim : +31 % de distance trouvée sur un monomoteur léger (modèle ISA, polaire, propulsion, croisière intégrée).<small>Projet personnel · 2026</small></td>
+              <td><span class="moc d">Démonstration</span></td>
+              <td class="acc"><a class="live" href="projets/aero-optim/">Essayer AéroOptim</a><small><a href="#p-aero">Étude de cas</a></small></td>
+            </tr>
+            <tr data-moc="A" data-live="1">
+              <td class="ref">C-08</td>
+              <th scope="row">Je simule une mission complète et j'en compare les profils.</th>
+              <td>A380 Cruise Lab : vol du roulage à l'arrêt, montées par paliers, profils MRC / LRC / ECON, exports JSON, CSV et PDF.<small>ÉTS · 2025, extension web · 2026</small></td>
+              <td><span class="moc a">Analyse</span></td>
+              <td class="acc"><a class="live" href="projets/a380-lab/">Essayer A380 Cruise Lab</a><small><a href="#a380Project">Étude de cas</a></small></td>
+            </tr>
+            <tr data-moc="E" data-live="0">
+              <td class="ref">C-09</td>
+              <th scope="row">Je conçois, je fabrique et je fais voler.</th>
+              <td>Drone hexacoptère dimensionné pour 8 kg, 10 km et 2 000 m : fabriqué, testé au sol puis en vol.<small>ENSPD · 2020 – 2021</small></td>
+              <td><span class="moc e">Essai</span></td>
+              <td class="acc"><a href="#p-hexa">Étude de cas</a></td>
+            </tr>
+            <tr data-moc="I" data-live="0">
+              <td class="ref">C-10</td>
+              <th scope="row">Je suis un fournisseur sur ses livrables.</th>
+              <td>Suivi hebdomadaire du partenaire Delastek sur les livrables du cockpit.<small>Flying Whales · 2026</small></td>
+              <td><span class="moc i">Inspection</span></td>
+              <td class="acc"><a href="#parcours">Parcours</a><small>Détaillé en entretien</small></td>
+            </tr>
+            <tr data-moc="I" data-live="0">
+              <td class="ref">C-11</td>
+              <th scope="row">Je travaille en français et en anglais.</th>
+              <td>TOEIC 900 ; note technique bilingue rédigée chez Flying Whales.</td>
+              <td><span class="moc i">Inspection</span></td>
+              <td class="acc">Vérifiable en entretien</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="mx-note"><b>Limites déclarées.</b> Le modèle A380 est académique et n'est pas validé sur des données de vol. Les travaux menés chez Flying Whales sont présentés sans code, sans mesures et sans captures d'écran.</p>
       </div>
     </div>
   </section>
@@ -341,7 +460,7 @@
 
 <footer>
   <div class="wrap">
-    <span>© <span id="year"></span> Emmanuel Tchouya · Montréal (Québec)</span>
+    <span class="meta"><span>© <span id="year"></span> Emmanuel Tchouya · Montréal (Québec)</span><span>Site écrit à la main, sans dépendance · <a href="https://github.com/emmatchouya-source/portfolio">code source</a></span><button class="linklike" id="printBtn" type="button">Version imprimable</button></span>
     <span class="soc">
       <a class="icon-btn" href="https://www.linkedin.com/in/emmanuel-tchouya" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm6.5 0h3.8v1.6h.06c.53-1 1.83-2.06 3.77-2.06 4.03 0 4.77 2.65 4.77 6.1V21h-4v-5.2c0-1.24-.02-2.84-1.73-2.84-1.73 0-2 1.35-2 2.75V21h-4V9.5Z"/></svg></a>
       <a class="icon-btn" href="https://github.com/emmatchouya-source" aria-label="GitHub"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.370-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.110-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg></a>
@@ -349,7 +468,7 @@
   </div>
 </footer>
 
-<script src="main.js"></script>
+<script src="main.js?v=2026-11-09"></script>
 <script type="module" src="projets/a380-lab/hero3d.js?v=1.5.2"></script>
 </body>
 </html>

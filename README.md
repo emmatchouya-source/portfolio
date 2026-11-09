@@ -4,7 +4,8 @@ Site personnel statique (HTML/CSS, sans dépendance).
 
 - `index.html` : page principale
 - `contact.html` : page de contact (formulaire qui ouvre la messagerie)
-- `style.css`, `main.js` : style, thème et animations communs
+- `style.css`, `main.js` : style, thème et animations communs (menu mobile, matrice de preuves filtrable, feuille d'impression)
+- `favicon.svg`, `og.png` : icône d'onglet et image d'aperçu du lien partagé ; `og.png` se régénère avec `python scripts/build_og.py` (Pillow)
 - `projets/aero-optim/` : application AéroOptim ([dépôt source](https://github.com/emmatchouya-source/aero-optim))
 - `projets/a380-lab/` : A380 Cruise Lab, données OpenVSP et propulsion MGA803, équilibrage longitudinal, trajectoire 3D animée, optimisation sous contraintes, MRC/LRC/ECON et exports reproductibles ([modèle et validation](projets/a380-lab/README.md)). Sans validation sur données de vol.
 - `projets/drone-lab/` : laboratoire de vol autonome 3D, sept géométries de multirotors, capteurs simulés, commande en cascade, catalogue de 73 cartes et programme Arduino de banc/portage ([documentation](projets/drone-lab/README.md))

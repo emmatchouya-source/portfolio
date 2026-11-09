@@ -35,6 +35,54 @@ document.querySelectorAll('a[href]').forEach(a => {
   a.target = '_blank'; a.rel = 'noopener';
 });
 
+/* ---------- Typographie française : espaces insécables devant : ; ? ! %, dans les nombres et avant les unités ---------- */
+(function typo(){
+  if (!document.documentElement.lang.startsWith('fr')) return;
+  const skip = 'script,style,svg,textarea,code,pre';
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n; (n = walker.nextNode());){
+    if (!n.parentElement || n.parentElement.closest(skip)) continue;
+    const t = n.nodeValue
+      .replace(/ ([:;?!%»])/g, '\u00a0$1')
+      .replace(/« /g, '«\u00a0')
+      .replace(/(\d) (?=\d{3}(?!\d))/g, '$1\u00a0')
+      .replace(/(\d) (?=(?:h|min|kg|km|m|lignes|pas)(?![\wÀ-ÿ]))/g, '$1\u00a0');
+    if (t !== n.nodeValue) n.nodeValue = t;
+  }
+})();
+
+/* ---------- Menu mobile ---------- */
+(function menu(){
+  const btn = $('menuBtn'), bar = $('nav'); if (!btn || !bar) return;
+  const set = open => {
+    bar.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open);
+    btn.setAttribute('aria-label', open ? 'Fermer le menu' : 'Ouvrir le menu');
+  };
+  btn.addEventListener('click', () => set(!bar.classList.contains('open')));
+  bar.querySelectorAll('ul a').forEach(a => a.addEventListener('click', () => set(false)));
+  addEventListener('keydown', e => { if (e.key === 'Escape' && bar.classList.contains('open')){ set(false); btn.focus(); } });
+  document.addEventListener('click', e => { if (!bar.contains(e.target)) set(false); });
+})();
+
+/* ---------- Matrice de preuves : filtre par moyen de vérification ---------- */
+(function matrix(){
+  const box = document.querySelector('.matrix'); if (!box) return;
+  const rows = [...box.querySelectorAll('tbody tr')], chips = [...box.querySelectorAll('.chip')], out = $('mxCount');
+  const match = (r, f) => f === 'all' || (f === 'live' ? r.dataset.live === '1' : r.dataset.moc === f);
+  chips.forEach(c => { const i = c.querySelector('i'); if (i) i.textContent = rows.filter(r => match(r, c.dataset.f)).length; });
+  function apply(f){
+    let n = 0;
+    rows.forEach(r => { const ok = match(r, f); r.hidden = !ok; if (ok) n++; });
+    chips.forEach(c => c.setAttribute('aria-pressed', c.dataset.f === f));
+    if (out) out.textContent = f === 'all' ? `${n} affirmations` : `${n} affirmation${n > 1 ? 's' : ''} sur ${rows.length}`;
+  }
+  chips.forEach(c => c.addEventListener('click', () => apply(c.dataset.f)));
+  apply('all');
+})();
+
+if ($('printBtn')) $('printBtn').addEventListener('click', () => window.print());
+
 /* ---------- Navigation : ombre, progression, section active ---------- */
 const nav = $('nav'), progress = $('progress');
 const links = [...document.querySelectorAll('nav ul a[href^="#"]')];
@@ -45,7 +93,11 @@ function onScroll(){
   if (progress) progress.style.width = (h > 0 ? y / h * 100 : 0) + '%';
   let cur = null;
   sections.forEach(s => { if (s.getBoundingClientRect().top < innerHeight * 0.35) cur = s.id; });
-  links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + cur));
+  links.forEach(a => {
+    const on = a.getAttribute('href') === '#' + cur;
+    a.classList.toggle('active', on);
+    if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+  });
 }
 addEventListener('scroll', onScroll, { passive:true }); onScroll();
 

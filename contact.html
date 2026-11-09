@@ -5,32 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Contact — Emmanuel Tchouya</title>
 <meta name="description" content="Contacter Emmanuel Tchouya — ingénierie système et essais aéronautiques, Montréal. Disponible janvier 2027.">
+<link rel="canonical" href="https://emmatchouya-source.github.io/portfolio/contact.html">
+<meta property="og:title" content="Contact — Emmanuel Tchouya">
+<meta property="og:description" content="Ingénierie système et essais aéronautiques, Montréal. Disponible janvier 2027.">
+<meta property="og:image" content="https://emmatchouya-source.github.io/portfolio/og.png">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#2b5cff">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <script>document.documentElement.classList.add('js');try{var t=localStorage.getItem('pfTheme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=2026-11-09">
 </head>
 <body>
+<a class="skip" href="#contenu">Aller au contenu</a>
 <div class="bg-grid"></div><div class="bg-blob b1"></div><div class="bg-blob b2"></div>
 
-<nav id="nav">
+<nav id="nav" aria-label="Navigation principale">
   <div class="wrap">
     <a class="brand" href="index.html" data-same-tab aria-label="Accueil"><span class="mark">ET</span>Emmanuel Tchouya</a>
-    <ul>
+    <ul id="navLinks">
       <li><a data-same-tab href="index.html#apropos">À propos</a></li>
       <li><a data-same-tab href="index.html#projets">Projets</a></li>
+      <li><a data-same-tab href="index.html#preuves">Preuves</a></li>
       <li><a data-same-tab href="index.html#competences">Compétences</a></li>
       <li><a data-same-tab href="index.html#parcours">Parcours</a></li>
     </ul>
     <div class="nav-actions">
       <button class="icon-btn" id="themeBtn" aria-label="Changer de thème" title="Thème"></button>
+      <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="navLinks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
   </div>
 </nav>
 
-<main class="page">
+<main class="page" id="contenu">
   <div class="wrap">
     <a class="back reveal" href="index.html" data-same-tab>← Retour au portfolio</a>
     <h1 class="reveal" style="--d:.06s">Travaillons <em>ensemble</em></h1>
@@ -81,7 +90,7 @@
   <div class="wrap"><span>© <span id="year"></span> Emmanuel Tchouya · Montréal (Québec)</span></div>
 </footer>
 
-<script src="main.js"></script>
+<script src="main.js?v=2026-11-09"></script>
 <script>
 const EMAIL = 'Emmatchouya@gmail.com';
 document.getElementById('form').addEventListener('submit', e => {
