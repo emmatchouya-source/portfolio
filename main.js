@@ -160,6 +160,7 @@ document.querySelectorAll('.case').forEach(c => c.addEventListener('pointermove'
   // Les trois constantes sont des valeurs typiques d'un profil d'épaisseur moyenne, non identifiées sur ce profil.
   const SEP_A1 = 12, SEP_S1 = 1.5, SEP_S2 = 2.3;                    // incidence de décrochage et raideurs, en degrés
   const attached = d => d <= SEP_A1 ? 1 - 0.3*Math.exp((d - SEP_A1)/SEP_S1) : 0.04 + 0.66*Math.exp((SEP_A1 - d)/SEP_S2);
+  const LIFT_MAX = 6400, MOMENT_MAX = 460;                          // efforts maximaux du domaine (80 m/s), en N/m et N·m/m : bases de l'échelle des flèches
   const MACH_MAX = 0.5;                                             // au-delà, la compressibilité ne se néglige plus
   let alpha = 0, Gamma = 0;
 
@@ -260,6 +261,7 @@ document.querySelectorAll('.case').forEach(c => c.addEventListener('pointermove'
     deg = +$('alpha').value; speed = $('vinf') ? +$('vinf').value : 50;
     res = solve(deg); layout();
     const lift = 0.5*RHO*speed*speed*CHORD_M*res.clReal, re = RHO*speed*CHORD_M/VISC, e = Math.floor(Math.log10(re));
+    res.lift = lift; res.mom = 0.5*RHO*speed*speed*CHORD_M*CHORD_M*res.cm;   // efforts par mètre d'envergure
     const machLoc = speed*Math.sqrt(1 - res.cpMin)/SOUND;         // survitesse maximale sur le profil
     put('alphaOut', num(deg, 1) + NB + '°'); put('vinfOut', num(speed, 0) + NB + 'm/s');
     put('flowInfo', `épaisseur ${num(thick/chord*100, 1)}${NB}% · cambrure ${num(camber/chord*100, 1)}${NB}%`);
@@ -267,7 +269,9 @@ document.querySelectorAll('.case').forEach(c => c.addEventListener('pointermove'
     put('fClInt', num(res.cl, 3) + `<small>écart ${num(Math.abs(res.cl - res.clKJ), 4)}</small>`);
     put('fCd', num(res.cd, 3));
     put('fCm', num(res.cm, 3));
-    put('fXcp', res.xcp >= 0 && res.xcp <= 1 ? num(res.xcp*100, 0) + NB + '% de corde' : 'hors profil');
+    const xcpNote = res.xcp > 1 ? 'hors profil, en aval' : res.xcp < 0 ? 'hors profil, en amont' : sepOn ? 'fluide parfait' : '';
+    put('fXcp', isNaN(res.xcp) ? 'couple pur<small>portance quasi nulle</small>'
+      : num(res.xcp*100, 0) + NB + '% de corde' + (xcpNote ? `<small>${xcpNote}</small>` : ''));
     put('fCpMin', num(res.cpMin, 2) + `<small>Mach local ${num(machLoc, 2)}</small>`);
     put('fLift', num(lift, 0) + NB + 'N/m' + `<small>C<sub>L</sub> estimé ${num(res.clReal, 3)}</small>`);
     put('fRe', `${num(re / Math.pow(10, e), 1)}·10<sup>${e}</sup><small>Mach ${num(speed/SOUND, 2)}</small>`);
@@ -387,20 +391,46 @@ document.querySelectorAll('.case').forEach(c => c.addEventListener('pointermove'
     ctx.font = '600 11px Inter, system-ui, sans-serif'; ctx.textAlign = align; ctx.textBaseline = 'middle';
     ctx.fillStyle = color; ctx.fillText(text, x, y);
   }
+  function tag(text, x, y, align, color){                           // libellé sur fond, lisible par-dessus les lignes de courant
+    ctx.font = '600 11px Inter, system-ui, sans-serif';
+    const w = ctx.measureText(text).width, x0 = align === 'right' ? x - w : x;
+    ctx.fillStyle = colors.panel; ctx.globalAlpha = 0.85;
+    ctx.beginPath(); ctx.roundRect(x0 - 4, y - 8, w + 8, 16, 4); ctx.fill(); ctx.globalAlpha = 1;
+    label(text, x, y, align, color);
+  }
   function drawForces(){
     // point d'arrêt
     const st = envXY[res.iStag];
     ctx.beginPath(); ctx.arc(st[0], st[1], 3.4, 0, 2*Math.PI); ctx.fillStyle = colors.warm; ctx.fill();
     ctx.lineWidth = 1.5; ctx.strokeStyle = colors.panel; ctx.stroke();
-    // portance : perpendiculaire à la vitesse amont, appliquée au centre de poussée, longueur proportionnelle à CL
-    if (Math.abs(res.clReal) > 0.03){
-      const xc = isNaN(res.xcp) ? 0.25 : Math.min(0.9, Math.max(0.1, res.xcp));
-      const [bx, by] = toScreen([xmin + xc*chord, chordY(xc)]);
-      const len = Math.max(-H*0.3, Math.min(H*0.37, res.clReal*H*0.165));
-      arrow(bx, by, bx, by - len, colors.ink, 2.6);
-      ctx.beginPath(); ctx.arc(bx, by, 3, 0, 2*Math.PI); ctx.fillStyle = colors.ink; ctx.fill();
-      label('L′', bx + 9, by - len + (len > 0 ? 7 : -7), 'left', colors.ink);
+    // Torseur réduit au quart de corde : portance (perpendiculaire à la vitesse amont) et moment.
+    // Ce point reste fixe alors que le centre de poussée part à l'infini quand la portance s'annule.
+    // Échelle linéaire sur les efforts dimensionnels : une flèche deux fois plus longue est une force deux fois plus grande.
+    const [bx, by] = toScreen([xmin + chord/4, chordY(0.25)]);
+    const len = res.lift / LIFT_MAX * H*0.37;
+    if (Math.abs(len) >= 12) arrow(bx, by, bx, by - len, colors.ink, 2.6);
+    else if (Math.abs(len) >= 0.5){                                 // trop courte pour porter une pointe
+      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx, by - len);
+      ctx.strokeStyle = colors.ink; ctx.lineWidth = 2.6; ctx.lineCap = 'round'; ctx.stroke();
     }
+    // Moment : arc d'ouverture proportionnelle à |M′|. CM < 0 (piqueur, nez à gauche) : sens antihoraire à l'écran.
+    const R = 21, sweep = Math.min(4, Math.abs(res.mom) / MOMENT_MAX * 3.2), dir = res.cm < 0 ? -1 : 1;
+    if (sweep >= 0.15){
+      const a0 = -dir*sweep/2, a1 = dir*sweep/2;
+      ctx.beginPath(); ctx.arc(bx, by, R, a0, a1, dir < 0);
+      ctx.strokeStyle = colors.ink; ctx.lineWidth = 1.7; ctx.lineCap = 'round'; ctx.stroke();
+      const ex = bx + R*Math.cos(a1), ey = by + R*Math.sin(a1), tx = -dir*Math.sin(a1), ty = dir*Math.cos(a1);
+      arrow(ex, ey, ex + 9*tx, ey + 9*ty, colors.ink, 1.7);
+    }
+    ctx.beginPath(); ctx.arc(bx, by, 3, 0, 2*Math.PI); ctx.fillStyle = colors.ink; ctx.fill();
+    // Libellés placés hors du profil et de son enveloppe de pression, sur la largeur qu'ils occupent.
+    let top = by, bottom = by;
+    envXY.forEach((e, k) => {
+      if (e[0] < bx || e[0] > bx + 115 || (sepOn && k < iSep)) return;
+      if (k < iLE) top = Math.min(top, e[1], e[3]); else bottom = Math.max(bottom, e[1], e[3]);
+    });
+    if (Math.abs(res.clReal) > 0.03) tag(`L′ ${num(res.lift, 0)}${NB}N/m`, bx + 10, Math.min(by - len + 8, top - 11), 'left', colors.ink);
+    tag(`M¼ ${num(res.mom, 0)}${NB}N·m/m`, bx + 4, Math.max(by + R + 12, bottom + 11), 'left', colors.ink);
     // vitesse amont
     const y = H - 18, l = (16 + speed*0.42) * Math.min(1, W/420);   // raccourcie sur petit écran, pour ne pas toucher la légende
     arrow(16, y, 16 + l, y, colors.muted, 1.6);
