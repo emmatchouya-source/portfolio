@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="projets/a380-lab/hero3d.css?v=1.5.2">
-<link rel="stylesheet" href="style.css?v=2026-11-09">
+<link rel="stylesheet" href="style.css?v=2026-11-09c">
 </head>
 <body>
 <a class="skip" href="#contenu">Aller au contenu</a>
@@ -66,12 +66,32 @@
         </div>
       </div>
       <figure class="flow-card reveal" style="--d:.2s;margin:0">
-        <div class="flow-head"><span><b>Écoulement autour d'un profil</b> · Joukowski</span><span id="flowInfo"></span></div>
-        <canvas id="flow" role="img" aria-label="Animation de l'écoulement de l'air autour d'un profil d'aile"></canvas>
-        <figcaption class="flow-foot">
-          <label for="alpha">Incidence α</label>
-          <input type="range" id="alpha" min="-4" max="14" step="0.5" value="6">
-          <span class="cl" id="clOut"></span>
+        <div class="flow-head"><span><b>Profil de Joukowski</b></span><span id="flowInfo"></span></div>
+        <canvas id="flow" role="img" aria-label="Écoulement de l'air autour d'un profil d'aile : lignes de courant, pression sur la paroi, point d'arrêt et vecteur portance. Les valeurs sont données dans le tableau qui suit."></canvas>
+        <div class="flow-cp">
+          <div class="flow-cp-head"><b>Coefficient de pression, fluide parfait</b><span class="lg"><i></i>extrados</span><span class="lg"><i class="lo"></i>intrados</span></div>
+          <canvas id="cpPlot" role="img" aria-label="Coefficient de pression en fonction de la position sur la corde, pour l'extrados et l'intrados"></canvas>
+        </div>
+        <dl class="flow-data">
+          <div title="Théorème de Kutta-Joukowski : portance = masse volumique × vitesse × circulation"><dt>C<sub>L</sub> théorique</dt><dd id="fCl"></dd></div>
+          <div title="Portance obtenue en intégrant les pressions sur le contour du profil"><dt>C<sub>L</sub> par intégration</dt><dd id="fClInt"></dd></div>
+          <div title="En fluide parfait, la traînée de pression est nulle (paradoxe de d'Alembert)"><dt>C<sub>D</sub> de pression</dt><dd id="fCd"></dd></div>
+          <div title="Moment de tangage au quart de corde, positif à cabrer"><dt>C<sub>M</sub> à ¼ de corde</dt><dd id="fCm"></dd></div>
+          <div title="Portance par mètre d'envergure, pour une corde de 1 m, décollement estimé compris"><dt>Portance estimée</dt><dd id="fLift"></dd></div>
+          <div title="Point d'application de la résultante des pressions"><dt>Centre de poussée</dt><dd id="fXcp"></dd></div>
+          <div title="Dépression maximale sur le profil et nombre de Mach local correspondant"><dt>C<sub>p</sub> minimal</dt><dd id="fCpMin"></dd></div>
+          <div title="Nombre de Reynolds rapporté à la corde et nombre de Mach amont"><dt>Reynolds</dt><dd id="fRe"></dd></div>
+        </dl>
+        <figcaption>
+          <div class="flow-foot">
+            <label for="alpha">Incidence α</label>
+            <input type="range" id="alpha" min="-4" max="20" step="0.5" value="6">
+            <output id="alphaOut" for="alpha"></output>
+            <label for="vinf">Vitesse V<sub>∞</sub></label>
+            <input type="range" id="vinf" min="10" max="80" step="5" value="50">
+            <output id="vinfOut" for="vinf"></output>
+          </div>
+          <p class="flow-note" id="flowNote">Fluide parfait incompressible, condition de Kutta ; corde de 1 m, air au niveau de la mer. Portance calculée de deux façons indépendantes ; décollement estimé par un modèle empirique, frottement non modélisé.</p>
         </figcaption>
       </figure>
     </div>
@@ -468,7 +488,7 @@
   </div>
 </footer>
 
-<script src="main.js?v=2026-11-09"></script>
+<script src="main.js?v=2026-11-09c"></script>
 <script type="module" src="projets/a380-lab/hero3d.js?v=1.5.2"></script>
 </body>
 </html>
