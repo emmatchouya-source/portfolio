@@ -226,7 +226,7 @@ document.querySelectorAll('.case').forEach(c => c.addEventListener('pointermove'
   let tAnim = 0, iSep = 0, sepOn = false, eddies = [];              // zone décollée
   const CP_LEN = 0.15, CP_CAP = 4;                                  // longueur des flèches de pression, par unité de Cp
   const noteEl = $('flowNote'), NOTE = noteEl ? noteEl.innerHTML : '';
-  const WARN_SEP = pct => `<b>Décollement estimé.</b> Environ ${pct}${NB}% de l'extrados est décollé (modèle empirique de Beddoes-Leishman)${NB}: la portance plafonne puis chute. Les pressions affichées restent celles du fluide parfait.`;
+  const WARN_SEP = pct => `<b>Décollement estimé${NB}:</b> environ ${pct}${NB}% de l'extrados (modèle empirique de Beddoes-Leishman). Portance réduite${NB}; pressions et moment restent ceux du fluide parfait.`;
 
   const WARN_MACH = m => `<b>Hors domaine.</b> La survitesse locale atteint Mach${NB}${num(m, 2)}${NB}: l'hypothèse incompressible ne tient plus.`;
 
@@ -509,7 +509,7 @@ document.querySelectorAll('.case').forEach(c => c.addEventListener('pointermove'
     g.setLineDash([3, 3]); g.beginPath(); g.moveTo(L, Y(0)); g.lineTo(L + pw, Y(0)); g.stroke(); g.setLineDash([]);
     g.font = '500 10.5px Inter, system-ui, sans-serif'; g.textBaseline = 'middle'; g.fillStyle = colors.muted;
     g.textAlign = 'right';
-    for (const c of [low, 0, 1]) g.fillText(num(c, c % 1 ? 1 : 0), L - 6, Y(c));
+    for (const c of [low, 0, 1]) if (c !== 1 || Y(1) - Y(0) >= 11) g.fillText(num(c, c % 1 ? 1 : 0), L - 6, Y(c));
     g.textAlign = 'center';
     for (const xc of [0, 0.5, 1]) g.fillText(num(xc, xc % 1 ? 1 : 0), X(xc), T + ph + 11);
     g.textAlign = 'right'; g.fillText('x/c', L + pw - 2, T + ph - 8);

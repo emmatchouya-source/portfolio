@@ -87,7 +87,7 @@ nav ul a:hover,nav ul a.active{color:var(--ink);background:var(--accent-soft);te
 .hero .lead{font-size:18px;color:var(--muted);max-width:560px;margin:0 0 30px}
 .hero .btns{display:flex;gap:12px;flex-wrap:wrap}
 .flow-card{position:relative;border-radius:22px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-lg);overflow:hidden}
-.flow-card canvas{width:100%;height:272px}
+.flow-card canvas{width:100%;height:var(--flow-h,272px)}
 .flow-head{position:absolute;top:14px;left:16px;right:16px;display:flex;justify-content:space-between;gap:10px;font-size:12.5px;color:var(--muted);pointer-events:none}
 .flow-head span{background:var(--glass);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:3px 9px;border-radius:8px;border:1px solid var(--line)}
 .flow-head b{color:var(--ink);font-weight:600}
@@ -259,7 +259,6 @@ footer .soc{display:flex;gap:8px}
   section{padding-top:72px}
   .cta{padding:36px 24px;border-radius:22px}
   .psr li{grid-template-columns:1fr;gap:0}
-  .flow-card canvas{height:250px}
 }
 
 /* illustrations des projets */
@@ -371,29 +370,29 @@ footer .meta{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center}
 .linklike:hover{text-decoration:underline}
 
 /* carte d'écoulement : tracé de pression, relevés, réglages */
-.flow-card #cpPlot{height:104px}
+.flow-card #cpPlot{height:72px}
 .flow-head span{white-space:nowrap}
-@media (max-width:520px){.flow-head span:last-child{display:none}}
+@media (max-width:520px){.flow-head{display:none}}
 .flow-head span:last-child{font-variant-numeric:tabular-nums}
-.flow-cp{border-top:1px solid var(--line);padding:10px 14px 2px}
-.flow-cp-head{display:flex;align-items:center;flex-wrap:wrap;gap:2px 14px;font-size:12.5px;color:var(--muted);padding:0 2px 4px}
+.flow-cp{border-top:1px solid var(--line);padding:6px 14px 0}
+.flow-cp-head{display:flex;align-items:center;flex-wrap:wrap;gap:2px 14px;font-size:12px;color:var(--muted);padding:0 2px 1px}
 .flow-cp-head b{color:var(--ink);font-weight:600;margin-right:auto}
 .lg{display:inline-flex;align-items:center;gap:6px}
 .lg i{width:14px;height:3px;border-radius:2px;background:var(--accent)}
 .lg i.lo{background:var(--accent-2)}
 .flow-data{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0;border-top:1px solid var(--line)}
-.flow-data div{padding:9px 12px 10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.flow-data div{padding:5px 10px 6px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
 .flow-data div:nth-child(4n){border-right:0}
 .flow-data div:nth-last-child(-n+4){border-bottom:0}
-.flow-data dt{font-size:11px;line-height:1.35;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.flow-data dd{margin:1px 0 0;font:600 15.5px/1.3 "Space Grotesk","Inter",sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
-.flow-data dd small{display:block;font:500 10.5px/1.4 "Inter",system-ui,sans-serif;color:var(--muted);letter-spacing:0}
+.flow-data dt{font-size:10.5px;line-height:1.35;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flow-data dd{margin:0;font:600 14.5px/1.25 "Space Grotesk","Inter",sans-serif;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.flow-data dd small{display:block;min-height:13px;font:500 10px/1.3 "Inter",system-ui,sans-serif;color:var(--muted);letter-spacing:0}
 .flow-data sub,.flow-foot sub{font-size:.75em;line-height:0}
 .flow-data sup{font-size:.7em;line-height:0}
-.flow-foot{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 12px;align-items:center;padding:12px 16px 10px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted)}
+.flow-foot{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto minmax(0,1fr) auto;gap:6px 10px;align-items:center;padding:8px 14px 5px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted)}
 .flow-foot input[type=range]{width:100%;margin:0;accent-color:var(--accent)}
-.flow-foot output{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600;min-width:62px;text-align:right}
-.flow-note{margin:0;padding:0 16px 13px;font-size:11.5px;line-height:1.5;color:var(--muted)}
+.flow-foot output{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600;min-width:50px;text-align:right}
+.flow-note{margin:0;padding:0 14px 8px;min-height:39px;font-size:11px;line-height:1.4;color:var(--muted)}
 .flow-note b{color:var(--ink)}
 .flow-note.warn{color:color-mix(in srgb,var(--warm) 70%,var(--ink))}
 .flow-note.warn b{color:inherit}
@@ -403,6 +402,21 @@ footer .meta{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center}
   .flow-data div:nth-child(2n){border-right:0}
   .flow-data div:nth-last-child(-n+4){border-bottom:1px solid var(--line)}
   .flow-data div:nth-last-child(-n+2){border-bottom:0}
+}
+
+/* La carte d'écoulement tient entière à l'écran : le tracé principal prend la hauteur qui reste. */
+.flow-card{align-self:start}
+@media (min-width:981px){
+  .hero{--flow-h:clamp(160px,calc(100vh - 384px),300px);padding-top:clamp(14px,calc((100vh - 654px)/2),72px)}
+}
+@media (max-width:980px){
+  .hero{--flow-h:clamp(160px,calc(100vh - 404px),300px)}
+}
+@media (max-width:760px){
+  .hero{--flow-h:clamp(150px,calc(100svh - 515px),250px)}
+  .flow-foot{grid-template-columns:auto minmax(0,1fr) auto}
+  .flow-data dd{white-space:normal}
+  .flow-data dd small{display:inline;margin-left:6px}
 }
 
 /* impression : une version papier lisible, sans décor ni animation */
