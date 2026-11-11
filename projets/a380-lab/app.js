@@ -17,6 +17,7 @@ for(const [key,title,unit,group] of AIRPORT_FIELDS){
 const trajectory=new TrajectoryPlayer();
 $('flightExample').onclick=()=>loadScenario('verification');
 $('recoverScenario').onclick=()=>loadScenario('verification');
+$('loadReferenceExample').onclick=()=>{activateTab('overview');useProject(true,'verification',true);};
 $('flightRecalculate').onclick=()=>form.requestSubmit();
 const f=(v,d=0)=>Number(v).toLocaleString('fr-FR',{maximumFractionDigits:d,minimumFractionDigits:d});
 const duration=s=>{const minutes=Math.round(s/60);return `${Math.floor(minutes/60)} h ${String(minutes%60).padStart(2,'0')}`;};
@@ -86,7 +87,7 @@ function busy(on){
   $('run').disabled=on;$('cancel').hidden=!on;$('progress').hidden=!on;
   for(const el of form.elements)if(el.matches('input,select'))el.disabled=on;
   for(const id of ['reset','projectSource','parametric','importButton','importData','template'])$(id).disabled=on;
-  for(const id of ['recoverScenario','verificationCase','flightExample','flightRecalculate'])if($(id))$(id).disabled=on;
+  for(const id of ['recoverScenario','verificationCase','flightExample','flightRecalculate','loadReferenceExample'])if($(id))$(id).disabled=on;
   if($('restoreStudy'))$('restoreStudy').disabled=on;
   for(const id of ['exportStudy','exportCSV','printReport'])$(id).disabled=on||!result;
   if(!on)modelState();
@@ -112,14 +113,14 @@ function run(){
 }
 form.addEventListener('submit',e=>{e.preventDefault();run();});
 $('cancel').onclick=()=>{worker?.terminate();worker=null;busy(false);status('Calcul annulé. Les éventuels résultats précédents sont conservés.');};
-async function useProject(start=false,id='full'){
+async function useProject(start=false,id='full',requireProject=false){
   let c;try{c=start?scenarioConfig(id):readConfig();}catch(e){showError(e);return;}
   busy(true);
   try{const response=await fetch(new URL('./data/project.json',import.meta.url));if(!response.ok)throw Error('Impossible de charger les données du projet.');const data=validateTables(await response.json());
     c.area=data.area;tables=data;setConfig(c);modelState();markDirty();busy(false);
     $('dataStatus').textContent=`Modèle du projet chargé : WB 180 cas, empennage 310 cas ; moteur Trent 970B-84, OACI 18RR082. Les corrections et limites sont documentées.`;
     if(start)run();
-  }catch(e){busy(false);if(start){tables=null;setConfig(scenarioConfig(id));modelState();run();$('dataStatus').textContent='Chargement des données du projet impossible : modèle paramétrique de secours activé.';}else showError(e);}
+  }catch(e){busy(false);if(requireProject){status('Exemple non recalculé : données du projet indisponibles.',true);showError(e);return;}if(start){tables=null;setConfig(scenarioConfig(id));modelState();run();$('dataStatus').textContent='Chargement des données du projet impossible : modèle paramétrique de secours activé.';}else showError(e);}
 }
 $('projectSource').onclick=()=>useProject();
 $('reset').onclick=()=>useProject(true);
