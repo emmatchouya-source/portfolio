@@ -2,6 +2,35 @@
 
 Site personnel statique (HTML/CSS, sans dépendance).
 
+## Branche de refonte et vérification
+
+Refonte du portfolio existant sur `audit/refonte-portfolio-2026-11`, sans publication ni modification de `main`.
+
+- [Audit et matrice de décisions](docs/AUDIT.md), [inventaire](docs/INVENTAIRE.md).
+- [Changements et points à confirmer](docs/LIVRAISON.md), [vérification scientifique](docs/VERIFICATION.md), [tests exécutés](docs/TESTS.md).
+- Études de cas descriptives : `projets/3dexperience/` et `projets/essais/`. Aucun document industriel ajouté.
+- Chaque application conserve ses fonctions avancées et propose une documentation scientifique distincte (`documentation.html`).
+
+Reproduire les exemples A380 et DroneLab depuis les seules sources publiques :
+
+```text
+node scripts/reproduce_examples.mjs
+```
+
+Le contrôle A380 compare le résultat à `data/reference-example.json` et ses empreintes de sources. `--write` régénère volontairement cet exemple après examen des changements de modèle.
+
+Contrôles du site et des nouveaux parcours :
+
+```text
+python -X utf8 tests/check_site.py
+python -X utf8 tests/test_portfolio_ui.py
+python -X utf8 tests/test_aero_optim.py
+python -X utf8 tests/test_guided_demo.py
+python -X utf8 tests/test_a380_example.py
+```
+
+Les tests navigateur utilisent Python, Playwright et Edge installé. Les références indépendantes A380 utilisent NumPy/SciPy. La suite existante est orchestrée par `python -X utf8 tests/run_audit_suite.py` ; les tests C demandent un compilateur C99. Les journaux et captures sont conservés dans `.test-artifacts/`, ignoré par Git. Les tests ne téléversent rien sur une carte.
+
 - `index.html` : page principale
 - `contact.html` : page de contact (formulaire qui ouvre la messagerie)
 - `style.css`, `main.js` : style, thème et animations communs (menu mobile, matrice de preuves filtrable, feuille d'impression)

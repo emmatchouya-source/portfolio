@@ -90,6 +90,9 @@ def main(base):
         page.locator('#trajectory').screenshot(path=str(ARTIFACTS/'3d-configured-steps-mobile.png'))
         assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
         # A rejected configured profile must remain rejected, with an explicit fallback.
+        # The responsive drawer closes on mobile; open it as a user would before editing.
+        if not page.locator('#configurationPanel').evaluate('el=>el.open'):
+            page.locator('#configurationPanel > summary').click()
         page.locator('[name=mach]').fill('.89')
         page.locator('#flightRecalculate').click()
         complete(page)
