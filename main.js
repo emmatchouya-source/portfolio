@@ -533,6 +533,13 @@ document.querySelectorAll('.case').forEach(c => c.addEventListener('pointermove'
     requestAnimationFrame(loop);
   }
   $('alpha').addEventListener('input', () => update(true));
+  if ($('flowMoreBtn')) $('flowMoreBtn').addEventListener('click', e => {
+    const more = $('flowMore'), open = more.hidden;
+    more.hidden = !open;
+    e.currentTarget.setAttribute('aria-expanded', open);
+    e.currentTarget.textContent = open ? 'Masquer la pression et les efforts' : 'Afficher la pression et les efforts';
+    resize();                                                        // le tracé de Cp n'a de taille qu'une fois affiché
+  });
   if ($('vinf')) $('vinf').addEventListener('input', () => update(false));
   new IntersectionObserver(en => { visible = en[0].isIntersecting; }).observe(cv);
   themeListeners.push(() => { readColors(); clear(); drawCp(); if (reduceMotion) staticLines(); });

@@ -25,7 +25,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="projets/a380-lab/hero3d.css?v=1.5.2">
-<link rel="stylesheet" href="style.css?v=2026-11-09f">
+<link rel="stylesheet" href="style.css?v=2026-11-11">
 </head>
 <body>
 <a class="skip" href="#contenu">Aller au contenu</a>
@@ -68,6 +68,7 @@
       <figure class="flow-card reveal" style="--d:.2s;margin:0">
         <div class="flow-head"><span><b>Profil de Joukowski</b></span><span id="flowInfo"></span></div>
         <canvas id="flow" role="img" aria-label="Écoulement de l'air autour d'un profil d'aile : lignes de courant, pression sur la paroi, point d'arrêt, portance et moment au quart de corde. Les valeurs sont données dans le tableau qui suit."></canvas>
+        <div class="flow-more" id="flowMore" hidden>
         <div class="flow-cp">
           <div class="flow-cp-head"><b>Coefficient de pression, fluide parfait</b><span class="lg"><i></i>extrados</span><span class="lg"><i class="lo"></i>intrados</span></div>
           <canvas id="cpPlot" role="img" aria-label="Coefficient de pression en fonction de la position sur la corde, pour l'extrados et l'intrados"></canvas>
@@ -82,6 +83,7 @@
           <div title="Dépression maximale sur le profil et nombre de Mach local correspondant"><dt>C<sub>p</sub> minimal</dt><dd id="fCpMin"></dd></div>
           <div title="Nombre de Reynolds rapporté à la corde et nombre de Mach amont"><dt>Reynolds</dt><dd id="fRe"></dd></div>
         </dl>
+        </div>
         <figcaption>
           <div class="flow-foot">
             <label for="alpha">Incidence α</label>
@@ -91,6 +93,7 @@
             <input type="range" id="vinf" min="10" max="80" step="5" value="50">
             <output id="vinfOut" for="vinf"></output>
           </div>
+          <button type="button" class="flow-toggle" id="flowMoreBtn" aria-expanded="false" aria-controls="flowMore">Afficher la pression et les efforts</button>
           <p class="flow-note" id="flowNote">Fluide parfait incompressible, condition de Kutta ; corde de 1 m, air au niveau de la mer. Décollement empirique, frottement non modélisé. Flèches à l'échelle des efforts.</p>
         </figcaption>
       </figure>
@@ -98,7 +101,7 @@
 
     <div class="stats">
       <div class="stat reveal"><div class="n" data-count="1000" data-suffix="+">1 000+</div><div class="l">exigences tracées (TLAR, dirigeable, gondole)</div></div>
-      <div class="stat reveal" style="--d:.08s"><div class="n" data-count="96" data-suffix="×">96×</div><div class="l">plus rapide pour comparer deux révisions d'une spécification</div></div>
+      <div class="stat reveal" style="--d:.08s"><div class="n wide">8 h → 5 min</div><div class="l">pour comparer deux révisions d'une spécification, au lieu d'une journée</div></div>
       <div class="stat reveal" style="--d:.16s"><div class="n" data-count="6">6</div><div class="l">campagnes d'essais sur bancs moteurs</div></div>
       <div class="stat reveal" style="--d:.24s"><div class="n" data-count="13">13</div><div class="l">exigences du SRD évaluées sur la propulsion électrique</div></div>
     </div>
@@ -316,7 +319,7 @@
 
   <section id="preuves">
     <div class="wrap">
-      <div class="sec-head reveal"><span class="eyebrow">Preuves</span><h2>Chaque affirmation, tracée à sa preuve</h2><p>Une compétence se traite comme une exigence : elle n'a de valeur que vérifiée. Voici la matrice de conformité de ce portfolio, avec les quatre moyens de vérification habituels : inspection, analyse, démonstration, essai.</p></div>
+      <div class="sec-head reveal"><span class="eyebrow">Preuves</span><h2>Ce que j'affirme, et comment le vérifier</h2><p>Comme je travaille sur la vérification des exigences, j'ai appliqué la même démarche aux compétences présentées ici. Les preuves que vous pouvez consulter en ligne viennent en premier ; les travaux confidentiels sont décrits, et je peux les détailler en entretien.</p></div>
       <div class="matrix reveal">
         <div class="mx-bar">
           <div class="mx-filters" role="group" aria-label="Filtrer la matrice par moyen de vérification">
@@ -333,68 +336,68 @@
           <caption class="sr-only">Matrice de conformité : pour chaque affirmation, la preuve, le moyen de vérification et la façon d'y accéder.</caption>
           <thead><tr><th scope="col">Réf.</th><th scope="col">Affirmation</th><th scope="col">Preuve</th><th scope="col">Moyen</th><th scope="col">Accès</th></tr></thead>
           <tbody>
-            <tr data-moc="I" data-live="0">
-              <td class="ref">C-01</td>
-              <th scope="row">Je tiens la traçabilité des exigences d'un programme aéronautique.</th>
-              <td>Plus de 1 000 exigences tracées (TLAR, dirigeable, gondole) et matrices de conformité du LCA60T.<small>Flying Whales · 2026</small></td>
-              <td><span class="moc i">Inspection</span></td>
-              <td class="acc"><a href="#parcours">Parcours</a><small>Confidentiel · détaillé en entretien</small></td>
-            </tr>
-            <tr data-moc="I" data-live="0">
-              <td class="ref">C-02</td>
-              <th scope="row">Je traduis un règlement en critères vérifiables.</th>
-              <td>Note bilingue : critères de vibration des écrans cockpit et de distorsion du pare-brise, d'après la CS-25 et les guides FAA.<small>Flying Whales · 2026</small></td>
-              <td><span class="moc i">Inspection</span></td>
-              <td class="acc"><a href="#parcours">Parcours</a><small>Confidentiel · détaillé en entretien</small></td>
-            </tr>
-            <tr data-moc="E" data-live="0">
-              <td class="ref">C-03</td>
-              <th scope="row">Je mène une campagne d'essais de bout en bout.</th>
-              <td>6 campagnes sur bancs moteurs : instrumentation, étalonnage, acquisition, dépouillement, 6 rapports d'essais.<small>CRDI, Douala · 2021 – 2024</small></td>
-              <td><span class="moc e">Essai</span></td>
-              <td class="acc"><a href="#parcours">Parcours</a><small>Détaillé en entretien</small></td>
-            </tr>
-            <tr data-moc="A" data-live="0">
-              <td class="ref">C-04</td>
-              <th scope="row">Je conclus à partir des mesures.</th>
-              <td>38 fichiers de mesures traités en Python, 13 exigences du SRD évaluées, recommandations pour la campagne suivante.<small>Flying Whales · 2026</small></td>
-              <td><span class="moc a">Analyse</span></td>
-              <td class="acc"><a href="#p-essais">Étude de cas</a><small>Confidentiel · détaillé en entretien</small></td>
-            </tr>
-            <tr data-moc="D" data-live="0">
-              <td class="ref">C-05</td>
-              <th scope="row">J'outille ce qui se répète.</th>
-              <td>Comparateur 3DEXPERIENCE : de 8 h à 5 min par comparaison, utilisé sur 1 260 exigences, environ 11 000 lignes testées hors ligne.<small>Flying Whales · 2026</small></td>
-              <td><span class="moc d">Démonstration</span></td>
-              <td class="acc"><a href="#p-3dx">Étude de cas</a><small>Confidentiel · détaillé en entretien</small></td>
-            </tr>
             <tr data-moc="E" data-live="1">
-              <td class="ref">C-06</td>
+              <td class="ref">C-01</td>
               <th scope="row">Je vérifie un logiciel de commande avant tout matériel.</th>
               <td>DroneLab : 130 contrôles automatisés ; contrôleur C exporté identique au JavaScript sur 700 pas.<small>Projet personnel · 2026</small></td>
               <td><span class="moc e">Essai</span></td>
               <td class="acc"><a class="live" href="projets/drone-lab/">Essayer DroneLab</a><small><a href="#p-dronelab">Étude de cas</a></small></td>
             </tr>
             <tr data-moc="D" data-live="1">
-              <td class="ref">C-07</td>
+              <td class="ref">C-02</td>
               <th scope="row">Je modélise les performances d'un avion et j'optimise sous contraintes.</th>
               <td>AéroOptim : +31 % de distance trouvée sur un monomoteur léger (modèle ISA, polaire, propulsion, croisière intégrée).<small>Projet personnel · 2026</small></td>
               <td><span class="moc d">Démonstration</span></td>
               <td class="acc"><a class="live" href="projets/aero-optim/">Essayer AéroOptim</a><small><a href="#p-aero">Étude de cas</a></small></td>
             </tr>
             <tr data-moc="A" data-live="1">
-              <td class="ref">C-08</td>
+              <td class="ref">C-03</td>
               <th scope="row">Je simule une mission complète et j'en compare les profils.</th>
               <td>A380 Cruise Lab : vol du roulage à l'arrêt, montées par paliers, profils MRC / LRC / ECON, exports JSON, CSV et PDF.<small>ÉTS · 2025, extension web · 2026</small></td>
               <td><span class="moc a">Analyse</span></td>
               <td class="acc"><a class="live" href="projets/a380-lab/">Essayer A380 Cruise Lab</a><small><a href="#a380Project">Étude de cas</a></small></td>
             </tr>
             <tr data-moc="E" data-live="0">
-              <td class="ref">C-09</td>
+              <td class="ref">C-04</td>
               <th scope="row">Je conçois, je fabrique et je fais voler.</th>
               <td>Drone hexacoptère dimensionné pour 8 kg, 10 km et 2 000 m : fabriqué, testé au sol puis en vol.<small>ENSPD · 2020 – 2021</small></td>
               <td><span class="moc e">Essai</span></td>
               <td class="acc"><a href="#p-hexa">Étude de cas</a></td>
+            </tr>
+            <tr data-moc="I" data-live="0">
+              <td class="ref">C-05</td>
+              <th scope="row">Je tiens la traçabilité des exigences d'un programme aéronautique.</th>
+              <td>Plus de 1 000 exigences tracées (TLAR, dirigeable, gondole) et matrices de conformité du LCA60T.<small>Flying Whales · 2026</small></td>
+              <td><span class="moc i">Inspection</span></td>
+              <td class="acc"><a href="#parcours">Parcours</a><small>Confidentiel · détaillé en entretien</small></td>
+            </tr>
+            <tr data-moc="I" data-live="0">
+              <td class="ref">C-06</td>
+              <th scope="row">Je traduis un règlement en critères vérifiables.</th>
+              <td>Note bilingue : critères de vibration des écrans cockpit et de distorsion du pare-brise, d'après la CS-25 et les guides FAA.<small>Flying Whales · 2026</small></td>
+              <td><span class="moc i">Inspection</span></td>
+              <td class="acc"><a href="#parcours">Parcours</a><small>Confidentiel · détaillé en entretien</small></td>
+            </tr>
+            <tr data-moc="E" data-live="0">
+              <td class="ref">C-07</td>
+              <th scope="row">Je mène une campagne d'essais de bout en bout.</th>
+              <td>6 campagnes sur bancs moteurs : instrumentation, étalonnage, acquisition, dépouillement, 6 rapports d'essais.<small>CRDI, Douala · 2021 – 2024</small></td>
+              <td><span class="moc e">Essai</span></td>
+              <td class="acc"><a href="#parcours">Parcours</a><small>Détaillé en entretien</small></td>
+            </tr>
+            <tr data-moc="A" data-live="0">
+              <td class="ref">C-08</td>
+              <th scope="row">Je conclus à partir des mesures.</th>
+              <td>38 fichiers de mesures traités en Python, 13 exigences du SRD évaluées, recommandations pour la campagne suivante.<small>Flying Whales · 2026</small></td>
+              <td><span class="moc a">Analyse</span></td>
+              <td class="acc"><a href="#p-essais">Étude de cas</a><small>Confidentiel · détaillé en entretien</small></td>
+            </tr>
+            <tr data-moc="D" data-live="0">
+              <td class="ref">C-09</td>
+              <th scope="row">J'outille ce qui se répète.</th>
+              <td>Comparateur 3DEXPERIENCE : de 8 h à 5 min par comparaison, utilisé sur 1 260 exigences, environ 11 000 lignes testées hors ligne.<small>Flying Whales · 2026</small></td>
+              <td><span class="moc d">Démonstration</span></td>
+              <td class="acc"><a href="#p-3dx">Étude de cas</a><small>Confidentiel · détaillé en entretien</small></td>
             </tr>
             <tr data-moc="I" data-live="0">
               <td class="ref">C-10</td>
@@ -488,7 +491,7 @@
   </div>
 </footer>
 
-<script src="main.js?v=2026-11-09f"></script>
+<script src="main.js?v=2026-11-11"></script>
 <script type="module" src="projets/a380-lab/hero3d.js?v=1.5.2"></script>
 </body>
 </html>

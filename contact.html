@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=2026-11-09">
+<link rel="stylesheet" href="style.css?v=2026-11-11">
 </head>
 <body>
 <a class="skip" href="#contenu">Aller au contenu</a>
@@ -42,12 +42,13 @@
 <main class="page" id="contenu">
   <div class="wrap">
     <a class="back reveal" href="index.html" data-same-tab>← Retour au portfolio</a>
-    <h1 class="reveal" style="--d:.06s">Travaillons <em>ensemble</em></h1>
+    <h1 class="reveal" style="--d:.06s">Échangeons sur votre <em>programme</em></h1>
     <p class="lead reveal" style="--d:.12s">Un poste en ingénierie système ou en essais, un projet, une question ? Je réponds généralement sous 48 h.</p>
 
     <div class="contact-grid">
       <form class="form reveal" id="form" novalidate style="--d:.16s">
         <h2>Écrire un message</h2>
+        <p class="hint top">Ce formulaire n'envoie rien depuis le site : il ouvre votre messagerie avec le message déjà rédigé, prêt à être envoyé.</p>
         <div class="row2">
           <div class="f"><label for="nom">Nom</label><input id="nom" autocomplete="name" placeholder="Votre nom" required></div>
           <div class="f"><label for="org">Entreprise</label><input id="org" autocomplete="organization" placeholder="Facultatif"></div>
@@ -62,7 +63,7 @@
         <div class="f"><label for="msg">Message</label><textarea id="msg" placeholder="Le poste, l'équipe, le programme…" required></textarea></div>
         <button class="btn primary" type="submit">Envoyer le message <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
         <p class="err" id="err"></p>
-        <p class="hint">Le bouton ouvre votre messagerie avec le message déjà rédigé, prêt à être envoyé. Aucune donnée n'est enregistrée sur ce site.</p>
+        <p class="hint">Aucune donnée n'est enregistrée sur ce site.</p>
       </form>
 
       <div class="channels reveal" style="--d:.24s">
@@ -90,7 +91,7 @@
   <div class="wrap"><span>© <span id="year"></span> Emmanuel Tchouya · Montréal (Québec)</span></div>
 </footer>
 
-<script src="main.js?v=2026-11-09"></script>
+<script src="main.js?v=2026-11-11"></script>
 <script>
 const EMAIL = 'Emmatchouya@gmail.com';
 document.getElementById('form').addEventListener('submit', e => {
