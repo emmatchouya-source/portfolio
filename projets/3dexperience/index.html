@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comparer les exigences dans 3DEXPERIENCE — Emmanuel Tchouya</title>
+<meta name="description" content="Étude de cas : comparaison de révisions et mises à jour d’exigences pendant un stage. Travail confidentiel, périmètre de vérification explicitement limité.">
+<link rel="canonical" href="https://emmatchouya-source.github.io/portfolio/projets/3dexperience/">
+<meta property="og:title" content="Comparer les exigences — Emmanuel Tchouya"><meta property="og:description" content="Comparaison documentaire et mises à jour PLM : démarche, périmètre déclaré et limites de vérification publique."><meta property="og:image" content="https://emmatchouya-source.github.io/portfolio/og.png"><meta property="og:type" content="article">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../../style.css?v=audit-2026-11">
+</head>
+<body><a class="skip" href="#contenu">Aller au contenu</a>
+<header class="wrap"><p><a href="../../index.html#p-3dx">← Emmanuel Tchouya · Portfolio</a></p></header>
+<main class="case-study" id="contenu">
+<p class="eyebrow">Flying Whales · stage en cours depuis mai 2026</p>
+<h1>Comparer des révisions sans perdre la trace des exigences</h1>
+<p class="lead">Mon travail porte sur un outil de comparaison de spécifications et de préparation des mises à jour dans 3DEXPERIENCE.</p>
+<p class="case-status"><strong>Travail professionnel décrit, sans démonstration industrielle publique.</strong> Le code, les spécifications, les exports et les journaux d’exécution sont internes. Les volumes et le gain ci-dessous sont déclarés ; ils ne sont pas recalculables depuis ce dépôt.</p>
+
+<h2>Le travail avant l’outil</h2>
+<p>Il fallait comparer les révisions d’une spécification, relever les écarts, produire les tableaux de suivi, puis reporter les relectures dans le référentiel. Une différence de texte ne suffit pas à décider d’une mise à jour : il faut la rattacher à la bonne exigence et à la bonne révision.</p>
+<p>J’ai développé l’automatisation de ces comparaisons et des rapports d’écarts, ainsi que l’intégration de modifications issues de Word et de matrices Excel. Les descriptions de l’expérience mentionnent des contrôles des données et une possibilité de retour arrière.</p>
+
+<h2>La difficulté des modifications concurrentes</h2>
+<p>Un document relu peut correspondre à une ancienne version du référentiel. Remplacer directement l’état courant risque alors d’écraser une modification intervenue depuis l’export. C’est le problème technique à examiner avant de qualifier une écriture de maîtrisée.</p>
+<p>Le code interne n’étant pas disponible ici, je ne présente pas une fusion à trois versions comme un mécanisme vérifié. Son examen demande de retrouver l’identité persistante de l’exigence, la version de référence et les règles réellement appliquées.</p>
+<div class="table-scroll"><table><caption>Points à vérifier dans l’implémentation interne, sous réserve d’autorisation</caption><thead><tr><th scope="col">Point</th><th scope="col">Question technique</th><th scope="col">État public</th></tr></thead><tbody>
+<tr><th scope="row">Identification</th><td>Quel identifiant persistant relie l’exigence exportée à l’objet PLM ? Que se passe-t-il en cas d’identifiant absent ou dupliqué ?</td><td>Non inspecté</td></tr>
+<tr><th scope="row">Différences</th><td>Quels champs sont comparés ? Comment distinguer une modification de contenu d’un déplacement ?</td><td>Comparaison décrite ; règles non inspectées</td></tr>
+<tr><th scope="row">Référence et conflits</th><td>La version à l’export est-elle conservée ? Les modifications du document et du référentiel sont-elles comparées à cette même base ?</td><td>Fusion à trois versions non confirmée</td></tr>
+<tr><th scope="row">Écritures</th><td>Quelle vérification de révision précède l’écriture ? Un conflit bloque-t-il l’opération et produit-il un rapport ?</td><td>Contrôles décrits ; comportement non testé ici</td></tr>
+<tr><th scope="row">Récupération</th><td>Quelles opérations sont récupérables après échec partiel ? Avec quel journal et quelles limites ?</td><td>Retour arrière décrit ; garantie non établie</td></tr>
+</tbody></table></div>
+
+<h2>Ce que les chiffres permettent de dire</h2>
+<div class="table-scroll"><table><thead><tr><th scope="col">Indicateur déclaré</th><th scope="col">Périmètre</th><th scope="col">Limite</th></tr></thead><tbody>
+<tr><th scope="row">Une journée → moins de 5 minutes</th><td>Comparaison manuelle puis comparaison avec l’outil, pour 162 exigences</td><td>Nature du chronométrage, matériel, répétitions et temps de relecture non documentés publiquement. Le temps initial peut être une estimation.</td></tr>
+<tr><th scope="row">Plus de 3 000 exigences</th><td>7 spécifications et 17 révisions, selon le bilan déclaré</td><td>Journaux non fournis ; exigences uniques et occurrences comparées non distinguées.</td></tr>
+<tr><th scope="row">Plus de 1 000 exigences suivies</th><td>Activité de traçabilité pendant le stage, distincte du volume de comparaison</td><td>Pas d’extraction publique du référentiel.</td></tr>
+</tbody></table></div>
+
+<h2>Développement, test et utilisation</h2>
+<p>Le développement de l’outil est décrit dans mon expérience. Une ancienne présentation évoquait des tests hors ligne contre un simulateur 3DEXPERIENCE ; les sources et traces de ces tests ne sont pas dans le dépôt public. Je ne les assimile donc ni à une validation sur le PLM réel ni à un déploiement industriel démontré.</p>
+<p>Aucun exemple de rapport d’écarts n’est publié sans autorisation. Un futur exemple synthétique devra être identifié comme tel et vérifié contre le fonctionnement réel avant d’illustrer cette réalisation.</p>
+<p><a href="../../index.html#preuves">Consulter la matrice des éléments vérifiables →</a></p>
+</main></body></html>
