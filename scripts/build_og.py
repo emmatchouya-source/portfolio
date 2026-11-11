@@ -131,11 +131,11 @@ def main():
     d.text(p(104, 93), 'ET', font=font(25, True), fill=(255, 255, 255), anchor='mm')
 
     d.text(p(72, 168), 'Emmanuel Tchouya', font=font(82, True), fill=INK)
-    gradient_text(img, tuple(p(74, 282)), 'Ingénierie système · Intégration · Essais aéronautiques',
+    gradient_text(img, tuple(p(74, 282)), 'Ingénierie système et essais · Aéronautique',
                   font(33, True), BLUE, TEAL)
 
-    stats = [('1 000+', 'exigences tracées'), ('8 h → 5 min', 'par comparaison de spécifications'),
-             ('6', "campagnes d'essais sur bancs moteurs")]
+    stats = [('1 000+', 'exigences tracées'), ('1 jour → 5 min', 'par comparaison de spécifications'),
+             ('3 ans', "d'essais sur bancs moteurs")]
     x = 72
     for n, label in stats:
         fn, fl = font(50, True), font(21)

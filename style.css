@@ -424,8 +424,8 @@ footer .meta{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center}
 .flow-toggle{font:inherit;font-size:12.5px;font-weight:600;color:var(--accent);background:none;border:0;padding:0 14px 6px;cursor:pointer;text-align:left}
 .flow-toggle:hover{text-decoration:underline}
 .flow-more[hidden]{display:none}
-.stat .n.wide{white-space:nowrap}
-@media (max-width:760px){.stat .n.wide{font-size:20px;line-height:1.5}}
+.stat .n.wide{white-space:nowrap;font-size:30px;line-height:1.35}
+@media (max-width:760px){.stat .n.wide{font-size:17px;line-height:1.75}}
 
 /* impression : une version papier lisible, sans décor ni animation */
 @media print{
