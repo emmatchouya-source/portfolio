@@ -428,6 +428,12 @@ footer .meta{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center}
 .stat .n.wide{white-space:nowrap;font-size:30px;line-height:1.35}
 @media (max-width:760px){.stat .n.wide{font-size:17px;line-height:1.75}}
 
+/* accueil : faits clés sous l'accroche ; projets : intertitre des démonstrations */
+.hero .hero-facts{margin:-14px 0 30px;font-size:14.5px;color:var(--muted);font-weight:500}
+.projects-sub{grid-column:1/-1;margin:26px 0 0}
+.projects-sub h3{margin:0;font-size:20px}
+.projects-sub p{margin:4px 0 0;color:var(--muted);font-size:15px}
+
 /* impression : une version papier lisible, sans décor ni animation */
 @media print{
   :root,:root[data-theme="dark"],:root:not([data-theme="light"]){--bg:#fff;--bg2:#f3f4f7;--panel:#fff;--glass:#fff;--ink:#000;--muted:#333;--line:#c9cdd6;--accent:#1d3fb8;--accent-2:#00756b;--warm:#a3480d;--accent-soft:transparent;--shadow:none;--shadow-lg:none}
