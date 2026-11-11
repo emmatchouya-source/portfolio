@@ -183,6 +183,7 @@ section{padding:96px 0 0}
 .when{color:var(--accent);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
 .timeline h4{margin:3px 0 2px;font-size:18px}
 .where{font-size:14.5px;color:var(--muted);margin-bottom:8px}
+.title-note{margin:2px 0 0;font-size:13px;line-height:1.5;color:var(--muted);font-style:italic}
 .timeline ul{margin:0;padding-left:18px;color:var(--muted);font-size:15px}
 .timeline ul li{padding:0 0 5px}
 
