@@ -26,14 +26,12 @@ if ($('themeBtn')) $('themeBtn').addEventListener('click', () => { themeIdx = (t
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => themeListeners.forEach(f => f()));
 applyTheme();
 
-/* ---------- Liens vers une autre page : nouvel onglet (sauf ancres, mailto et data-same-tab) ---------- */
+/* External destinations open separately; internal navigation keeps browser history. */
 document.querySelectorAll('a[href]').forEach(a => {
-  const h = a.getAttribute('href');
-  if (h.startsWith('#') || h.startsWith('mailto:') || a.hasAttribute('data-same-tab')) return;
   const u = new URL(a.href, location.href);
-  if (u.origin === location.origin && u.pathname === location.pathname) return;
-  a.target = '_blank'; a.rel = 'noopener';
+  if (u.protocol === 'https:' && u.origin !== location.origin){ a.target = '_blank'; a.rel = 'noopener'; }
 });
+document.querySelector('.flow-discovery')?.addEventListener('toggle', () => window.dispatchEvent(new Event('resize')));
 
 /* ---------- Typographie française : espaces insécables devant : ; ? ! %, dans les nombres et avant les unités ---------- */
 (function typo(){

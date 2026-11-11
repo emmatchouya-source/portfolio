@@ -8,6 +8,7 @@ import {BOARDS} from './boards.js?v=airframes-1';
 import {customBoard,arduinoZip} from './arduino.js?v=airframes-1';
 import {createBoardPicker} from './board-picker.js';
 import {setupAgent} from './agent-client.js?v=airframes-1';
+import {DEMO_CONFIG,DEMO,demoState,beforeDemoStep,afterDemoStep,demoSummary} from './demo.js';
 
 const $=id=>document.getElementById(id),labels={hover:'VOL STATIONNAIRE',square:'CIRCUIT CARRÉ',circle:'ORBITE CIRCULAIRE',eight:'TRAJECTOIRE EN HUIT',waypoints:'POINTS DE PASSAGE'};
 const fields={
@@ -27,10 +28,10 @@ function previewFrame(){
 }
 for(const id of ['airframe','arm','hAspect'])$(id).addEventListener('input',previewFrame);
 
-let waypoints=[[0,0,5],[6,0,5],[6,6,5],[0,0,5]],sim,playing=false,dirty=false,accumulator=0,last=performance.now(),lastUi=0,lastEvents=-1,toastTimer;
+let waypoints=[[0,0,5],[6,0,5],[6,6,5],[0,0,5]],sim,playing=false,dirty=false,accumulator=0,last=performance.now(),lastUi=0,lastEvents=-1,toastTimer,guided=null;
 const scene=new Scene($('scene'));
 function toast(message,error=false){$('toast').textContent=message;$('toast').classList.toggle('error',error);$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,error?7000:3500);}
-function markDirty(){dirty=true;$('dirtyBadge').hidden=false;}
+function markDirty(){cancelGuided();dirty=true;$('dirtyBadge').hidden=false;}
 function choosePanel(name){document.querySelectorAll('[data-panel]').forEach(b=>{const active=b.dataset.panel===name;b.classList.toggle('active',active);b.setAttribute('aria-selected',active);});document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===`panel-${name}`));$('configActions').hidden=!['mission','aircraft','control','sensors'].includes(name);}
 document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',()=>choosePanel(b.dataset.panel)));
 $('openExport').onclick=()=>{choosePanel('export');if(innerWidth<=720)$('panel-export').scrollIntoView({behavior:'smooth',block:'center'});};
@@ -41,7 +42,21 @@ function renderWaypoints(){
 $('addWaypoint').onclick=()=>{if(waypoints.length>=30){toast('Maximum : 30 points.',true);return;}waypoints.push([0,0,Number($('altitude').value)||5]);renderWaypoints();markDirty();};
 function fill(c){for(const items of Object.values(fields))for(const [key] of items)$(key).value=({ix:c.inertia[0],iy:c.inertia[1],iz:c.inertia[2]})[key]??c[key];$('airframe').value=c.airframe;$('mission').value=c.mission;$('feedback').value=c.feedback;previewFrame();showWaypointEditor();renderWaypoints();}
 function read(){const c={};for(const items of Object.values(fields))for(const [key] of items){if(!$(key).checkValidity())throw Error(`Vérifie le champ « ${$(key).closest('label').firstChild.textContent} ».`);c[key]=Number($(key).value);}c.inertia=[c.ix,c.iy,c.iz];delete c.ix;delete c.iy;delete c.iz;c.airframe=$('airframe').value;c.mission=$('mission').value;c.feedback=$('feedback').value;return config(c);}
-function newSim(c,wp=waypoints){const next=new Simulation(c,wp);sim=next;playing=false;accumulator=0;lastEvents=-1;dirty=false;$('dirtyBadge').hidden=true;$('gpsDropout').checked=false;rebuildMotors();$('motorFailure').value='-1';$('airframeLabel').textContent=sim.geometry.profile.short;$('allocationLabel').textContent=`Allocation des ${sim.motors.length} moteurs`;$('missionLabel').textContent=labels[c.mission];showBoard();try{localStorage.setItem('droneLabConfig',JSON.stringify(configuration(sim)));}catch{/* Storage may be disabled. */}legend();updateUi();scene.draw(sim);drawChart($('chart'),sim.history,$('chartType').value,sim.motors.length);}
+function newSim(c,wp=waypoints){const next=new Simulation(c,wp);cancelGuided();sim=next;playing=false;accumulator=0;lastEvents=-1;dirty=false;$('dirtyBadge').hidden=true;$('gpsDropout').checked=false;rebuildMotors();$('motorFailure').value='-1';$('airframeLabel').textContent=sim.geometry.profile.short;$('allocationLabel').textContent=`Allocation des ${sim.motors.length} moteurs`;$('missionLabel').textContent=labels[c.mission];showBoard();try{localStorage.setItem('droneLabConfig',JSON.stringify(configuration(sim)));}catch{/* Storage may be disabled. */}legend();updateUi();scene.draw(sim);drawChart($('chart'),sim.history,$('chartType').value,sim.motors.length);}
+function cancelGuided(){if(guided)$('demoStatus').textContent='Démonstration quittée. Les résultats suivants dépendent de vos commandes manuelles.';guided=null;$('demoResults').hidden=true;$('demoResults').removeAttribute('data-report');}
+function renderDemo(){
+  if(!guided)return;
+  if(guided.done&&$('demoResults').dataset.report)return;
+  const r=demoSummary(sim,guided);
+  $('demoStatus').textContent=guided.done?'Démonstration terminée : résultats de cette simulation. Relancer restaure exactement le même scénario.':`Démonstration ${sim.t.toFixed(0)} / ${DEMO.duration} s · ${guided.injected?'impulsion appliquée, observation de la réponse':'décollage et suivi ; impulsion automatique à 20 s'}`;
+  if(!guided.done)return;
+  const number=v=>v==null?'Non établi':v.toFixed(3);
+  $('demoResults').hidden=false;$('demoResults').dataset.report=JSON.stringify(r);
+  $('demoResults').innerHTML=[['RMS de suivi',number(r.trackingRmsM)+' m','Phase de trajectoire seulement'],['Pic après impulsion',number(r.postImpulsePeakErrorM)+' m','Distance état réel simulé / consigne'],['Rétablissement',r.recoverySeconds==null?'Non établi':number(r.recoverySeconds)+' s','Erreur ≤ 0,5 m et écart de vitesse ≤ 0,3 m/s jusqu’à la fin, au moins 2 s'],['Commandes saturées',number(r.saturationPercent)+' %','Fraction des pas de commande actifs']].map(([label,value,note])=>`<div>${label}<strong>${value}</strong><small>${note}</small></div>`).join('');
+}
+$('startDemo').onclick=()=>{waypoints=[];fill(DEMO_CONFIG);$('preset').value='standard';newSim(DEMO_CONFIG,[]);guided=demoState();$('timescale').value='4';sim.start();playing=true;$('chartType').value='error';legend();renderDemo();updateUi();};
+$('demoConfig').onclick=()=>{choosePanel('aircraft');$('panel-aircraft').scrollIntoView({block:'nearest'});};
+for(const id of ['hold','rtl','land','disturb','gpsDropout','motorFailure'])$(id).addEventListener(id==='gpsDropout'||id==='motorFailure'?'change':'click',cancelGuided);
 function apply(){try{newSim(read());toast('Configuration appliquée. Prêt pour un nouvel essai.');}catch(e){toast(e.message,true);}}
 $('applyConfig').onclick=apply;
 $('defaults').onclick=()=>{waypoints=[[0,0,5],[6,0,5],[6,6,5],[0,0,5]];fill(DEFAULTS);$('preset').value='standard';newSim(DEFAULTS);toast('Paramètres initiaux restaurés.');};
@@ -49,6 +64,7 @@ for(const el of document.querySelectorAll('.panel input:not([type=file]),.panel 
 $('mission').addEventListener('change',showWaypointEditor);
 $('preset').onchange=()=>{for(const [key,value] of Object.entries(PRESETS[$('preset').value])){if(key==='inertia'){['ix','iy','iz'].forEach((id,i)=>$(id).value=value[i]);}else if($(key))$(key).value=value;}previewFrame();markDirty();};
 $('play').onclick=()=>{
+  if(guided?.done)cancelGuided();
   if(dirty){toast('Applique les paramètres pour commencer un nouvel essai.',true);return;}
   if(['landed','crashed'].includes(sim.mode)){newSim(sim.c);}
   if(sim.mode==='ready')sim.start();playing=!playing;accumulator=0;updateUi();
@@ -132,7 +148,7 @@ fill(initial);newSim(initial);window.addEventListener('resize',()=>{scene.draw(s
 document.addEventListener('visibilitychange',()=>{last=performance.now();accumulator=0;});
 function frame(now){
   const elapsed=Math.min(.1,(now-last)/1000);last=now;
-  if(playing&&!document.hidden){accumulator+=elapsed*Number($('timescale').value);let steps=0;while(accumulator>=DT&&steps<100){sim.step();accumulator-=DT;steps++;if(['landed','crashed'].includes(sim.mode)){playing=false;accumulator=0;break;}}}
-  scene.draw(sim);if(now-lastUi>100){updateUi();drawChart($('chart'),sim.history,$('chartType').value,sim.motors.length);setView();lastUi=now;}requestAnimationFrame(frame);
+  if(playing&&!document.hidden){accumulator+=elapsed*Number($('timescale').value);let steps=0;while(accumulator>=DT&&steps<100){if(guided)beforeDemoStep(sim,guided);sim.step();if(guided)afterDemoStep(sim,guided);accumulator-=DT;steps++;if(guided?.done||['landed','crashed'].includes(sim.mode)){playing=false;accumulator=0;break;}}}
+  if(!document.hidden)scene.draw(sim);if(now-lastUi>100){updateUi();renderDemo();drawChart($('chart'),sim.history,$('chartType').value,sim.motors.length);setView();lastUi=now;}requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

@@ -8,6 +8,35 @@
   --shadow-lg:0 2px 4px rgba(13,19,33,.05),0 22px 48px rgba(13,19,33,.12);
   --radius:16px;
 }
+
+/* Recruiter entry points, followed by progressively detailed project work. */
+.career-focus{border-left:2px solid var(--accent);padding:22px 0 22px 28px;min-width:0}
+.career-focus>a{display:flex;gap:18px;padding:24px 0;color:var(--ink);border-bottom:1px solid var(--line)}
+.career-focus>a:hover{text-decoration:none}
+.career-focus h2{font-size:25px;line-height:1.2;margin:0 0 8px}
+.career-focus p{font-size:15px;color:var(--muted);margin:0 0 12px}
+.career-focus a span:last-child{font-size:14px;color:var(--accent)}
+.career-focus .focus-number{font:13px/1.5 ui-monospace,monospace;color:var(--accent);padding-top:4px}
+.career-focus .hint{margin-top:18px;font-size:13px}
+.profile-summary .stat .n{font-size:25px}
+.skills.skills-levels{grid-template-columns:repeat(3,minmax(0,1fr))}
+.skills-levels .skill h3{font-size:20px;margin-top:0}
+.skills-levels .skill p{color:var(--muted);font-size:15px}
+.ai-note{color:var(--muted);font-size:13px;margin-top:24px}
+.flow-discovery{border-block:1px solid var(--line);padding:20px 0}
+.flow-discovery>summary{font-size:18px;font-weight:600;cursor:pointer}
+.flow-discovery .flow-card{max-width:760px;margin:24px auto!important}
+.case-study{max-width:860px;margin:auto;padding:52px 24px 80px}
+.case-study h1{font-size:clamp(30px,5vw,48px);line-height:1.15}
+.case-study h2{font-size:25px;margin-top:40px}
+.case-study .case-status{border-left:3px solid var(--accent);padding:12px 20px;background:var(--accent-soft)}
+.case-study table{border-collapse:collapse;width:100%;font-size:14px}
+.case-study th,.case-study td{padding:14px 10px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+.case-study .table-scroll{max-width:100%;overflow-x:auto}
+.case-study .table-scroll table{min-width:540px}
+.case-study .lead{font-size:19px;color:var(--muted)}
+.case-study a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:5px}
+@media(max-width:820px){.career-focus{padding-left:20px}.skills.skills-levels{grid-template-columns:1fr}.profile-summary .stat .n{font-size:21px}}
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#080c15; --bg2:#0c1220; --panel:#101726; --glass:rgba(10,15,27,.7);
@@ -67,7 +96,7 @@ nav ul a:hover,nav ul a.active{color:var(--ink);background:var(--accent-soft);te
 /* boutons */
 .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:600;font-size:15px;transition:transform .2s,box-shadow .2s,border-color .2s;cursor:pointer;font-family:inherit}
 .btn:hover{text-decoration:none;transform:translateY(-2px);box-shadow:var(--shadow);border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
-.btn.primary{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 8px 24px var(--glow)}
+.btn.primary{background:linear-gradient(100deg,#214cc9,#08796f);border-color:transparent;color:#fff;box-shadow:0 8px 24px var(--glow)}
 .btn.primary:hover{box-shadow:0 12px 32px var(--glow)}
 .btn.sm{padding:8px 14px;font-size:14px;border-radius:10px}
 .btn svg{width:17px;height:17px}
@@ -309,10 +338,10 @@ svg .tx{fill:var(--muted);font:11px "Inter",system-ui,sans-serif}
 
 /* menu mobile */
 .menu-btn,.only-mobile{display:none}
-@media (max-width:760px){
+@media (max-width:980px){
   .menu-btn{display:flex}
   .only-mobile{display:block}
-  nav ul{position:absolute;top:64px;left:12px;right:12px;flex-direction:column;gap:2px;padding:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);font-size:16px}
+  nav ul{display:none;position:absolute;top:64px;left:12px;right:12px;flex-direction:column;gap:2px;padding:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lg);font-size:16px}
   nav.open ul{display:flex}
   nav ul a{padding:11px 12px}
   nav .only-mobile a{color:var(--accent);font-weight:600}

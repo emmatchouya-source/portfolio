@@ -4,8 +4,10 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Laboratoire de vol autonome : simulation 3D de quadricoptères, hexacoptères et octocoptères, capteurs, commande en cascade et export C de référence.">
   <meta name="theme-color" content="#0b1017"><title>DroneLab — Laboratoire de vol autonome</title>
+  <link rel="canonical" href="https://emmatchouya-source.github.io/portfolio/projets/drone-lab/">
+  <meta property="og:title" content="DroneLab — Commande de multirotors en simulation"><meta property="og:description" content="Un scénario guidé de 40 secondes simulées : décollage, trajectoire, perturbation et mesures de suivi."><meta property="og:image" content="https://emmatchouya-source.github.io/portfolio/og.png"><meta property="og:type" content="website">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1017'/%3E%3Cpath d='m8 8 16 16M8 24 24 8' stroke='%2357dfbc' stroke-width='3'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="styles.css?v=airframes-1">
+  <link rel="stylesheet" href="styles.css?v=audit-2026-11">
 </head>
 <body>
   <header class="topbar">
@@ -103,7 +105,14 @@
       <div id="configActions" class="sidebar-footer"><button id="applyConfig" class="button outline full">Appliquer et réinitialiser</button><button id="defaults" class="quiet">Rétablir les paramètres initiaux</button></div>
     </aside>
     <main class="main">
-      <div class="titlebar"><div><span class="eyebrow">SIMULER · MESURER · DÉVELOPPER</span><h1>Le vol, sous contrôle.</h1></div><span class="simulation-tag"><span class="dot"></span>SIMULATION LOCALE</span></div>
+      <div class="titlebar"><div><span class="eyebrow">Commande de multirotors</span><h1>Suivre une trajectoire, puis perturber le vol.</h1></div><span class="simulation-tag"><span class="dot"></span>SIMULATION LOCALE</span></div>
+      <section class="guided-demo" aria-labelledby="demoTitle">
+        <h2 id="demoTitle">Découvrir le modèle en 40 secondes simulées</h2>
+        <p>Décollage à 5 m → trajectoire en huit → impulsion à 20 s → observation jusqu’à 40 s. Même configuration et même graine à chaque lancement. Aucun matériel à installer.</p>
+        <div class="demo-actions"><button id="startDemo" class="button primary">Lancer la démonstration guidée</button><a href="documentation.html" class="text-link">Méthodes, tests et limites →</a><button id="demoConfig" class="button outline">Configuration avancée</button></div>
+        <p id="demoStatus" role="status">La configuration avancée et les exports restent accessibles dans le panneau latéral. Modèle de développement, non qualifié pour le vol réel.</p>
+        <div id="demoResults" hidden></div>
+      </section>
       <section class="scene-card" aria-label="Vue 3D du drone">
         <div class="scene-toolbar"><div class="scene-title"><span class="live-square"></span>ESPACE DE VOL <span id="missionLabel">CIRCUIT CARRÉ</span></div><div class="view-buttons"><button id="orbitView" class="active" title="Vue en perspective">3D</button><button id="topView" title="Vue de dessus">Dessus</button><button id="followView" aria-pressed="false" title="Suivre le drone">Suivre</button><button id="resetView" title="Recentrer la caméra">↺</button></div></div>
         <div class="viewport"><canvas id="scene" aria-label="Vue 3D interactive. Glisser pour tourner la caméra, molette pour zoomer."></canvas>
@@ -145,5 +154,5 @@
     <p id="agentPlatform" class="hint amber-text" hidden>L’installateur proposé fonctionne sur Windows x64. Une version macOS / Linux n’est pas encore proposée.</p>
     <p class="hint">L’agent ne demande pas de droits administrateur. Certains pilotes USB ou les règles de ton entreprise peuvent en nécessiter. Cet exécutable n’est pas signé : Windows peut afficher une vérification ou en bloquer l’ouverture. <a href="https://github.com/emmatchouya-source/portfolio/releases/tag/dronelab-agent-v1.1.0" target="_blank" rel="noopener">Version et empreinte SHA-256 ↗</a></p>
   </dialog>
-  <noscript>Active JavaScript pour utiliser le simulateur DroneLab.</noscript><script type="module" src="app.js?v=airframes-1"></script>
+  <noscript>Active JavaScript pour utiliser le simulateur DroneLab.</noscript><script type="module" src="app.js?v=audit-2026-11"></script>
 </body></html>

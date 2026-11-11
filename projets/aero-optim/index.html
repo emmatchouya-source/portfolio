@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AéroOptim</title>
+<title>AéroOptim — Étude de voilure · Emmanuel Tchouya</title>
+<meta name="description" content="Comparer une voilure de référence à une solution calculée : masse, traînée, distance et contraintes. Modèle simplifié, exemple reproductible de monomoteur.">
+<link rel="canonical" href="https://emmatchouya-source.github.io/portfolio/projets/aero-optim/">
+<meta property="og:title" content="AéroOptim — Étude de voilure"><meta property="og:description" content="Un exemple calculé avant/après, avec hypothèses et contraintes explicites. Aucune performance réelle garantie."><meta property="og:image" content="https://emmatchouya-source.github.io/portfolio/og.png"><meta property="og:type" content="website">
+<link rel="icon" href="../../favicon.svg" type="image/svg+xml">
 <style>
 :root{
   --bg:#f5f6f8; --panel:#ffffff; --ink:#1a1d23; --muted:#5b6472; --line:#e1e4ea; --grid:#eceff3;
@@ -76,6 +80,11 @@ th{color:var(--muted);font-weight:600;font-size:12px}
 .range{display:grid;grid-template-columns:1fr 78px 78px 40px;gap:6px;align-items:center;margin:4px 0}
 .status{color:var(--muted);font-size:13px}
 details summary{cursor:pointer;color:var(--muted);font-size:13px;margin-top:8px}
+.entry{max-width:1468px;margin:24px auto 0;padding:0 16px}.entry h2{font-size:25px}.entry p{max-width:850px;color:var(--muted)}.entry a{color:var(--accent)}
+.entry-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap}.reference-summary{margin-top:14px;border-left:3px solid var(--accent);padding:10px 16px;background:var(--panel)}
+.table-scroll{overflow-x:auto;max-width:100%}.table-scroll table{min-width:560px}main,aside{min-width:0}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media(max-width:600px){header{flex-wrap:wrap;padding:12px 16px}.range{grid-template-columns:minmax(60px,1fr) 66px 66px 24px;gap:4px}.tabs{overflow-x:auto}.kpi .v{font-size:19px}}
 .formula{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--muted);line-height:1.7}
 @media (max-width:1000px){
   .layout{grid-template-columns:1fr;padding:16px}
@@ -87,14 +96,19 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px;margin-top:8px}
 <body>
 <header>
   <h1>AéroOptim <span>performances &amp; optimisation aérodynamique</span></h1>
-  <button id="themeBtn" title="Thème">Thème : auto</button>
+  <div class="row"><a href="../../index.html#p-aero">← Portfolio</a><button id="themeBtn" title="Thème">Thème : auto</button></div>
 </header>
-
+<section class="entry" aria-labelledby="entryTitle">
+  <h2 id="entryTitle">Jusqu’où allonger l’aile ?</h2>
+  <p>Une aile plus longue réduit la traînée induite, mais sa masse augmente. Comparez ces effets sur un monomoteur générique, avec les mêmes modèles de carburant, de propulsion et de contraintes.</p>
+  <div class="entry-actions"><button id="referenceDemo" class="primary">Reproduire le cas monomoteur</button><a href="documentation.html">Hypothèses, équations et limites →</a></div>
+  <p class="reference-summary"><strong>Exemple calculé :</strong> 1 562,9 → 2 046,6 km (+30,95 %). Envergure : 11 → 16,5 m. Ce gain du modèle inclut un changement de surface et de masse ; il ne représente pas une performance mesurée. Le bouton rétablit tous les paramètres du scénario avant de recalculer.</p>
+</section>
 <div class="layout">
 <aside>
   <div class="card">
     <h3>Modèle d'avion</h3>
-    <select id="preset">
+    <select id="preset" aria-label="Préréglage du modèle">
       <option value="c172">Monomoteur léger (type C172)</option>
       <option value="glider">Planeur 18 m</option>
       <option value="drone">Drone MALE léger</option>
@@ -157,7 +171,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px;margin-top:8px}
       <div class="card">
         <h2>Problème d'optimisation</h2>
         <h3>Objectif</h3>
-        <select id="optObj">
+        <select id="optObj" aria-label="Objectif de l’optimisation">
           <option value="range">Maximiser la distance franchissable</option>
           <option value="endurance">Maximiser l'endurance</option>
           <option value="ld">Maximiser la finesse max</option>
@@ -240,7 +254,7 @@ function readParams(){
   return p;
 }
 function validParams(p){
-  return p.m>0 && p.S>0 && p.b>0 && p.CLmax>0 && p.CD0>0 && (p.eAuto || p.e>0) && p.fuel>=0 && p.fuel<p.m;
+  return NUM.every(k=>Number.isFinite(p[k])) && p.m>0 && p.S>0 && p.b>0 && p.CLmax>0 && p.CD0>0 && (p.eAuto || p.e>0) && p.fuel>=0 && p.fuel<p.m && p.reserve>=0 && p.reserve<100 && p.h>=0 && p.h<=20000 && (p.vAuto || p.Vc>0) && p.P>=0 && p.T>=0 && p.etap>0 && p.etap<=1 && p.bsfc>0 && p.tsfc>0 && p.mmo>0 && ['prop','jet'].includes(p.propType);
 }
 
 /* ---------- Modèle aérodynamique ---------- */
@@ -723,7 +737,9 @@ function makeEvaluator(p, o){
       else cr = cruise(q, d, h, { mode });
     }
     const score = OBJ[mode].max ? val : -val;
-    return { b, S, AR, m, CD0, e:d.e, LD:d.LDmax, Vs0, roc0, h, val, score, viol, feasible: viol < 1e-9 && isFinite(val), cr };
+    const wingMass=o.massModel?m-mOther:null;
+    const cruiseDrag=cr?drag(q,d,isa(h).rho,cr.V0,m-cr.usable/80).D:null;
+    return { b, S, AR, m, wingMass, cruiseDrag, CD0, e:d.e, LD:d.LDmax, Vs0, roc0, h, val, score, viol, feasible: viol < 1e-9 && isFinite(val), cr };
   };
 }
 function nelderMead(f, x0, step, iters){
@@ -748,8 +764,10 @@ function nelderMead(f, x0, step, iters){
 let heat = null, optBest = null;
 function runOptimization(){
   const p = readParams(), o = readOpt();
+  optBest=null;$('applyOpt').disabled=true;
   if (!validParams(p)){ $('optStatus').textContent = 'Paramètres du modèle invalides.'; return; }
   if (!(o.bmax > o.bmin && o.Smax > o.Smin && o.bmin > 0 && o.Smin > 0)){ $('optStatus').textContent = 'Bornes invalides.'; return; }
+  if (!['bmin','bmax','Smin','Smax','hmin','hmax','VsMax','ROCmin','ARmax','Nz','tc','Cf'].every(k=>Number.isFinite(o[k])) || (o.hOpt && !(o.hmin>=0 && o.hmax>o.hmin && o.hmax<=20000)) || o.VsMax<0 || o.ROCmin<0 || o.ARmax<0 || (o.massModel && !(o.Nz>0 && o.tc>0 && o.tc<1)) || (o.dragModel && o.Cf<0)) { $('optStatus').textContent='Contraintes invalides : valeurs finies, bornes ordonnées et altitude entre 0 et 20 000 m requises.'; $('applyOpt').disabled=true; return; }
   if (['range','endurance'].includes(o.obj) && !(hasEngine(p) && p.fuel > 0)){ $('optStatus').textContent = 'Cet objectif nécessite une propulsion et du carburant.'; return; }
   $('optStatus').textContent = 'Calcul en cours…'; $('runOpt').disabled = true;
   setTimeout(() => {
@@ -799,18 +817,23 @@ function renderOptResult(base, opt, o){
     ['Finesse max', base.LD, opt.LD, 2, true], ['V décrochage sol (km/h)', base.Vs0, opt.Vs0, 1, false]
   ];
   if (isFinite(base.roc0)) rows.push(['Montée max sol (m/s)', base.roc0, opt.roc0, 2, true]);
+  if(o.massModel)rows.push(['Masse aile estimée (kg)',base.wingMass,opt.wingMass,1,false]);
+  if(opt.cr)rows.push(['Traînée en début de croisière (N)',base.cruiseDrag,opt.cruiseDrag,1,false]);
   if (['range','endurance'].includes(o.obj)){
     rows.push(['Altitude de croisière (m)', base.h, opt.h, 0]);
     if (opt.cr) rows.push(['Vitesse de croisière (km/h)', base.cr ? base.cr.V0*3.6 : NaN, opt.cr.V0*3.6, 0]);
   }
-  let h = '<table><tr><th>Grandeur</th><th>Actuel</th><th>Optimum</th><th>Écart</th></tr>';
+  let h = '<div class="table-scroll"><table><caption>Résultats calculés au même objectif ; altitude optimisée si sélectionnée</caption><tr><th scope="col">Grandeur</th><th scope="col">Référence</th><th scope="col">Solution trouvée</th><th scope="col">Écart</th></tr>';
   rows.forEach(([lab, a, b, dec, better], i) => {
     const dlt = isFinite(a) && isFinite(b) && a !== 0 ? (b/a - 1)*100 : NaN;
     let cls = '';
     if (better !== undefined && isFinite(dlt) && Math.abs(dlt) > 0.05) cls = (dlt > 0) === better ? 'pos' : 'neg';
     h += `<tr${i === 0 ? ' style="font-weight:650"' : ''}><td>${lab}</td><td>${fmt(a, dec)}</td><td>${fmt(b, dec)}</td><td class="${cls}">${isFinite(dlt) ? (dlt >= 0 ? '+' : '') + fmt(dlt, 1) + ' %' : '—'}</td></tr>`;
   });
-  h += '</table>';
+  h += '</table></div>';
+  const margins=[['Décrochage au sol',o.VsMax>0?o.VsMax-opt.Vs0:null,'km/h'],['Montée au sol',o.ROCmin>0?opt.roc0-o.ROCmin:null,'m/s'],['Allongement',o.ARmax>0?o.ARmax-opt.AR:null,''],['Borne haute d’envergure',o.bmax-opt.b,'m'],['Borne basse de surface',opt.S-o.Smin,'m²'],['Borne haute de surface',o.Smax-opt.S,'m²']];
+  h+='<h3>Marges de contraintes</h3><ul>'+margins.map(([label,value,unit])=>`<li>${label} : ${value==null?'désactivée':fmt(value,3)+' '+unit+(Math.abs(value)<.001?' · active (seuil d’affichage 0,001)':' · respectée')}</li>`).join('')+'</ul>';
+  h+='<p class="note">La réduction de traînée induite peut compenser une masse d’aile accrue. Cette solution est la meilleure trouvée par le balayage et le simplexe ; l’optimalité globale n’est pas démontrée. Pas de vérification structurale détaillée, de certification ni de validation en vol.</p>';
   if (!base.feasible) h += '<p class="note" style="color:var(--warn)">La configuration actuelle viole au moins une contrainte.</p>';
   $('optResult').innerHTML = h;
 }
@@ -915,21 +938,29 @@ function syncUI(){
   $('Nz').disabled = $('tc').disabled = !$('massModel').checked; $('Cf').disabled = !$('dragModel').checked;
 }
 let tmr = null;
+function invalidateOptimization(){optBest=null;$('applyOpt').disabled=true;if(heat)$('optStatus').textContent='Paramètres modifiés : les résultats ci-dessus appartiennent au dernier calcul. Relancez l’optimisation.';}
 document.querySelector('aside').addEventListener('input', e => {
   if (e.target.id === 'preset') return;
-  $('preset').value = 'custom'; syncUI();
+  $('preset').value = 'custom'; syncUI(); invalidateOptimization();
   clearTimeout(tmr); tmr = setTimeout(renderAnalysis, 60);
 });
 $('preset').addEventListener('change', e => loadPreset(e.target.value));
 ['hOpt','massModel','dragModel'].forEach(id => $(id).addEventListener('change', syncUI));
 $('runOpt').addEventListener('click', runOptimization);
+document.querySelector('#pane-optim .optgrid>.card').addEventListener('input',invalidateOptimization);
+$('initOpt').addEventListener('click',invalidateOptimization);
+$('referenceDemo').addEventListener('click',()=>{clearTimeout(tmr);loadPreset('c172');$('hOpt').checked=true;$('massModel').checked=true;$('dragModel').checked=true;syncUI();initOptBounds();document.querySelector('[data-tab="optim"]').click();runOptimization();$('pane-optim').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});});
 $('initOpt').addEventListener('click', initOptBounds);
 $('applyOpt').addEventListener('click', applyOptimum);
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === t));
   document.querySelectorAll('.pane').forEach(x => x.classList.toggle('on', x.id === 'pane-' + t.dataset.tab));
+  document.querySelectorAll('.tab').forEach(x=>{x.setAttribute('aria-selected',String(x===t));x.tabIndex=x===t?0:-1;});
   redrawAll(); if (t.dataset.tab === 'sens') renderSensitivity();
 }));
+document.querySelector('.tabs').setAttribute('role','tablist');
+document.querySelectorAll('.tab').forEach((t,i)=>{t.id='tab-'+t.dataset.tab;t.setAttribute('role','tab');t.setAttribute('aria-controls','pane-'+t.dataset.tab);t.setAttribute('aria-selected',String(i===0));t.tabIndex=i===0?0:-1;const panel=$('pane-'+t.dataset.tab);panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',t.id);t.addEventListener('keydown',e=>{const tabs=[...document.querySelectorAll('.tab')],j=tabs.indexOf(t);let n;if(e.key==='ArrowRight')n=(j+1)%tabs.length;else if(e.key==='ArrowLeft')n=(j+tabs.length-1)%tabs.length;else if(e.key==='Home')n=0;else if(e.key==='End')n=tabs.length-1;else return;e.preventDefault();tabs[n].click();tabs[n].focus();});});
+for(const [id,label] of Object.entries({bmin:'Envergure minimale (m)',bmax:'Envergure maximale (m)',Smin:'Surface minimale (m²)',Smax:'Surface maximale (m²)',hmin:'Altitude minimale (m)',hmax:'Altitude maximale (m)'}))$(id).setAttribute('aria-label',label);
 function redrawAll(){ canvases.forEach(cv => cv._draw && cv._draw(cv)); }
 let rz = null; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(redrawAll, 80); });
 const themes = ['auto', 'light', 'dark'];

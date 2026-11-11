@@ -134,8 +134,8 @@ def main():
     gradient_text(img, tuple(p(74, 282)), 'Ingénierie système et essais · Aéronautique',
                   font(33, True), BLUE, TEAL)
 
-    stats = [('1 000+', 'exigences tracées'), ('1 jour → 5 min', 'par comparaison de spécifications'),
-             ('3 ans', "d'essais sur bancs moteurs")]
+    stats = [('Exigences', 'traçabilité et vérification'), ('Essais', 'instrumentation et analyse'),
+             ('Simulation', 'modèles et calculs publics')]
     x = 72
     for n, label in stats:
         fn, fl = font(50, True), font(21)
