@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Défaillances latentes</title>
+<meta name="description" content="Probabilité moyenne de défaillance par vol des systèmes redondants à défaillances latentes : méthode du cours, formules de Ramesh et al., calcul exact mission par mission et détectabilité de Kohda et Inoue.">
+<style>
+:root{
+  --fond:#f6f7f9; --carte:#ffffff; --texte:#1b1f24; --doux:#5b6470; --trait:#d9dde3; --accent:#1f4e9e; --accent2:#2a7a3a;
+  --rouge:#b03030; --ok:#1d7a46; --ko:#b42318; --code:#eef1f5; --ombre:0 1px 3px rgba(0,0,0,.08); --latent:#b86e00;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --fond:#14171b; --carte:#1d2126; --texte:#e7eaee; --doux:#9aa4b0; --trait:#333a42; --accent:#7aa5ee; --accent2:#6cc282;
+    --rouge:#ef7d7d; --ok:#5fd093; --ko:#ff8a80; --code:#262b31; --ombre:none; --latent:#f0a440; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+header{background:var(--carte);border-bottom:1px solid var(--trait)}
+header .wrap{padding-top:22px;padding-bottom:18px}
+h1{font-size:1.55rem;margin:0 0 4px}
+h2{font-size:1.15rem;margin:0 0 10px}
+h3{font-size:1rem;margin:16px 0 6px}
+.sous{color:var(--doux);margin:0}
+.ctx{font-size:.85rem;color:var(--doux);margin-top:8px}
+nav.onglets{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+nav.onglets button{border:1px solid var(--trait);background:transparent;color:var(--texte);padding:6px 14px;border-radius:999px;cursor:pointer;font:inherit;font-size:.92rem}
+nav.onglets button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+main{padding:18px 0 40px}
+.carte{background:var(--carte);border:1px solid var(--trait);border-radius:10px;padding:16px;box-shadow:var(--ombre);margin-bottom:16px}
+.grille{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.grille{grid-template-columns:minmax(0,1fr)}}
+label{display:block;font-weight:600;font-size:.9rem;margin:10px 0 4px}
+label small{font-weight:400;color:var(--doux)}
+textarea,input{width:100%;font:15px/1.4 Consolas,"Cascadia Mono",Menlo,monospace;color:var(--texte);background:var(--fond);border:1px solid var(--trait);border-radius:6px;padding:7px 9px}
+textarea{resize:vertical}
+.ligne2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.exemples{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.exemples button,.btn{border:1px solid var(--accent);background:transparent;color:var(--accent);border-radius:6px;padding:5px 10px;cursor:pointer;font:inherit;font-size:.86rem}
+.btn.plein{background:var(--accent);color:#fff}
+.aide{font-size:.82rem;color:var(--doux);margin:4px 0 0}
+.erreur{color:var(--ko);font-weight:600;margin:8px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.kpi{border:1px solid var(--trait);border-radius:8px;padding:9px 11px}
+.kpi .v{font-size:1.2rem;font-weight:700}
+.kpi .l{font-size:.8rem;color:var(--doux)}
+.kpi.exact{border-color:var(--accent2)}
+.kpi.exact .v{color:var(--accent2)}
+.kpi.cours .v{color:var(--rouge)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{border:1px solid var(--trait);padding:5px 7px;text-align:center}
+th{background:var(--code);font-weight:600}
+td.g,th.g{text-align:left}
+.defile{overflow-x:auto}
+.etape{border-left:3px solid var(--accent);padding:2px 0 2px 12px;margin:12px 0}
+.etape h3{margin:0 0 4px}
+.etape p{margin:3px 0}
+.f{font-family:"Cambria Math","Times New Roman",serif;font-size:1.04rem}
+.note{font-size:.85rem;color:var(--doux)}
+svg text{fill:var(--texte);font-family:inherit}
+.ok{color:var(--ok);font-weight:700}.ko{color:var(--ko);font-weight:700}
+details summary{cursor:pointer;font-weight:600}
+code{background:var(--code);padding:1px 4px;border-radius:4px}
+footer{color:var(--doux);font-size:.85rem;padding:0 0 30px}
+.retour{display:inline-block;font-size:.88rem;color:var(--accent);text-decoration:none;margin-bottom:6px}
+.schema-vue{border:1px solid var(--trait);border-radius:8px;background:var(--fond);padding:8px;margin-top:8px;overflow-x:auto}
+.schema-vue svg{display:block;margin:0 auto;max-width:100%;height:auto;color:var(--texte)}
+.schema-vue .titre{font-size:.8rem;color:var(--doux);margin:0 0 4px}
+.schema-vue .leg{font-size:.78rem;color:var(--doux);margin:4px 0 0}
+.schema-vue .leg i{display:inline-block;width:22px;height:0;border-top:2px solid var(--accent);vertical-align:middle;margin:0 4px}
+.schema-vue .leg i.lat{border-top:2px dashed var(--latent)}[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a id="retour" class="retour" href="../../index.html#p-latentes" hidden>← Portfolio</a>
+    <h1>Défaillances latentes dans les systèmes redondants</h1>
+    <p class="sous">Identification et calcul de la probabilité moyenne de défaillance par vol</p>
+    <p class="ctx">Outil développé pour le travail de recherche du cours MEC8312 — Fiabilité et sécurité des systèmes (Polytechnique Montréal, automne 2026). Il applique les méthodes de Kohda et Inoue (2001) et de Ramesh, Twigg et Sharma (2002, 2008), et fonctionne entièrement dans le navigateur, hors ligne.</p>
+    <nav class="onglets" role="tablist">
+      <button role="tab" aria-selected="true" data-onglet="calcul">Calcul</button>
+      <button role="tab" aria-selected="false" data-onglet="validation">Validation</button>
+      <button role="tab" aria-selected="false" data-onglet="methode">Méthode et hypothèses</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+<!-- ============================================================ CALCUL -->
+<section id="onglet-calcul">
+  <div class="grille">
+    <div class="carte">
+      <h2>Données</h2>
+      <div class="exemples" id="exemples"></div>
+      <label for="comp">Composants <small>— une ligne : NOM λ [T]</small></label>
+      <textarea id="comp" rows="5" spellcheck="false"></textarea>
+      <p class="aide">λ en h⁻¹. T = intervalle de vérification (h) d'une défaillance <b>latente</b> ; laisser vide si le composant est vérifié avant chaque mission (défaillance active).</p>
+      <label for="schema">Schéma <small>— diagramme, arbre ou coupes minimales</small></label>
+      <textarea id="schema" rows="3" spellcheck="false"></textarea>
+      <p class="aide">Diagramme de fiabilité : <code>serie(1; par(2; 3))</code> · arbre de défaillance : <code>OU(ET(1;4); ET(2;3;4))</code> · ou une coupe minimale par ligne : <code>2 3</code></p>
+      <div class="schema-vue" id="schema-vue" aria-live="polite"></div>
+      <label for="t">Durée d'une mission t <small>(h)</small></label>
+      <input id="t" inputmode="decimal">
+      <div class="ligne2">
+        <div><label for="cible">Objectif par mission <small>(facultatif)</small></label><input id="cible" inputmode="decimal" placeholder="7,5e-5"></div>
+        <div><label for="cc">Composant à espacer</label><input id="cc" placeholder="2"></div>
+      </div>
+      <p class="aide">Avec un objectif, l'outil cherche l'intervalle de vérification le plus long admissible pour ce composant latent.</p>
+      <div id="erreur" class="erreur" hidden></div>
+    </div>
+
+    <div>
+      <div class="carte">
+        <h2>Résultats</h2>
+        <div class="kpis" id="kpis"></div>
+        <div id="graphe"></div>
+        <p class="note" id="graphe-note"></p>
+      </div>
+      <div class="carte">
+        <h2>Où placer une surveillance ?</h2>
+        <p class="note">Effet d'une surveillance ajoutée sur un seul composant latent, qui devient alors vérifié avant chaque mission (probabilité moyenne exacte). Comparer avec l'importance de détectabilité <i>n</i><sub>CI</sub> de Kohda et Inoue.</p>
+        <div class="defile" id="surveillance"></div>
+      </div>
+      <div class="carte">
+        <h2>Résolution détaillée</h2>
+        <div id="etapes"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ VALIDATION -->
+<section id="onglet-validation" hidden>
+  <div class="carte">
+    <h2>Validation de l'outil</h2>
+    <p>Chaque cas est recalculé à l'instant dans votre navigateur et comparé à une valeur publiée ou indépendante.</p>
+    <button class="btn plein" id="lancer-validation">Lancer la validation</button>
+    <div class="defile" id="validation" style="margin-top:12px"></div>
+  </div>
+</section>
+
+<!-- ============================================================ MÉTHODE -->
+<section id="onglet-methode" hidden>
+  <div class="carte">
+    <h2>Méthode</h2>
+    <p>Un composant de secours peut tomber en panne sans que sa défaillance soit détectée : elle reste <b>latente</b> jusqu'à la vérification suivante, toutes les <i>T</i> = <i>N t</i> heures. L'outil enchaîne cinq étapes.</p>
+    <div class="etape"><h3>1. Identifier (Kohda et Inoue, 2001)</h3>
+      <p>Indice de détectabilité <i>Y<sub>i</sub></i> = 1 si la défaillance de <i>i</i> est détectée dès qu'elle survient (ici : composant vérifié avant chaque mission), 0 sinon. Une coupe minimale <i>C<sub>k</sub></i> dont <span class="f">d = Σ<sub>i∈C<sub>k</sub></sub> Y<sub>i</sub></span> vaut 0 ou 1 ne peut pas toujours être détectée.</p>
+      <p>Importance structurelle <span class="f">I<sub>S</sub>(i) = n<sub>c</sub>(i) / 2<sup>n−1</sup></span> (rôle de défaillance active) ; <span class="f">n<sub>CI</sub>(i)</span> = nombre d'états critiques qui incluent <i>i</i> (rôle de condition latente) ; <span class="f">I<sub>PD</sub>(i) = Σ<sub>X∈S<sub>CI</sub>(i)</sub> Pr(X)</span> avec une détection parfaite et <span class="f">q<sub>i</sub> = 1 − e<sup>−λ<sub>i</sub>τ<sub>i</sub></sup></span>. Un état critique de <i>j</i> n'est compté pour <i>i</i> que si <i>i</i> appartient à une coupe minimale que <i>j</i> vient compléter.</p></div>
+    <div class="etape"><h3>2. Méthode du cours (module M3A)</h3>
+      <p>Chaque composant est exposé pendant <i>t</i> (défaillance active) ou <i>T<sub>i</sub></i> (défaillance latente) : <span class="f">P<sub>cours</sub> = Σ<sub>k</sub> Π<sub>i∈C<sub>k</sub></sub> λ<sub>i</sub> τ<sub>i</sub></span>. C'est une borne de la probabilité du vol le plus défavorable.</p></div>
+    <div class="etape"><h3>3. Probabilité moyenne approchée (Ramesh, Twigg et Sharma, 2002)</h3>
+      <p>À la mission <i>j</i>, le composant latent <i>i</i> est exposé depuis sa dernière vérification : <span class="f">e<sub>i</sub>(j) = t·((j − 1) mod N<sub>i</sub> + 1)</span>. <span class="f">P<sub>moy</sub> ≈ (1/L) Σ<sub>j=1</sub><sup>L</sup> Σ<sub>k</sub> Π<sub>i∈C<sub>k</sub></sub> [1 − e<sup>−λ<sub>i</sub>e<sub>i</sub>(j)</sup>]</span>, sur le cycle commun <i>L</i> = PPCM(<i>N<sub>i</sub></i>). Pour un seul composant latent, le facteur d'exposition tend vers ½.</p></div>
+    <div class="etape"><h3>4. Calcul exact (Ramesh et al., 2008 : Markov vol par vol)</h3>
+      <p>L'état au début de chaque mission est l'ensemble des composants latents déjà en panne. Pendant une mission, toutes les combinaisons de défaillances sont énumérées (<span class="f">q<sub>i</sub> = 1 − e<sup>−λ<sub>i</sub>t</sup></span>) ; le système défaille si une coupe minimale est complète. Une défaillance du système remet tout à neuf ; une vérification remet à neuf le composant vérifié. <span class="f">P<sub>moy</sub> = (1/L) Σ<sub>j</sub> P<sub>j</sub></span>.</p></div>
+    <div class="etape"><h3>5. Intervalle de vérification admissible</h3>
+      <p>Méthode du cours : la somme des coupes est linéaire en <i>T<sub>c</sub></i>, que l'on isole. Probabilité moyenne exacte : recherche par dichotomie du plus grand nombre de missions <i>N<sub>c</sub></i> qui respecte l'objectif.</p></div>
+    <h3>Hypothèses (celles de Ramesh et al.)</h3>
+    <p>Lois exponentielles ; défaillances indépendantes (pas de mode commun) ; commutation, inspection et réparation parfaites ; même taux en attente et en service ; maintenance entre les missions seulement.</p>
+    <h3>Références</h3>
+    <ol>
+      <li>A. V. Ramesh, D. W. Twigg et T. C. Sharma, « Approximation method and formulas for average unavailability of systems with latent faults », <i>Proc. RAMS</i>, 2002, p. 460-466, doi : 10.1109/RAMS.2002.981686.</li>
+      <li>A. V. Ramesh, D. W. Twigg et T. C. Sharma, « Advanced methodologies for average probability calculation for aerospace systems », <i>26th ICAS Congress</i>, 2008.</li>
+      <li>T. Kohda et K. Inoue, « Fault-tree analysis considering latency of basic events », <i>Proc. RAMS</i>, 2001, p. 32-35, doi : 10.1109/RAMS.2001.902437.</li>
+      <li>Z. Klim, <i>MEC8312 – Fiabilité et sécurité des systèmes</i>, notes de cours, module M3A (défaillances cachées), Polytechnique Montréal.</li>
+    </ol>
+  </div>
+</section>
+</main>
+<footer class="wrap">Emmanuel Tchouya Tangwa · MEC8312, Polytechnique Montréal · page autonome, sans dépendance ni connexion.</footer>
+
+<script id="moteur">
+/* ====================================================================================== MOTEUR
+   Fonctions pures, sans accès à la page : testables hors navigateur (voir tests/test_moteur.cjs). */
+"use strict";
+const Latentes = (() => {
+  const F = (l, t) => -Math.expm1(-l * t);
+  const pgcd = (a, b) => b ? pgcd(b, a % b) : a;
+  const ppcm = a => a.reduce((r, v) => r / pgcd(r, v) * v, 1);
+  const bits = m => { let k = 0; while (m){ k += m & 1; m >>= 1; } return k; };
+  const tri = noms => noms.slice().sort((a, b) => /^\d+$/.test(a) && /^\d+$/.test(b) ? a - b : /^\d+$/.test(a) ? -1 : /^\d+$/.test(b) ? 1 : a.localeCompare(b));
+  const NOM = /^[A-Za-z0-9_À-ÿ′']+/;
+
+  /* nombre : 1e-5 · 1,5e-5 · 10^-5 · 1,5×10^-5 · 1,5·10⁻⁵ */
+  function nombre(s){
+    const sup = {"⁰":"0","¹":"1","²":"2","³":"3","⁴":"4","⁵":"5","⁶":"6","⁷":"7","⁸":"8","⁹":"9","⁻":"-"};
+    let x = String(s ?? "").trim().replace(/\s+/g, "").replace(/−/g, "-").replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g, m => "^" + [...m].map(c => sup[c]).join(""));
+    if (!x) return undefined;
+    x = x.replace(",", ".").replace(/^10\^/, "1e").replace(/[×x·*]10\^?/i, "e");
+    const v = Number(x);
+    if (!isFinite(v)) throw `nombre illisible « ${s} »`;
+    return v;
+  }
+
+  /* --------------------------------------------------------------- schéma -> coupes minimales */
+  function lireArbre(txt){                       /* OU(…)/ET(…) */
+    const s = txt.replace(/\s+/g, ""); let i = 0;
+    const noeud = () => {
+      const m = /^(OU|ET|OR|AND)\(/i.exec(s.slice(i));
+      if (m){ i += m[0].length; const porte = /^(OU|OR)$/i.test(m[1]) ? "OU" : "ET", enf = [];
+        for (;;){ enf.push(noeud()); if (s[i] === ";" || s[i] === ","){ i++; continue; } if (s[i] === ")"){ i++; break; } throw `« ) » attendue en position ${i + 1} du schéma`; }
+        return {porte, enf}; }
+      const n = NOM.exec(s.slice(i)); if (!n) throw `nom attendu en position ${i + 1} du schéma`; i += n[0].length; return {nom: n[0]};
+    };
+    const r = noeud(); if (i < s.length) throw `texte en trop dans le schéma après la position ${i}`;
+    const ev = (n, S) => n.nom ? S.has(n.nom) : n.porte === "OU" ? n.enf.some(c => ev(c, S)) : n.enf.every(c => ev(c, S));
+    return {panne: S => ev(r, S), forme: "arbre de défaillance", type: "arbre", racine: r, noms: (function f(n, o){ if (n.nom) o.push(n.nom); else n.enf.forEach(c => f(c, o)); return o; })(r, [])};
+  }
+  function lireDiagramme(txt){                   /* serie(…)/par(…) : fonctionne si… */
+    const s = txt.replace(/\s+/g, ""); let i = 0;
+    const noeud = () => {
+      const m = /^(serie|série|par|parallele|parallèle)\(/i.exec(s.slice(i));
+      if (m){ i += m[0].length; const k = /^s/i.test(m[1]) ? "serie" : "par", l = [];
+        for (;;){ l.push(noeud()); if (s[i] === ";" || s[i] === ","){ i++; continue; } if (s[i] === ")"){ i++; break; } throw `« ) » attendue en position ${i + 1} du schéma`; }
+        return {k, l}; }
+      const n = NOM.exec(s.slice(i)); if (!n) throw `nom attendu en position ${i + 1} du schéma`; i += n[0].length; return {nom: n[0]};
+    };
+    const r = noeud(); if (i < s.length) throw `texte en trop dans le schéma après la position ${i}`;
+    const marche = (n, P) => n.nom ? !P.has(n.nom) : n.k === "serie" ? n.l.every(c => marche(c, P)) : n.l.some(c => marche(c, P));
+    return {panne: P => !marche(r, P), forme: "diagramme de fiabilité", type: "diagramme", racine: r, noms: (function f(n, o){ if (n.nom) o.push(n.nom); else n.l.forEach(c => f(c, o)); return o; })(r, [])};
+  }
+  /* schéma lu tel qu'il est écrit : arbre, diagramme, ou coupes (dessinées comme le diagramme équivalent :
+     série de coupes, chaque coupe étant un parallèle de ses composants) */
+  function lireSchema(txt){
+    const s = String(txt || "").trim();
+    if (!s) throw "il manque le schéma";
+    if (/^(OU|ET|OR|AND)\s*\(/i.test(s)) return lireArbre(s);
+    if (/^(serie|série|par|parall[eè]le)\s*\(/i.test(s)) return lireDiagramme(s);
+    const C = s.split(/\n|;/).map(l => l.trim()).filter(Boolean).map(l => l.split(/[\s,{}]+/).filter(Boolean));
+    const racine = C.length === 1 && C[0].length === 1 ? {nom: C[0][0]}
+      : {k: "serie", l: C.map(c => c.length === 1 ? {nom: c[0]} : {k: "par", l: c.map(nom => ({nom}))})};
+    return {panne: P => C.some(c => c.every(x => P.has(x))), forme: "coupes minimales", type: "coupes", racine, noms: C.flat()};
+  }
+  function coupesMinimales(txt, noms){
+    const S = lireSchema(txt);
+    for (const x of S.noms) if (!noms.includes(x)) throw `le composant ${x} du schéma n'a pas de taux de défaillance`;
+    const n = noms.length; if (n > 12) throw "au plus 12 composants";
+    const masques = Array.from({length: 1 << n}, (_, m) => m).sort((a, b) => bits(a) - bits(b) || a - b), trouvees = [];
+    for (const m of masques){ if (trouvees.some(c => (c & m) === c)) continue; if (S.panne(new Set(noms.filter((x, j) => m >> j & 1)))) trouvees.push(m); }
+    if (!trouvees.length) throw "le système ne défaille jamais avec ces composants";
+    return {coupes: trouvees.map(m => noms.filter((x, j) => m >> j & 1)), forme: S.forme};
+  }
+
+  /* --------------------------------------------------------------- calculs */
+  const coursLin = (C, lam, N, t) => C.reduce((s, c) => s + c.reduce((p, x) => p * lam[x] * N[x] * t, 1), 0);
+  const coursExp = (C, lam, N, t) => 1 - C.reduce((p, c) => p * (1 - c.reduce((r, x) => r * F(lam[x], N[x] * t), 1)), 1);
+  function ramesh(C, lam, N, t, noms){
+    const L = ppcm(noms.map(x => N[x])); if (L > 200000) throw `cycle commun trop long (${L} missions)`;
+    let s = 0;
+    for (let j = 1; j <= L; j++) s += C.reduce((a, c) => a + c.reduce((p, x) => p * F(lam[x], t * ((j - 1) % N[x] + 1)), 1), 0);
+    return s / L;
+  }
+  function markov(C, lam, N, t, noms){
+    const L = ppcm(noms.map(x => N[x])); if (L > 200000) throw `cycle commun trop long (${L} missions)`;
+    const lat = noms.filter(x => N[x] > 1), q = Object.fromEntries(noms.map(x => [x, F(lam[x], t)]));
+    const idx = Object.fromEntries(noms.map((x, j) => [x, j])), Cm = C.map(c => c.reduce((m, x) => m | 1 << idx[x], 0));
+    const latM = lat.reduce((m, x) => m | 1 << idx[x], 0), trans = new Map();
+    for (let s = 0; s < 1 << lat.length; s++){
+      const S = lat.reduce((m, x, j) => s >> j & 1 ? m | 1 << idx[x] : m, 0), libres = noms.filter(x => !(S >> idx[x] & 1));
+      let pp = 0; const vers = new Map();
+      for (let u = 0; u < 1 << libres.length; u++){
+        let p = 1, K = S;
+        libres.forEach((x, j) => { if (u >> j & 1){ p *= q[x]; K |= 1 << idx[x]; } else p *= 1 - q[x]; });
+        if (Cm.some(c => (c & K) === c)) pp += p; else { const S2 = K & latM; vers.set(S2, (vers.get(S2) || 0) + p); }
+      }
+      trans.set(S, [pp, vers]);
+    }
+    let etat = new Map([[0, 1]]); const profil = new Float64Array(L);
+    for (let j = 1; j <= L; j++){
+      let pj = 0; for (const [S, pi] of etat) pj += pi * trans.get(S)[0];
+      profil[j - 1] = pj;
+      const verif = lat.reduce((m, x) => j % N[x] === 0 ? m | 1 << idx[x] : m, 0), nouv = new Map([[0, pj]]);
+      for (const [S, pi] of etat) for (const [S2, p] of trans.get(S)[1]){ const S3 = S2 & ~verif; nouv.set(S3, (nouv.get(S3) || 0) + pi * p); }
+      etat = nouv;
+    }
+    let tot = 0, max = 0; for (const p of profil){ tot += p; if (p > max) max = p; }
+    return {P: tot / L, profil, L, max};
+  }
+  function etatsCritiques(C, noms){
+    const n = noms.length, idx = Object.fromEntries(noms.map((x, j) => [x, j])), Cm = C.map(c => c.reduce((m, x) => m | 1 << idx[x], 0));
+    const def = m => Cm.some(c => (c & m) === c), actifs = Object.fromEntries(noms.map(x => [x, []])), incl = Object.fromEntries(noms.map(x => [x, []]));
+    for (let m = 0; m < 1 << n; m++){
+      if (def(m)) continue;
+      let inc = 0;
+      noms.forEach((x, j) => {
+        if (m >> j & 1 || !def(m | 1 << j)) return;
+        actifs[x].push(m);
+        Cm.forEach(c => { const reste = c & ~(1 << j); if (c >> j & 1 && (reste & m) === reste) inc |= reste; });
+      });
+      noms.forEach((x, j) => { if (inc >> j & 1) incl[x].push(m); });
+    }
+    return {actifs, incl};
+  }
+
+  /* --------------------------------------------------------------- analyse complète */
+  function lireComposants(txt){
+    const lam = {}, T = {};
+    for (const l of String(txt || "").split(/\n|;/)){
+      if (!l.trim()) continue;
+      const m = /^\s*([A-Za-z0-9_À-ÿ′']+)\s+(\S+)(?:\s+(\S+))?\s*$/.exec(l);
+      if (!m) throw `ligne illisible « ${l.trim()} » : écrire NOM λ [T]`;
+      if (m[1] in lam) throw `composant ${m[1]} défini deux fois`;
+      lam[m[1]] = nombre(m[2]); if (!(lam[m[1]] > 0)) throw `λ de ${m[1]} doit être positif`;
+      if (m[3] !== undefined){ T[m[1]] = nombre(m[3]); if (!(T[m[1]] > 0)) throw `T de ${m[1]} doit être positif`; }
+    }
+    if (!Object.keys(lam).length) throw "il manque les composants (une ligne : NOM λ [T])";
+    return {lam, T};
+  }
+  function analyser(d){
+    const t = nombre(d.t); if (!(t > 0)) throw "il manque la durée t d'une mission";
+    const {lam, T} = lireComposants(d.comp), noms = tri(Object.keys(lam));
+    const {coupes: C, forme} = coupesMinimales(d.schema, noms);
+    const N = {}, arrondis = [];
+    for (const x of noms){
+      if (T[x] === undefined){ N[x] = 1; continue; }
+      const r = T[x] / t; N[x] = Math.max(1, Math.round(r));
+      if (Math.abs(r - N[x]) > 1e-9 * r) arrondis.push(x);
+    }
+    const lat = noms.filter(x => N[x] > 1), n = noms.length;
+    /* 1. Kohda et Inoue */
+    const Y = Object.fromEntries(noms.map(x => [x, N[x] === 1 ? 1 : 0])), {actifs, incl} = etatsCritiques(C, noms);
+    const q = Object.fromEntries(noms.map(x => [x, F(lam[x], N[x] * t)]));
+    const prX = m => noms.reduce((p, x, j) => p * (m >> j & 1 ? q[x] : 1 - q[x]), 1);
+    const kohda = noms.map(x => ({nom: x, Y: Y[x], nc: actifs[x].length, IS: actifs[x].length / 2 ** (n - 1), nCI: incl[x].length, IPD: incl[x].reduce((s, m) => s + prX(m), 0)}));
+    const det = C.map(c => ({coupe: c, d: c.reduce((s, x) => s + Y[x], 0), latents: c.filter(x => !Y[x])}));
+    /* 2-4 */
+    const Pc = coursLin(C, lam, N, t), Pce = coursExp(C, lam, N, t), PR = ramesh(C, lam, N, t, noms), M = markov(C, lam, N, t, noms);
+    /* surveillance */
+    const surveillance = lat.map(x => { const N2 = Object.assign({}, N, {[x]: 1}), M2 = markov(C, lam, N2, t, noms);
+      return {nom: x, nCI: incl[x].length, P: M2.P, max: M2.max, gain: M.P / M2.P}; });
+    /* 5. intervalle admissible */
+    let adm = null;
+    const cible = nombre(d.cible);
+    if (cible !== undefined){
+      if (!(cible > 0)) throw "l'objectif doit être positif";
+      const c0 = String(d.cc || "").trim() || lat[0];
+      if (!c0) throw "aucun composant latent : indiquez un T pour le composant à espacer";
+      if (!(c0 in lam)) throw `composant à espacer inconnu : ${c0}`;
+      const fixe = C.filter(c => !c.includes(c0)).reduce((s, c) => s + c.reduce((p, x) => p * lam[x] * N[x] * t, 1), 0);
+      const pente = C.filter(c => c.includes(c0)).reduce((s, c) => s + lam[c0] * c.filter(x => x !== c0).reduce((p, x) => p * lam[x] * N[x] * t, 1), 0);
+      const Tc = pente > 0 ? (cible - fixe) / pente : Infinity;
+      const PN = k => markov(C, lam, Object.assign({}, N, {[c0]: k}), t, noms).P;
+      let Nex = null;
+      if (PN(1) <= cible){
+        let lo = 1, hi = 2;
+        while (hi <= 100000 && PN(hi) <= cible){ lo = hi; hi *= 2; }
+        if (hi > 100000) Nex = Infinity;
+        else { while (hi - lo > 1){ const m = (lo + hi) >> 1; if (PN(m) <= cible) lo = m; else hi = m; } Nex = lo; }
+      }
+      adm = {c0, cible, fixe, pente, Tc, Nex, Tex: Nex === null ? null : Nex * t};
+    }
+    return {t, lam, T, N, noms, lat, C, forme, arrondis, det, kohda, Pc, Pce, PR, M, surveillance, adm};
+  }
+
+  /* --------------------------------------------------------------- validation */
+  const EHARP = [[1e-7, 1e-7, 4.5036e-11], [1e-6, 1e-6, 4.4955e-09], [1e-5, 1e-5, 4.4157e-07], [1e-4, 1e-4, 3.7237e-05], [1e-3, 1e-3, 1.2514e-03],
+    [1e-8, 1e-2, 2.9015e-08], [1e-7, 1e-3, 2.0511e-07], [1e-6, 1e-4, 4.0815e-07], [1e-4, 1e-6, 4.0818e-07], [1e-3, 1e-7, 2.0511e-07], [1e-2, 1e-8, 2.9015e-08]];
+  function valider(){
+    const L = [];
+    const ajoute = (cas, ref, attendu, obtenu, tol) => L.push({cas, ref, attendu, obtenu, ecart: attendu ? (obtenu - attendu) / attendu : obtenu, ok: Math.abs(obtenu - attendu) <= tol * Math.abs(attendu || 1)});
+    for (const [lA, lB, v] of EHARP){
+      const r = markov([["A", "B"]], {A: lA, B: lB}, {A: 1, B: 1000}, 3, ["A", "B"]);
+      ajoute(`Système double, λA = ${lA}, λB = ${lB} (t = 3 h, N = 1000)`, "Ramesh et al. 2002, tableaux 4 et 5 (EHARP)", v, r.P, 1e-3);
+    }
+    const ex = analyser({comp: "1 1e-5\n2 1e-4 1000\n3 1e-4", schema: "serie(1; par(2; 3))", t: "5", cible: "7,5e-5", cc: "2"});
+    ajoute("Exemple 2 du M3A : méthode du cours", "Notes du cours, M3A : 1,0 × 10⁻⁴", 1e-4, ex.Pc, 1e-9);
+    ajoute("Exemple 2 du M3A : moyenne exacte", "Modèle à deux états indépendant (rapport, annexe A)", 7.3449e-5, ex.M.P, 1e-4);
+    ajoute("Exemple 2 du M3A : intervalle admissible (cours)", "Inversion de la borne : 500 h", 500, ex.adm.Tc, 1e-9);
+    const k = analyser({comp: "1 1e-4 1000\n2 1e-4 1000\n3 1e-4 1000\n4 1e-4", schema: "OU(ET(1;4);ET(2;3;4))", t: "5"});
+    const attendus = {"1": [3, 4], "2": [1, 3], "3": [1, 3], "4": [5, 3]};
+    for (const e of k.kohda) ajoute(`Arbre de Kohda et Inoue, événement ${e.nom} : états critiques (actif ; latent)`, "Kohda et Inoue 2001, tableau 2",
+      attendus[e.nom][0] * 10 + attendus[e.nom][1], e.nc * 10 + e.nCI, 0);
+    /* Monte-Carlo : deux composants latents d'intervalles différents */
+    const C = [["A", "B"], ["A", "C", "D"]], lam = {A: 0.02, B: 0.03, C: 0.05, D: 0.04}, N = {A: 1, B: 2, C: 3, D: 1};
+    const P = markov(C, lam, N, 1, ["A", "B", "C", "D"]).P, qq = Object.fromEntries(Object.keys(lam).map(x => [x, F(lam[x], 1)]));
+    let graine = 8312; const alea = () => (graine = (graine * 1103515245 + 12345) % 2147483648) / 2147483648;
+    let pannes = 0; const cycles = 20000;
+    for (let c = 0; c < cycles; c++){
+      let latent = new Set();
+      for (let j = 1; j <= 6; j++){
+        const ko = new Set(latent); for (const x of Object.keys(lam)) if (!latent.has(x) && alea() < qq[x]) ko.add(x);
+        if (C.some(cc => cc.every(x => ko.has(x)))){ pannes++; latent = new Set(); }
+        else latent = new Set([...ko].filter(x => N[x] > 1 && j % N[x] !== 0));
+      }
+    }
+    const mc = pannes / (cycles * 6), sigma = Math.sqrt(P * (1 - P) / (cycles * 6));
+    L.push({cas: "Deux composants latents (N = 2 et 3), taux élevés", ref: `Simulation de Monte-Carlo (${cycles * 6} missions)`, attendu: mc, obtenu: P, ecart: (P - mc) / mc, ok: Math.abs(P - mc) < 4 * sigma, note: `${((mc - P) / sigma).toFixed(2)} écart-type`});
+    return L;
+  }
+
+  return {nombre, lireSchema, lireComposants, coupesMinimales, analyser, markov, ramesh, etatsCritiques, valider, F};
+})();
+if (typeof module !== "undefined") module.exports = Latentes;
+</script>
+
+<script>
+/* ====================================================================================== INTERFACE */
+"use strict";
+const $ = s => document.querySelector(s);
+const EXEMPLES = [
+  {nom: "Exemple 2 du M3A", comp: "1 1e-5\n2 1e-4 1000\n3 1e-4", schema: "serie(1; par(2; 3))", t: "5", cible: "7,5e-5", cc: "2"},
+  {nom: "Arbre de Kohda et Inoue", comp: "1 1e-4 1000\n2 1e-4 1000\n3 1e-4 1000\n4 1e-4", schema: "OU(ET(1;4); ET(2;3;4))", t: "5", cible: "1e-5", cc: "1"},
+  {nom: "Système double (Ramesh 2002)", comp: "A 1e-4\nB 1e-4 3000", schema: "A B", t: "3", cible: "", cc: ""},
+  {nom: "Deux secours latents", comp: "A 1e-4\nB 1e-4 600\nC 1e-4 1800", schema: "par(A; B; C)", t: "6", cible: "", cc: ""},
+];
+const CHAMPS = ["comp", "schema", "t", "cible", "cc"];
+
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c])); }
+function nb(x, chiffres = 4){
+  if (x === null || x === undefined || Number.isNaN(x)) return "—";
+  if (!isFinite(x)) return "∞";
+  if (x === 0) return "0";
+  const e = Math.floor(Math.log10(Math.abs(x)));
+  if (e < -3 || e >= 5){
+    let m = x / 10 ** e; let s = m.toPrecision(chiffres);
+    if (Math.abs(Number(s)) >= 10){ m /= 10; s = m.toPrecision(chiffres); return `${s.replace(".", ",")} × 10<sup>${String(e + 1).replace("-", "−")}</sup>`; }
+    return `${s.replace(".", ",")} × 10<sup>${String(e).replace("-", "−")}</sup>`;
+  }
+  return String(Number(x.toPrecision(chiffres))).replace(".", ",");
+}
+const pct = x => (x >= 0 ? "+" : "−") + nb(Math.abs(100 * x), 3) + " %";
+const ens = c => `{${c.join(", ")}}`;
+const L_ = x => `λ<sub>${esc(x)}</sub>`;
+
+function lireFormulaire(){ return Object.fromEntries(CHAMPS.map(k => [k, $("#" + k).value])); }
+function remplir(e){ for (const k of CHAMPS) $("#" + k).value = e[k] ?? ""; calculer(); }
+
+function calculer(){
+  dessinerSchema();
+  const err = $("#erreur");
+  let r;
+  try { r = Latentes.analyser(lireFormulaire()); err.hidden = true; }
+  catch (e){ err.textContent = String(e); err.hidden = false; return; }
+  afficher(r);
+  try { localStorage.setItem("latentes-saisie", JSON.stringify(lireFormulaire())); } catch (e){}
+}
+
+function afficher(r){
+  const {t, lam, T, N, noms, lat, C, M} = r;
+  /* indicateurs */
+  const k = [
+    ["cours", nb(r.Pc), "Méthode du cours (exposition T)"],
+    ["", nb(r.PR), "Moyenne approchée (Ramesh et al.)"],
+    ["exact", nb(M.P), "Moyenne exacte (Markov)"],
+    ["", nb(M.max), "Pire vol (exact)"],
+    ["", pct((r.Pc - M.P) / M.P), "Écart de la méthode du cours"],
+  ];
+  if (r.adm) k.push(["", `${nb(r.adm.Tc)} h → ${r.adm.Tex === null ? "aucun" : isFinite(r.adm.Tex) ? nb(r.adm.Tex) + " h" : "∞"}`, `T admissible de ${esc(r.adm.c0)} : cours → exact`]);
+  $("#kpis").innerHTML = k.map(([c, v, l]) => `<div class="kpi ${c}"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+  /* graphe */
+  $("#graphe").innerHTML = graphe(r);
+  $("#graphe-note").textContent = lat.length ? `Probabilité de défaillance de chaque mission sur ${r.M.L > 1500 ? "un cycle" : "deux cycles"} de vérification (L = ${M.L} missions).`
+    : "Aucun composant latent : la probabilité est la même à chaque mission.";
+  /* surveillance */
+  $("#surveillance").innerHTML = r.surveillance.length
+    ? `<table><thead><tr><th>Composant surveillé</th><th>n<sub>CI</sub> (Kohda)</th><th>Moyenne exacte</th><th>Pire vol</th><th>Gain sur la moyenne</th></tr></thead><tbody>
+       <tr><td>aucun</td><td>—</td><td>${nb(M.P)}</td><td>${nb(M.max)}</td><td>—</td></tr>
+       ${r.surveillance.slice().sort((a, b) => b.gain - a.gain).map(s => `<tr><td>${esc(s.nom)}</td><td>${s.nCI}</td><td>${nb(s.P)}</td><td>${nb(s.max)}</td><td><b>÷ ${nb(s.gain, 3)}</b></td></tr>`).join("")}
+       </tbody></table>`
+    : `<p class="note">Aucun composant latent.</p>`;
+  /* étapes */
+  const e = [];
+  e.push(`<div class="etape"><h3>Données</h3>
+    <p>Durée d'une mission : <i>t</i> = ${nb(t)} h. Coupes minimales (${esc(r.forme)}) : ${C.map(ens).join(", ")}.</p>
+    ${noms.map(x => `<p>${L_(x)} = ${nb(lam[x])} h<sup>−1</sup> ; ${N[x] > 1 ? `défaillance latente, <i>T</i><sub>${esc(x)}</sub> = ${nb(T[x])} h, soit <i>N</i><sub>${esc(x)}</sub> = <i>T</i>/<i>t</i> = ${N[x]} missions` : "vérifié avant chaque mission (défaillance active)"}</p>`).join("")}
+    ${r.arrondis.length ? `<p class="note">T n'est pas un multiple de t pour ${r.arrondis.join(", ")} : N arrondi à l'entier le plus proche.</p>` : ""}</div>`);
+  e.push(`<div class="etape"><h3>1. Identifier les défaillances latentes (Kohda et Inoue)</h3>
+    ${r.det.map(d => `<p>Coupe ${ens(d.coupe)} : <i>d</i> = Σ <i>Y<sub>i</sub></i> = ${d.d} — ${d.coupe.length === 1 ? "défaillance simple" : d.d === 0 ? "aucun symptôme détectable avant la défaillance du système" : d.d === 1 ? `ne peut pas toujours être détectée (condition latente ${ens(d.latents)})` : "toujours détectable"}.</p>`).join("")}
+    <div class="defile"><table><thead><tr><th>Événement</th><th><i>Y<sub>i</sub></i></th><th><i>I<sub>S</sub></i> (rôle actif)</th><th><i>n</i><sub>CI</sub> (rôle latent)</th><th><i>I</i><sub>PD</sub></th></tr></thead><tbody>
+    ${r.kohda.map(k => `<tr><td>${esc(k.nom)}</td><td>${k.Y}</td><td>${k.nc}/${2 ** (noms.length - 1)} = ${nb(k.IS, 3)}</td><td>${k.nCI}</td><td>${nb(k.IPD)}</td></tr>`).join("")}</tbody></table></div>
+    <p class="note"><i>I</i><sub>PD</sub> calculée avec <i>q<sub>i</sub></i> = 1 − exp(−λ<sub>i</sub>τ<sub>i</sub>) (τ = <i>t</i> ou <i>T</i>) et une détection parfaite.</p></div>`);
+  e.push(`<div class="etape"><h3>2. Méthode du cours (M3A)</h3>
+    ${C.map(c => `<p class="f">P(${ens(c)}) ≈ ${c.map(x => `${L_(x)}·${N[x] > 1 ? `T<sub>${esc(x)}</sub>` : "t"}`).join(" · ")} = ${c.map(x => `${nb(lam[x])} × ${nb(N[x] * t)}`).join(" × ")} = ${nb(c.reduce((p, x) => p * lam[x] * N[x] * t, 1))}</p>`).join("")}
+    <p class="f">P<sub>cours</sub> = Σ<sub>k</sub> P(C<sub>k</sub>) = <b>${nb(r.Pc)}</b> <span class="note">(borne du pire vol ; avec les lois exponentielles : ${nb(r.Pce)})</span></p></div>`);
+  e.push(`<div class="etape"><h3>3. Probabilité moyenne approchée (Ramesh et al., 2002)</h3>
+    <p>Cycle commun <i>L</i> = PPCM(<i>N<sub>i</sub></i>) = ${M.L} missions ; à la mission <i>j</i>, le composant <i>i</i> est exposé pendant <span class="f">e<sub>i</sub>(j) = t·((j − 1) mod N<sub>i</sub> + 1)</span>.</p>
+    <p class="f">P<sub>moy</sub> ≈ (1/L) Σ<sub>j</sub> Σ<sub>k</sub> Π<sub>i∈C<sub>k</sub></sub> [1 − e<sup>−λ<sub>i</sub>e<sub>i</sub>(j)</sup>] = <b>${nb(r.PR)}</b> <span class="note">(écart au calcul exact : ${pct((r.PR - M.P) / M.P)})</span></p></div>`);
+  e.push(`<div class="etape"><h3>4. Calcul exact : Markov mission par mission (Ramesh et al., 2008)</h3>
+    <p>${2 ** lat.length} états au début d'une mission (ensembles de composants latents en panne) ; remise à neuf après une défaillance du système et à chaque vérification.</p>
+    <p class="f">P<sub>1</sub> = ${nb(M.profil[0])} (1<sup>re</sup> mission après les vérifications) ; P<sub>max</sub> = ${nb(M.max)} (pire vol)</p>
+    <p class="f">P<sub>moy</sub> = (1/L) Σ<sub>j</sub> P<sub>j</sub> = <b>${nb(M.P)}</b> <span class="note">(méthode du cours : ${pct((r.Pc - M.P) / M.P)})</span></p></div>`);
+  if (r.adm){
+    const a = r.adm;
+    e.push(`<div class="etape"><h3>5. Intervalle de vérification admissible de ${esc(a.c0)} (objectif ${nb(a.cible)} par mission)</h3>
+      <p class="f">Méthode du cours : T<sub>${esc(a.c0)}</sub> ≤ (${nb(a.cible)} − ${nb(a.fixe)}) / ${nb(a.pente)} = <b>${a.Tc > 0 ? nb(a.Tc) + " h" : "objectif inatteignable"}</b></p>
+      <p>Probabilité moyenne exacte (dichotomie sur <i>N</i>) : ${a.Nex === null ? "objectif inatteignable même en vérifiant avant chaque mission" : isFinite(a.Nex) ? `<i>N</i> ≤ ${a.Nex} missions, soit <b>T<sub>${esc(a.c0)}</sub> ≤ ${nb(a.Tex)} h</b>` : "respecté quel que soit l'intervalle (au-delà de 100 000 missions)"}.</p></div>`);
+  }
+  $("#etapes").innerHTML = e.join("");
+}
+
+function graphe(r){
+  const {M} = r, W = 680, H = 300, g = 74, d = 14, h = 16, b = 46;
+  const cycles = M.L > 1500 || M.L === 1 ? 1 : 2, n = M.L * cycles, pas = Math.max(1, Math.ceil(n / 700));
+  const ymax = Math.max(r.Pc, M.max) * 1.12, e = Math.floor(Math.log10(ymax)), u = 10 ** e;
+  const X = j => g + (W - g - d) * (j - 1) / Math.max(1, n - 1), Y = p => H - b - (H - b - h) * p / ymax;
+  const pts = []; for (let j = 1; j <= n; j += pas){ pts.push([j, M.profil[(j - 1) % M.L]]); if (cycles === 2 && j <= M.L && j + pas > M.L) pts.push([M.L, M.profil[M.L - 1]], [M.L + 1, M.profil[0]]); }
+  pts.push([n, M.profil[(n - 1) % M.L]]);
+  const ticks = []; const pasY = [1, 2, 2.5, 5, 10].map(k => k * u / 2).find(s => ymax / s <= 6) || u;
+  for (let v = 0; v <= ymax + 1e-30; v += pasY) ticks.push(v);
+  const lignes = ticks.map(v => `<line x1="${g}" x2="${W - d}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--trait)"/><text x="${g - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="12">${nb(v / u, 3)}</text>`).join("");
+  const xt = []; const pasX = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000, 10000, 20000, 50000].find(s => n / s <= 8) || 100000;
+  for (let j = 0; j <= n; j += pasX) xt.push(`<line x1="${X(Math.max(1, j))}" x2="${X(Math.max(1, j))}" y1="${H - b}" y2="${H - b + 4}" stroke="currentColor"/><text x="${X(Math.max(1, j))}" y="${H - b + 17}" text-anchor="middle" font-size="12">${j}</text>`);
+  const hline = (v, c, dash, lib) => `<line x1="${g}" x2="${W - d}" y1="${Y(v)}" y2="${Y(v)}" stroke="${c}" stroke-width="1.8" stroke-dasharray="${dash}"/>`;
+  const leg = [["var(--accent)", "", "probabilité exacte de la mission j"], ["var(--rouge)", "8 5", `méthode du cours : ${nb(r.Pc)}`], ["var(--accent2)", "2 3", `moyenne exacte : ${nb(M.P)}`]];
+  const lx = W - d - 270, ly = H - b - 76;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Probabilité de défaillance mission par mission" style="max-width:${W}px;color:var(--texte)">
+    ${lignes}<rect x="${g}" y="${h}" width="${W - g - d}" height="${H - b - h}" fill="none" stroke="currentColor"/>
+    ${xt.join("")}
+    ${cycles === 2 ? `<line x1="${X(M.L)}" x2="${X(M.L)}" y1="${h}" y2="${H - b}" stroke="var(--doux)" stroke-dasharray="3 3"/>` : ""}
+    ${hline(r.Pc, "var(--rouge)", "8 5")}${hline(M.P, "var(--accent2)", "2 3")}
+    <polyline points="${pts.map(([j, p]) => `${X(j).toFixed(1)},${Y(p).toFixed(1)}`).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+    <rect x="${lx}" y="${ly}" width="262" height="68" fill="var(--carte)" stroke="var(--trait)"/>
+    ${leg.map(([c, dash, l], i) => `<line x1="${lx + 10}" x2="${lx + 40}" y1="${ly + 16 + 20 * i}" y2="${ly + 16 + 20 * i}" stroke="${c}" stroke-width="2" stroke-dasharray="${dash}"/><text x="${lx + 48}" y="${ly + 20 + 20 * i}" font-size="12">${l.replace(/<sup>(.*?)<\/sup>/g, '<tspan dy="-5" font-size="9">$1</tspan><tspan dy="5"> </tspan>')}</text>`).join("")}
+    <text x="${(g + W - d) / 2}" y="${H - 8}" text-anchor="middle" font-size="13">mission j</text>
+    <text x="16" y="${(h + H - b) / 2}" text-anchor="middle" font-size="13" transform="rotate(-90 16 ${(h + H - b) / 2})">probabilité par mission (× 10<tspan dy="-5" font-size="10">${String(e).replace("-", "−")}</tspan><tspan dy="5">)</tspan></text>
+  </svg>`;
+}
+
+/* ---------------------------------------------------------------- dessin du schéma saisi */
+function dessinerSchema(){
+  const vue = $("#schema-vue");
+  let S;
+  try { S = Latentes.lireSchema($("#schema").value); }
+  catch (e){ vue.innerHTML = `<p class="titre">Schéma</p><p class="erreur" style="margin:0">${esc(e)}</p>`; return; }
+  let lam = {}, T = {};
+  try { ({lam, T} = Latentes.lireComposants($("#comp").value)); } catch (e){}
+  let t; try { t = Latentes.nombre($("#t").value); } catch (e){}
+  const latent = x => T[x] !== undefined && !(t > 0 && Math.round(T[x] / t) <= 1);
+  const sous = x => latent(x) ? `T = ${nb(T[x])} h` : lam[x] !== undefined ? "actif" : "λ manquant";
+  const titre = {diagramme: "Diagramme de fiabilité saisi", arbre: "Arbre de défaillance saisi",
+    coupes: "Diagramme équivalent aux coupes minimales (chaque coupe : ses composants en parallèle ; les coupes en série)"}[S.type];
+  const svg = S.type === "arbre" ? dessinArbre(S.racine, latent, sous) : dessinDiagramme(S.racine, latent, sous);
+  vue.innerHTML = `<p class="titre">${esc(titre)}</p>${svg}<p class="leg"><i></i>actif : vérifié avant chaque mission <i class="lat"></i>défaillance latente, vérifiée toutes les T heures</p>`;
+}
+const trait = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="currentColor" stroke-width="1.4"/>`;
+function dessinDiagramme(racine, latent, sous){
+  const BW = 74, BH = 42, GS = 20, GP = 12, R = 14;
+  const mesure = n => {
+    if (n.nom){ n._w = BW; n._h = BH; return n; }
+    n.l.forEach(mesure);
+    if (n.k === "serie"){ n._w = n.l.reduce((s, c) => s + c._w, 0) + GS * (n.l.length - 1); n._h = Math.max(...n.l.map(c => c._h)); }
+    else { n._w = Math.max(...n.l.map(c => c._w)) + 2 * R; n._h = n.l.reduce((s, c) => s + c._h, 0) + GP * (n.l.length - 1); }
+    return n;
+  };
+  const o = [];
+  const trace = (n, x, y) => {
+    const ym = y + n._h / 2;
+    if (n.nom){
+      const lat = latent(n.nom), yb = ym - BH / 2;
+      o.push(`<rect x="${x}" y="${yb}" width="${BW}" height="${BH}" rx="5" fill="var(--carte)" stroke="${lat ? "var(--latent)" : "var(--accent)"}" stroke-width="1.8"${lat ? ' stroke-dasharray="5 3"' : ""}/>`,
+        `<text x="${x + BW / 2}" y="${yb + 18}" text-anchor="middle" font-size="14" font-weight="700">${esc(n.nom)}</text>`,
+        `<text x="${x + BW / 2}" y="${yb + 33}" text-anchor="middle" font-size="9.5" fill="${lat ? "var(--latent)" : "var(--doux)"}">${esc(sous(n.nom))}</text>`);
+      return;
+    }
+    if (n.k === "serie"){
+      let cx = x;
+      n.l.forEach((c, i) => { trace(c, cx, ym - c._h / 2); if (i < n.l.length - 1) o.push(trait(cx + c._w, ym, cx + c._w + GS, ym)); cx += c._w + GS; });
+      return;
+    }
+    const xg = x + R / 2, xd = x + n._w - R / 2, mids = []; let cy = y;
+    for (const c of n.l){
+      const cx = x + (n._w - c._w) / 2, m = cy + c._h / 2;
+      trace(c, cx, cy); mids.push(m);
+      o.push(trait(xg, m, cx, m), trait(cx + c._w, m, xd, m));
+      cy += c._h + GP;
+    }
+    o.push(trait(xg, mids[0], xg, mids[mids.length - 1]), trait(xd, mids[0], xd, mids[mids.length - 1]), trait(x, ym, xg, ym), trait(xd, ym, x + n._w, ym));
+  };
+  mesure(racine);
+  const M = 30, W = racine._w + 2 * M, H = racine._h + 16, ym = H / 2;
+  trace(racine, M, 8);
+  o.push(trait(10, ym, M, ym), trait(M + racine._w, ym, W - 10, ym),
+    `<circle cx="10" cy="${ym}" r="4" fill="currentColor"/><circle cx="${W - 10}" cy="${ym}" r="4" fill="currentColor"/>`);
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" role="img" aria-label="Diagramme de fiabilité">${o.join("")}</svg>`;
+}
+function dessinArbre(racine, latent, sous){
+  const FW = 70, GX = 14, NIV = 84, o = [];
+  const mesure = n => { if (n.nom){ n._w = FW; return n; } n.enf.forEach(mesure); n._w = n.enf.reduce((s, c) => s + c._w, 0) + GX * (n.enf.length - 1); return n; };
+  let prof = 0;
+  const porte = (cx, y, ou) => ou
+    ? `<path d="M${cx - 17} ${y + 32} Q${cx} ${y + 22} ${cx + 17} ${y + 32} Q${cx + 17} ${y + 8} ${cx} ${y} Q${cx - 17} ${y + 8} ${cx - 17} ${y + 32}Z" fill="var(--carte)" stroke="var(--accent)" stroke-width="1.8"/><text x="${cx}" y="${y + 24}" text-anchor="middle" font-size="10" font-weight="700">OU</text>`
+    : `<path d="M${cx - 17} ${y + 32} L${cx - 17} ${y + 15} A17 15 0 0 1 ${cx + 17} ${y + 15} L${cx + 17} ${y + 32}Z" fill="var(--carte)" stroke="var(--accent)" stroke-width="1.8"/><text x="${cx}" y="${y + 26}" text-anchor="middle" font-size="10" font-weight="700">ET</text>`;
+  const trace = (n, x, y, niv) => {
+    prof = Math.max(prof, niv);
+    const cx = x + n._w / 2;
+    if (n.nom){
+      const lat = latent(n.nom);
+      o.push(`<circle cx="${cx}" cy="${y + 18}" r="18" fill="var(--carte)" stroke="${lat ? "var(--latent)" : "var(--accent)"}" stroke-width="1.8"${lat ? ' stroke-dasharray="5 3"' : ""}/>`,
+        `<text x="${cx}" y="${y + 23}" text-anchor="middle" font-size="14" font-weight="700">${esc(n.nom)}</text>`,
+        `<text x="${cx}" y="${y + 50}" text-anchor="middle" font-size="9.5" fill="${lat ? "var(--latent)" : "var(--doux)"}">${esc(sous(n.nom))}</text>`);
+      return;
+    }
+    o.push(porte(cx, y, n.porte === "OU"));
+    const yb = y + 32, ybus = y + 52;
+    o.push(trait(cx, yb, cx, ybus));
+    let x0 = x; const xs = [];
+    for (const c of n.enf){ const ccx = x0 + c._w / 2; xs.push(ccx); trace(c, x0, y + NIV, niv + 1); o.push(trait(ccx, ybus, ccx, y + NIV)); x0 += c._w + GX; }
+    o.push(trait(Math.min(...xs, cx), ybus, Math.max(...xs, cx), ybus));
+  };
+  mesure(racine);
+  const M = 12, haut = 44, W = Math.max(racine._w, 170) + 2 * M, xr = M + (W - 2 * M - racine._w) / 2;
+  o.push(`<rect x="${W / 2 - 80}" y="4" width="160" height="26" rx="4" fill="var(--carte)" stroke="currentColor" stroke-width="1.4"/><text x="${W / 2}" y="21" text-anchor="middle" font-size="11.5">Défaillance du système</text>`,
+    trait(W / 2, 30, W / 2, haut));
+  trace(racine, xr, haut, 0);
+  const H = haut + prof * NIV + 62;
+  return `<svg viewBox="0 0 ${W} ${H}" width="${W}" role="img" aria-label="Arbre de défaillance">${o.join("")}</svg>`;
+}
+
+function validation(){
+  const L = Latentes.valider(), ok = L.filter(x => x.ok).length;
+  $("#validation").innerHTML = `<p><b class="${ok === L.length ? "ok" : "ko"}">${ok} / ${L.length} cas conformes</b></p>
+    <table><thead><tr><th class="g">Cas</th><th class="g">Référence</th><th>Attendu</th><th>Obtenu</th><th>Écart</th><th></th></tr></thead><tbody>
+    ${L.map(x => `<tr><td class="g">${esc(x.cas)}</td><td class="g">${esc(x.ref)}</td><td>${nb(x.attendu, 5)}</td><td>${nb(x.obtenu, 5)}</td><td>${x.note ? esc(x.note) : x.attendu ? pct(x.ecart) : "—"}</td><td class="${x.ok ? "ok" : "ko"}">${x.ok ? "✓" : "✗"}</td></tr>`).join("")}
+    </tbody></table>
+    <p class="note">Pour l'arbre de Kohda et Inoue, la valeur codée est 10 × (états critiques en rôle actif) + (états critiques qui incluent l'événement). Le cas λA = 10⁻⁶, λB = 10⁻⁴ diffère de 0,008 % : la valeur publiée (4,0815 × 10⁻⁷) semble contenir une coquille, puisque le cas symétrique donne 4,0818 × 10⁻⁷, comme notre calcul.</p>`;
+}
+
+/* démarrage */
+if (/\/projets\/defaillances-latentes\//.test(location.pathname)) $("#retour").hidden = false;   /* page servie depuis le portfolio */
+$("#exemples").innerHTML = EXEMPLES.map((e, i) => `<button type="button" data-i="${i}">${esc(e.nom)}</button>`).join("");
+$("#exemples").addEventListener("click", ev => { const b = ev.target.closest("button"); if (b) remplir(EXEMPLES[+b.dataset.i]); });
+for (const k of CHAMPS) $("#" + k).addEventListener("input", () => { clearTimeout(window.__minuterie); window.__minuterie = setTimeout(calculer, 250); });
+document.querySelectorAll("nav.onglets button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav.onglets button").forEach(x => x.setAttribute("aria-selected", x === b));
+  for (const id of ["calcul", "validation", "methode"]) $("#onglet-" + id).hidden = id !== b.dataset.onglet;
+}));
+$("#lancer-validation").addEventListener("click", validation);
+let depart = EXEMPLES[0];
+try { const s = JSON.parse(localStorage.getItem("latentes-saisie") || "null"); if (s && s.comp) depart = s; } catch (e){}
+remplir(depart);
+</script>
+</body>
+</html>

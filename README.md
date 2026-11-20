@@ -9,6 +9,7 @@ Site personnel statique (HTML/CSS, sans dépendance).
 - `projets/aero-optim/` : application AéroOptim ([dépôt source](https://github.com/emmatchouya-source/aero-optim))
 - `projets/a380-lab/` : A380 Cruise Lab, données OpenVSP et propulsion MGA803, équilibrage longitudinal, trajectoire 3D animée, optimisation sous contraintes, MRC/LRC/ECON et exports reproductibles ([modèle et validation](projets/a380-lab/README.md)). Sans validation sur données de vol.
 - `projets/drone-lab/` : laboratoire de vol autonome 3D, sept géométries de multirotors, capteurs simulés, commande en cascade, catalogue de 73 cartes et programme Arduino de banc/portage ([documentation](projets/drone-lab/README.md))
+- `projets/defaillances-latentes/` : outil Défaillances latentes (MEC8312, Polytechnique Montréal) : probabilité moyenne de défaillance par vol d'un système redondant, méthode du cours, formules de Ramesh et al., calcul exact mission par mission et détectabilité de Kohda et Inoue, avec 19 cas de validation recalculés dans la page ([documentation](projets/defaillances-latentes/README.md))
 - `agent/` : agent Windows à installer depuis DroneLab pour compiler et téléverser le programme de banc depuis la page ([construction et limites](agent/README.md))
 
 DroneLab utilise des modules JavaScript : le servir par HTTP, par exemple avec `python -m http.server 8080`, puis ouvrir `http://localhost:8080/projets/drone-lab/`.

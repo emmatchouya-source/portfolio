@@ -322,6 +322,34 @@
           </div>
         </article>
 
+        <article class="case featured reveal" id="p-latentes">
+          <div class="thumb" aria-hidden="true">
+            <svg viewBox="0 0 320 200">
+              <line x1="30" y1="166" x2="232" y2="166" class="ln" stroke-width="1.5"/><line x1="30" y1="26" x2="30" y2="166" class="ln" stroke-width="1.5"/>
+              <line x1="30" y1="52" x2="232" y2="52" class="ac2" stroke-width="2" stroke-dasharray="7 5"/>
+              <line x1="30" y1="96" x2="232" y2="96" class="te" stroke-width="2" stroke-dasharray="2 4"/>
+              <path class="draw ac" style="--len:440" d="M32 132 L131 60 L131 132 L230 60" fill="none" stroke-width="3" stroke-linejoin="round"/>
+              <line x1="131" y1="30" x2="131" y2="166" class="ln" stroke-width="1" stroke-dasharray="3 3"/>
+              <circle cx="131" cy="60" r="5" class="fa2"/>
+              <text x="240" y="50" class="tx">Borne du</text><text x="240" y="63" class="tx">cours</text>
+              <text x="240" y="94" class="tx">Moyenne</text><text x="240" y="107" class="tx">exacte</text>
+              <text x="240" y="138" class="tx">Probabilité</text><text x="240" y="151" class="tx">du vol j</text>
+              <text x="137" y="182" class="tx">Inspection</text><text x="214" y="182" class="tx">vol j</text>
+            </svg>
+          </div>
+          <div class="body">
+            <div class="top"><span class="ctx">Polytechnique Montréal · MEC8312 · 2026</span><span class="metric">19 cas validés</span></div>
+            <h3>Défaillances latentes — probabilité moyenne de défaillance par vol</h3>
+            <ul class="psr">
+              <li><b>Problème</b>Les secours d'un système redondant peuvent tomber en panne sans être détectés jusqu'à l'inspection suivante ; la méthode classique surestime alors le risque moyen.</li>
+              <li><b>Démarche</b>Synthèse de trois publications (Kohda et Inoue ; Ramesh, Twigg et Sharma, Boeing) : détectabilité dans l'arbre de défaillance, probabilité moyenne par vol, calcul exact par chaîne de Markov mission par mission.</li>
+              <li><b>Résultat</b>Sur un exemple du cours, la méthode classique surestime le risque de 36 % et l'intervalle d'inspection admissible passe de 500 h à 1 070 h ; outil web validé sur 19 cas de référence publiés.</li>
+            </ul>
+            <div class="tags"><span class="tag">Fiabilité</span><span class="tag">Sécurité des systèmes</span><span class="tag">Chaînes de Markov</span><span class="tag">Arbres de défaillance</span><span class="tag">JavaScript</span></div>
+            <div class="links"><a class="btn sm primary" href="projets/defaillances-latentes/">Lancer l'outil <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+          </div>
+        </article>
+
       </div>
     </div>
   </section>
@@ -339,7 +367,7 @@
             <button type="button" class="chip" data-f="A" aria-pressed="false">Analyse <i></i></button>
             <button type="button" class="chip" data-f="I" aria-pressed="false">Inspection <i></i></button>
           </div>
-          <span class="mx-count" id="mxCount" aria-live="polite">11 affirmations</span>
+          <span class="mx-count" id="mxCount" aria-live="polite">12 affirmations</span>
         </div>
         <table class="mx">
           <caption class="sr-only">Matrice de conformité : pour chaque affirmation, la preuve, le moyen de vérification et la façon d'y accéder.</caption>
@@ -366,57 +394,64 @@
               <td><span class="moc a">Analyse</span></td>
               <td class="acc"><a class="live" href="projets/a380-lab/">Essayer A380 Cruise Lab</a><small><a href="#a380Project">Étude de cas</a></small></td>
             </tr>
-            <tr data-moc="E" data-live="0">
+            <tr data-moc="A" data-live="1">
               <td class="ref">C-04</td>
+              <th scope="row">J'évalue le risque d'un système redondant dont les pannes peuvent rester cachées.</th>
+              <td>Outil Défaillances latentes : probabilité moyenne par vol, calcul exact mission par mission et intervalle d'inspection admissible ; 19 cas de référence publiés recalculés en ligne.<small>Polytechnique Montréal · 2026</small></td>
+              <td><span class="moc a">Analyse</span></td>
+              <td class="acc"><a class="live" href="projets/defaillances-latentes/">Essayer l'outil</a><small><a href="#p-latentes">Étude de cas</a></small></td>
+            </tr>
+            <tr data-moc="E" data-live="0">
+              <td class="ref">C-05</td>
               <th scope="row">Je conçois, je fabrique et je fais voler.</th>
               <td>Hexacoptère conçu et construit pour l'armée : 8 kg de charge utile, 10 km de rayon d'action, 2 000 m d'altitude maximale ; essais réussis.<small>ENSPD · 2020 – 2021</small></td>
               <td><span class="moc e">Essai</span></td>
               <td class="acc"><a href="#p-hexa">Étude de cas</a></td>
             </tr>
             <tr data-moc="I" data-live="0">
-              <td class="ref">C-05</td>
+              <td class="ref">C-06</td>
               <th scope="row">Je tiens la traçabilité des exigences d'un programme aéronautique.</th>
               <td>Gestion et traçabilité de plus de 1 000 exigences, avec mise à jour des matrices de conformité.<small>Flying Whales · 2026</small></td>
               <td><span class="moc i">Inspection</span></td>
               <td class="acc"><a href="#parcours">Parcours</a><small>Confidentiel · détaillé en entretien</small></td>
             </tr>
             <tr data-moc="I" data-live="0">
-              <td class="ref">C-06</td>
+              <td class="ref">C-07</td>
               <th scope="row">Je traduis un règlement en critères vérifiables.</th>
               <td>Analyse réglementaire : critères de vibration des écrans du cockpit et de distorsion optique du pare-brise, sur la base de la CS-25 et des recommandations FAA.<small>Flying Whales · 2026</small></td>
               <td><span class="moc i">Inspection</span></td>
               <td class="acc"><a href="#parcours">Parcours</a><small>Confidentiel · détaillé en entretien</small></td>
             </tr>
             <tr data-moc="E" data-live="0">
-              <td class="ref">C-07</td>
+              <td class="ref">C-08</td>
               <th scope="row">Je prépare et j'exécute des essais sur banc.</th>
               <td>Trois ans d'essais sur bancs moteurs : montage, instrumentation, acquisition, analyse des données, calibrage et rapports d'essais.<small>CRDI, Douala · 2020 – 2024</small></td>
               <td><span class="moc e">Essai</span></td>
               <td class="acc"><a href="#parcours">Parcours</a><small>Détaillé en entretien</small></td>
             </tr>
             <tr data-moc="A" data-live="0">
-              <td class="ref">C-08</td>
+              <td class="ref">C-09</td>
               <th scope="row">Je conclus à partir des mesures.</th>
               <td>Essais TGD1 : 3,5 h de données traitées sous Python et MATLAB, 28 exigences du SRD vérifiées, causes racines de 6 anomalies, rapport de 85 pages.<small>Flying Whales · 2026</small></td>
               <td><span class="moc a">Analyse</span></td>
               <td class="acc"><a href="#p-essais">Étude de cas</a><small>Confidentiel · détaillé en entretien</small></td>
             </tr>
             <tr data-moc="D" data-live="0">
-              <td class="ref">C-09</td>
+              <td class="ref">C-10</td>
               <th scope="row">J'outille ce qui se répète.</th>
               <td>Outil d'automatisation 3DEXPERIENCE : comparaison de révisions de spécifications réduite d'une journée à moins de 5 minutes pour 162 exigences ; plus de 3 000 exigences comparées sur 7 spécifications et 17 révisions.<small>Flying Whales · 2026</small></td>
               <td><span class="moc d">Démonstration</span></td>
               <td class="acc"><a href="#p-3dx">Étude de cas</a><small>Confidentiel · détaillé en entretien</small></td>
             </tr>
             <tr data-moc="I" data-live="0">
-              <td class="ref">C-10</td>
+              <td class="ref">C-11</td>
               <th scope="row">Je suis un fournisseur sur ses livrables.</th>
               <td>Suivi technique du partenaire Delastek : livrables du cockpit, écarts de conception et clarification des exigences en réunions hebdomadaires.<small>Flying Whales · 2026</small></td>
               <td><span class="moc i">Inspection</span></td>
               <td class="acc"><a href="#parcours">Parcours</a><small>Détaillé en entretien</small></td>
             </tr>
             <tr data-moc="I" data-live="0">
-              <td class="ref">C-11</td>
+              <td class="ref">C-12</td>
               <th scope="row">Je travaille en français et en anglais.</th>
               <td>Français avancé, anglais professionnel (B2) ; rapport d'essais de 85 pages rédigé en anglais chez Flying Whales.</td>
               <td><span class="moc i">Inspection</span></td>
