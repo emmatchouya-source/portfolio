@@ -40,6 +40,15 @@ test('arbre de Kohda et Inoue : états critiques, probabilités et surveillance'
   assert.equal(r.adm.Tex, 340);
 });
 
+test('contre-essai : avec λ1 faible, I_PD et le calcul exact désignent l’événement 2', () => {
+  const r = L.analyser({comp: '1 1e-6 1000\n2 1e-4 1000\n3 1e-4 1000\n4 1e-4', schema: 'OU(ET(1;4);ET(2;3;4))', t: '5'});
+  const s = Object.fromEntries(r.surveillance.map(x => [x.nom, x]));
+  proche(s['2'].gain, 6.91, 1e-2, 'gain en surveillant 2');
+  proche(s['1'].gain, 1.16, 1e-2, 'gain en surveillant 1');
+  assert.ok(s['2'].IPD > s['1'].IPD, 'I_PD doit désigner 2');
+  assert.ok(s['1'].nCI > s['2'].nCI, 'le décompte des états critiques désigne encore 1');
+});
+
 test('les trois écritures du schéma donnent les mêmes coupes minimales', () => {
   const noms = ['1', '2', '3', '4'];
   const a = L.coupesMinimales('OU(ET(1;4);ET(2;3;4))', noms).coupes;

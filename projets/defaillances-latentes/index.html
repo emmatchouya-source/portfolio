@@ -120,7 +120,7 @@ footer{color:var(--doux);font-size:.85rem;padding:0 0 30px}
       </div>
       <div class="carte">
         <h2>Où placer une surveillance ?</h2>
-        <p class="note">Effet d'une surveillance ajoutée sur un seul composant latent, qui devient alors vérifié avant chaque mission (probabilité moyenne exacte). Comparer avec l'importance de détectabilité <i>n</i><sub>CI</sub> de Kohda et Inoue.</p>
+        <p class="note">Effet d'une surveillance ajoutée sur un seul composant latent, qui devient alors vérifié avant chaque mission (probabilité moyenne exacte). À comparer avec les importances de Kohda et Inoue : le décompte des états critiques <i>n</i><sub>CI</sub> ne suffit pas toujours, l'importance probabiliste <i>I</i><sub>PD</sub> désigne le bon composant dans tous les cas étudiés dans le rapport.</p>
         <div class="defile" id="surveillance"></div>
       </div>
       <div class="carte">
@@ -329,7 +329,7 @@ const Latentes = (() => {
     const Pc = coursLin(C, lam, N, t), Pce = coursExp(C, lam, N, t), PR = ramesh(C, lam, N, t, noms), M = markov(C, lam, N, t, noms);
     /* surveillance */
     const surveillance = lat.map(x => { const N2 = Object.assign({}, N, {[x]: 1}), M2 = markov(C, lam, N2, t, noms);
-      return {nom: x, nCI: incl[x].length, P: M2.P, max: M2.max, gain: M.P / M2.P}; });
+      return {nom: x, nCI: incl[x].length, IPD: kohda.find(k => k.nom === x).IPD, P: M2.P, max: M2.max, gain: M.P / M2.P}; });
     /* 5. intervalle admissible */
     let adm = null;
     const cible = nombre(d.cible);
@@ -402,6 +402,7 @@ const $ = s => document.querySelector(s);
 const EXEMPLES = [
   {nom: "Exemple 2 du M3A", comp: "1 1e-5\n2 1e-4 1000\n3 1e-4", schema: "serie(1; par(2; 3))", t: "5", cible: "7,5e-5", cc: "2"},
   {nom: "Arbre de Kohda et Inoue", comp: "1 1e-4 1000\n2 1e-4 1000\n3 1e-4 1000\n4 1e-4", schema: "OU(ET(1;4); ET(2;3;4))", t: "5", cible: "1e-5", cc: "1"},
+  {nom: "Kohda : contre-essai (λ₁ faible)", comp: "1 1e-6 1000\n2 1e-4 1000\n3 1e-4 1000\n4 1e-4", schema: "OU(ET(1;4); ET(2;3;4))", t: "5", cible: "", cc: ""},
   {nom: "Système double (Ramesh 2002)", comp: "A 1e-4\nB 1e-4 3000", schema: "A B", t: "3", cible: "", cc: ""},
   {nom: "Deux secours latents", comp: "A 1e-4\nB 1e-4 600\nC 1e-4 1800", schema: "par(A; B; C)", t: "6", cible: "", cc: ""},
 ];
@@ -455,9 +456,9 @@ function afficher(r){
     : "Aucun composant latent : la probabilité est la même à chaque mission.";
   /* surveillance */
   $("#surveillance").innerHTML = r.surveillance.length
-    ? `<table><thead><tr><th>Composant surveillé</th><th>n<sub>CI</sub> (Kohda)</th><th>Moyenne exacte</th><th>Pire vol</th><th>Gain sur la moyenne</th></tr></thead><tbody>
-       <tr><td>aucun</td><td>—</td><td>${nb(M.P)}</td><td>${nb(M.max)}</td><td>—</td></tr>
-       ${r.surveillance.slice().sort((a, b) => b.gain - a.gain).map(s => `<tr><td>${esc(s.nom)}</td><td>${s.nCI}</td><td>${nb(s.P)}</td><td>${nb(s.max)}</td><td><b>÷ ${nb(s.gain, 3)}</b></td></tr>`).join("")}
+    ? `<table><thead><tr><th>Composant surveillé</th><th>n<sub>CI</sub></th><th>I<sub>PD</sub></th><th>Moyenne exacte</th><th>Pire vol</th><th>Gain sur la moyenne</th></tr></thead><tbody>
+       <tr><td>aucun</td><td>—</td><td>—</td><td>${nb(M.P)}</td><td>${nb(M.max)}</td><td>—</td></tr>
+       ${r.surveillance.slice().sort((a, b) => b.gain - a.gain).map(s => `<tr><td>${esc(s.nom)}</td><td>${s.nCI}</td><td>${nb(s.IPD, 3)}</td><td>${nb(s.P)}</td><td>${nb(s.max)}</td><td><b>÷ ${nb(s.gain, 3)}</b></td></tr>`).join("")}
        </tbody></table>`
     : `<p class="note">Aucun composant latent.</p>`;
   /* étapes */
